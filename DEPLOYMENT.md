@@ -16,7 +16,7 @@ This guide walks you through deploying your Lanqua language tutoring app to Verc
 
 2. **Create a Database**
    - Click "Create Project"
-   - Name it "lanqua"
+   - Name it "ai tutor"
    - Select your preferred region
    - **Save your connection string** - it looks like:
      ```
@@ -88,7 +88,7 @@ git add .
 git commit -m "Prepare for Vercel deployment"
 
 # Create GitHub repository and push (or use GitLab/Bitbucket)
-gh repo create lanqua --private --source=. --remote=origin --push
+gh repo create ai_tutor --private --source=. --remote=origin --push
 # Or manually: git remote add origin YOUR_REPO_URL
 # git push -u origin master
 ```
@@ -180,6 +180,23 @@ export const config = {
 Add `ACCESS_TOKEN` to Vercel environment variables.
 
 ## Troubleshooting
+
+### Build Error: "Cannot open database because the directory does not exist"
+**Error during build:**
+```
+TypeError: Cannot open database because the directory does not exist
+Error: Failed to collect page data for /api/chat
+```
+
+**Solution:**
+1. **Set DATABASE_URL** in Vercel environment variables (Settings → Environment Variables)
+2. Use your Neon PostgreSQL connection string (starts with `postgresql://`)
+3. Redeploy the project
+
+**Why this happens:**
+- The app uses SQLite for local development but requires PostgreSQL for production
+- If DATABASE_URL is missing or incorrectly formatted, the build tries to use SQLite
+- Vercel's build environment doesn't support creating local SQLite files
 
 ### Build Errors
 - Check Vercel build logs
