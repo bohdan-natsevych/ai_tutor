@@ -47,6 +47,7 @@ next-env.d.ts
 
 # svn repository
 /svn_repo/
+.svn/
 
 # IDE
 .cursor/
