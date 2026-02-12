@@ -133,14 +133,42 @@ export const db = new Proxy({} as any, {
   }
 });
 
-// Export the correct schema based on DATABASE_URL
-const databaseUrl = process.env.DATABASE_URL;
-const isPostgres = databaseUrl?.startsWith('postgres');
-
-if (isPostgres) {
-  // Production: PostgreSQL schema with TIMESTAMP fields
-  export * from './schema.postgres';
-} else {
-  // Local dev: SQLite schema with INTEGER timestamp fields
-  export * from './schema';
+// Get the active schema at runtime
+function getSchema() {
+  initializeDatabase();
+  return _schema || schemaPostgres;
 }
+
+// Export schema tables as getters that return from active schema
+export const chats = new Proxy({} as any, {
+  get(target, prop) {
+    return getSchema().chats[prop];
+  }
+});
+
+export const messages = new Proxy({} as any, {
+  get(target, prop) {
+    return getSchema().messages[prop];
+  }
+});
+
+export const settings = new Proxy({} as any, {
+  get(target, prop) {
+    return getSchema().settings[prop];
+  }
+});
+
+export const vocabulary = new Proxy({} as any, {
+  get(target, prop) {
+    return getSchema().vocabulary[prop];
+  }
+});
+
+export const chatSummaries = new Proxy({} as any, {
+  get(target, prop) {
+    return getSchema().chatSummaries[prop];
+  }
+});
+
+// Export types from PostgreSQL schema (for TypeScript)
+export type { Chat, NewChat, Message, NewMessage, Setting, Vocabulary, NewVocabulary, ChatSummary } from './schema.postgres';
