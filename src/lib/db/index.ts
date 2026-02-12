@@ -7,33 +7,38 @@ import * as schemaPostgres from './schema.postgres';
 import path from 'path';
 import fs from 'fs';
 
-// Lazy initialization - only create DB when accessed
+// Detect database type at module load from DATABASE_URL
+const _isPostgres = process.env.DATABASE_URL?.startsWith('postgres') ?? false;
+
+// Pick the correct schema tables at module load (no Proxy, no conditional export)
+const activeSchema = _isPostgres ? schemaPostgres : schemaSqlite;
+export const chats = activeSchema.chats as any;
+export const messages = activeSchema.messages as any;
+export const settings = activeSchema.settings as any;
+export const vocabulary = activeSchema.vocabulary as any;
+export const chatSummaries = activeSchema.chatSummaries as any;
+
+// Re-export types (compatible between both schemas)
+export type { Chat, NewChat, Message, NewMessage, Setting, Vocabulary, NewVocabulary, ChatSummary } from './schema';
+
+// Lazy initialization - only create DB connection when accessed
 let _db: any = null;
-let _schema: any = null;
 let _initialized = false;
 
 function initializeDatabase() {
-  if (_initialized) {
-    return;
-  }
-
+  if (_initialized) return;
   _initialized = true;
 
-  // Detect database type from DATABASE_URL
   const databaseUrl = process.env.DATABASE_URL;
-  const isPostgres = databaseUrl?.startsWith('postgres');
 
-  if (isPostgres && databaseUrl) {
+  if (_isPostgres && databaseUrl) {
     // PostgreSQL setup for production (Vercel/Neon)
     const sql = neon(databaseUrl);
     _db = drizzlePostgres(sql, { schema: schemaPostgres });
-    _schema = schemaPostgres;
-    
     console.log('📊 Using PostgreSQL database');
   } else {
     // SQLite setup for local development only (not during build)
-    // Skip initialization if we're in a build environment without proper filesystem
-    if (typeof window === 'undefined' && process.env.NEXT_PHASE === 'phase-production-build') {
+    if (process.env.NEXT_PHASE === 'phase-production-build') {
       console.log('⚠️ Skipping SQLite initialization during build');
       return;
     }
@@ -49,12 +54,9 @@ function initializeDatabase() {
 
     // Create SQLite connection
     const sqlite = new Database(dbPath);
-
-    // Enable foreign keys
     sqlite.pragma('foreign_keys = ON');
 
-    // CURSOR: Create tables if they don't exist
-    // This ensures the database is ready on first run without needing migrations
+    // Create tables if they don't exist
     sqlite.exec(`
       CREATE TABLE IF NOT EXISTS chats (
         id TEXT PRIMARY KEY,
@@ -104,7 +106,7 @@ function initializeDatabase() {
       );
     `);
 
-    // CURSOR: Ensure new columns exist for existing databases
+    // Ensure new columns exist for existing databases
     const messageColumns = sqlite.prepare(`PRAGMA table_info(messages);`).all();
     const messageColumnNames = new Set((messageColumns as Array<{ name: string }>).map((col) => col.name));
     if (!messageColumnNames.has('audio_blob')) {
@@ -114,15 +116,12 @@ function initializeDatabase() {
       sqlite.exec(`ALTER TABLE messages ADD COLUMN audio_format TEXT;`);
     }
 
-    // Create Drizzle instance
     _db = drizzleSqlite(sqlite, { schema: schemaSqlite });
-    _schema = schemaSqlite;
-    
     console.log('📊 Using SQLite database');
   }
 }
 
-// Export getter that initializes on first access
+// Export db as lazy getter - only connects when first accessed
 export const db = new Proxy({} as any, {
   get(target, prop) {
     initializeDatabase();
@@ -132,43 +131,3 @@ export const db = new Proxy({} as any, {
     return _db[prop];
   }
 });
-
-// Get the active schema at runtime
-function getSchema() {
-  initializeDatabase();
-  return _schema || schemaPostgres;
-}
-
-// Export schema tables as getters that return from active schema
-export const chats = new Proxy({} as any, {
-  get(target, prop) {
-    return getSchema().chats[prop];
-  }
-});
-
-export const messages = new Proxy({} as any, {
-  get(target, prop) {
-    return getSchema().messages[prop];
-  }
-});
-
-export const settings = new Proxy({} as any, {
-  get(target, prop) {
-    return getSchema().settings[prop];
-  }
-});
-
-export const vocabulary = new Proxy({} as any, {
-  get(target, prop) {
-    return getSchema().vocabulary[prop];
-  }
-});
-
-export const chatSummaries = new Proxy({} as any, {
-  get(target, prop) {
-    return getSchema().chatSummaries[prop];
-  }
-});
-
-// Export types from PostgreSQL schema (for TypeScript)
-export type { Chat, NewChat, Message, NewMessage, Setting, Vocabulary, NewVocabulary, ChatSummary } from './schema.postgres';
