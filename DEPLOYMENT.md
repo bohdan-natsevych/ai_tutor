@@ -38,8 +38,8 @@ This guide walks you through deploying your Lanqua language tutoring app to Verc
      thread_id TEXT,
      ai_provider TEXT DEFAULT 'openai',
      ai_mode TEXT DEFAULT 'chat',
-     created_at TIMESTAMP DEFAULT NOW(),
-     updated_at TIMESTAMP DEFAULT NOW()
+     created_at TIMESTAMP DEFAULT NOW() NOT NULL,
+     updated_at TIMESTAMP DEFAULT NOW() NOT NULL
    );
 
    CREATE TABLE IF NOT EXISTS messages (
@@ -48,10 +48,10 @@ This guide walks you through deploying your Lanqua language tutoring app to Verc
      role TEXT NOT NULL,
      content TEXT NOT NULL,
      audio_url TEXT,
-     audio_blob BYTEA,
+     audio_blob TEXT,
      audio_format TEXT,
      analysis TEXT,
-     created_at TIMESTAMP DEFAULT NOW()
+     created_at TIMESTAMP DEFAULT NOW() NOT NULL
    );
 
    CREATE TABLE IF NOT EXISTS settings (
@@ -65,7 +65,7 @@ This guide walks you through deploying your Lanqua language tutoring app to Verc
      translation TEXT,
      example TEXT,
      context TEXT,
-     created_at TIMESTAMP DEFAULT NOW()
+     created_at TIMESTAMP DEFAULT NOW() NOT NULL
    );
 
    CREATE TABLE IF NOT EXISTS chat_summaries (
@@ -75,6 +75,34 @@ This guide walks you through deploying your Lanqua language tutoring app to Verc
      updated_at TIMESTAMP DEFAULT NOW()
    );
    ```
+
+## Quick Fix for Common Errors
+
+### ❌ Error: "Database not initialized. Make sure DATABASE_URL is set"
+**You need to add DATABASE_URL to Vercel:**
+
+1. **Get your Neon connection string:**
+   - Go to [neon.tech](https://neon.tech) → Sign up (free)
+   - Create a new project
+   - Copy the connection string (looks like: `postgresql://username:password@host.neon.tech/dbname`)
+
+2. **Add to Vercel:**
+   - Vercel Dashboard → Your Project → Settings → Environment Variables
+   - Add: `DATABASE_URL` = `postgresql://...` (your Neon string)
+   - Click "Save"
+   - Go to Deployments → Click "..." → Redeploy
+
+3. **Initialize database schema:**
+   - In Neon dashboard → SQL Editor
+   - Run the SQL script from Step 1 below
+
+### ❌ Error: "OpenAI API key not configured"
+**Add OPENAI_API_KEY to Vercel:**
+- Settings → Environment Variables
+- Add: `OPENAI_API_KEY` = `sk-...` (your OpenAI key from [platform.openai.com](https://platform.openai.com))
+- Redeploy
+
+---
 
 ## Step 2: Push Your Code to Git
 
@@ -101,18 +129,23 @@ gh repo create ai_tutor --private --source=. --remote=origin --push
    - Select your Git repository (lanqua)
    - Vercel auto-detects Next.js configuration
 
-2. **Configure Environment Variables**
+2. **Configure Environment Variables** ⚠️ **CRITICAL STEP**
    
-   Add these environment variables in Vercel:
+   In Vercel: **Settings → Environment Variables → Add**
 
-   **Required:**
-   - `DATABASE_URL`: Your Neon connection string (from Step 1)
-   - `OPENAI_API_KEY`: Your OpenAI API key
-   - `NODE_ENV`: `production`
+   **Required (app won't work without these):**
+   - **`DATABASE_URL`**: Your Neon PostgreSQL connection string (from Step 1 above)
+     - Example: `postgresql://user:pass@ep-xxx.us-east-1.aws.neon.tech/neondb`
+   - **`OPENAI_API_KEY`**: Your OpenAI API key
+     - Get it from: [platform.openai.com/api-keys](https://platform.openai.com/api-keys)
+     - Example: `sk-proj-xxxxxxxxxxxxx`
+   - **`NODE_ENV`**: `production`
 
    **Optional:**
    - `DEEPL_API_KEY`: If using DeepL translation
    - `OLLAMA_BASE_URL`: If using Ollama (not typical in cloud)
+
+   ⚠️ **Make sure to click "Apply to all environments" when adding variables!**
 
 3. **Deploy**
    - Click "Deploy"

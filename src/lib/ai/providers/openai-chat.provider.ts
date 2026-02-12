@@ -29,9 +29,9 @@ export class OpenAIChatProvider implements AIProvider {
       this.status = {
         initialized: false,
         loading: false,
-        error: 'OpenAI API key not configured',
+        error: 'OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.',
       };
-      return;
+      throw new Error('OpenAI API key not configured. Please set OPENAI_API_KEY environment variable in your Vercel project settings.');
     }
 
     this.client = new OpenAI({ apiKey });

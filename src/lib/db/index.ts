@@ -133,5 +133,12 @@ export const db = new Proxy({} as any, {
   }
 });
 
-// Export schema for convenience
-export * from './schema';
+// Conditionally export schema based on database type
+const databaseUrl = process.env.DATABASE_URL;
+const isPostgres = databaseUrl?.startsWith('postgres');
+
+if (isPostgres) {
+  export * from './schema.postgres';
+} else {
+  export * from './schema';
+}

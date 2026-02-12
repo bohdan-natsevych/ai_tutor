@@ -82,7 +82,19 @@ export async function POST(request: NextRequest) {
     const { action, aiProvider, aiModel } = body as { action?: string; aiProvider?: string; aiModel?: string };
     
     // CURSOR: Initialize with provider/model from request (from user settings)
-    await ensureInitialized(aiProvider, aiModel);
+    try {
+      await ensureInitialized(aiProvider, aiModel);
+    } catch (initError) {
+      console.error('AI initialization error:', initError);
+      return NextResponse.json(
+        { 
+          error: 'AI provider initialization failed',
+          details: initError instanceof Error ? initError.message : 'Unknown error',
+          hint: 'Please ensure OPENAI_API_KEY is set in your environment variables'
+        },
+        { status: 503 }
+      );
+    }
 
     // CURSOR: Apply context settings from client (summarization, window size, etc.)
     const rawContextSettings = body.contextSettings;
