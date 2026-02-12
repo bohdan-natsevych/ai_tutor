@@ -57,6 +57,10 @@ export async function GET(request: NextRequest) {
 // POST /api/chat - Create new chat or send message
 export async function POST(request: NextRequest) {
   try {
+    // Debug: Log environment
+    console.log('[Chat API] DATABASE_URL configured:', !!process.env.DATABASE_URL);
+    console.log('[Chat API] Database type:', process.env.DATABASE_URL?.substring(0, 10));
+    
     const contentType = request.headers.get('content-type') || '';
     const isFormData = contentType.includes('multipart/form-data');
     let body: Record<string, unknown> = {};

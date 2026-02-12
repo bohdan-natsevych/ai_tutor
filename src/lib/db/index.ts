@@ -133,12 +133,14 @@ export const db = new Proxy({} as any, {
   }
 });
 
-// Conditionally export schema based on database type
+// Export the correct schema based on DATABASE_URL
 const databaseUrl = process.env.DATABASE_URL;
 const isPostgres = databaseUrl?.startsWith('postgres');
 
 if (isPostgres) {
+  // Production: PostgreSQL schema with TIMESTAMP fields
   export * from './schema.postgres';
 } else {
+  // Local dev: SQLite schema with INTEGER timestamp fields
   export * from './schema';
 }
