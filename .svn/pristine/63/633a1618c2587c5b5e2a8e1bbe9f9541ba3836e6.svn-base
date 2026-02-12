@@ -1,0 +1,71 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { deeplClient } from '@/lib/translation/deepl';
+
+// Initialize DeepL client
+deeplClient.initialize();
+
+// POST /api/translate - Translate text
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { text, texts, targetLanguage, sourceLanguage } = body;
+
+    if (!targetLanguage) {
+      return NextResponse.json(
+        { error: 'targetLanguage required' },
+        { status: 400 }
+      );
+    }
+
+    if (!text && !texts) {
+      return NextResponse.json(
+        { error: 'text or texts required' },
+        { status: 400 }
+      );
+    }
+
+    if (!deeplClient.isAvailable()) {
+      return NextResponse.json(
+        { error: 'DeepL API not configured' },
+        { status: 503 }
+      );
+    }
+
+    // Batch translation
+    if (texts && Array.isArray(texts)) {
+      const results = await deeplClient.translateBatch(texts, targetLanguage, sourceLanguage);
+      return NextResponse.json({ translations: results });
+    }
+
+    // Single translation
+    const result = await deeplClient.translate(text, targetLanguage, sourceLanguage);
+    return NextResponse.json({ translation: result });
+  } catch (error) {
+    console.error('Translation error:', error);
+    return NextResponse.json(
+      { error: 'Failed to translate text' },
+      { status: 500 }
+    );
+  }
+}
+
+// GET /api/translate/usage - Get usage statistics
+export async function GET() {
+  try {
+    if (!deeplClient.isAvailable()) {
+      return NextResponse.json(
+        { error: 'DeepL API not configured' },
+        { status: 503 }
+      );
+    }
+
+    const usage = await deeplClient.getUsage();
+    return NextResponse.json(usage);
+  } catch (error) {
+    console.error('Usage fetch error:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch usage' },
+      { status: 500 }
+    );
+  }
+}

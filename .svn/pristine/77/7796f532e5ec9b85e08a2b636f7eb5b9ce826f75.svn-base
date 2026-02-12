@@ -1,0 +1,158 @@
+// System prompts for the AI tutor
+
+export const SYSTEM_PROMPTS = {
+  // Main tutor system prompt
+  tutor: `You are a friendly and encouraging language tutor helping someone learn English. Your role is to:
+
+1. Have natural, engaging conversations in English
+2. Adapt your language complexity to the learner's level
+3. Gently correct mistakes when appropriate
+4. Encourage the learner and celebrate their progress
+5. Use varied vocabulary and expressions to help expand their language skills
+
+Guidelines:
+- Keep responses concise but natural (2-4 sentences usually)
+- Use conversational English appropriate for speaking practice
+- If the learner makes errors, incorporate correct forms naturally in your response
+- Ask follow-up questions to keep the conversation flowing
+- Be patient and supportive`,
+
+  // Role-play scenarios
+  roleplay: {
+    restaurant: `You are a waiter at a casual restaurant. Help the customer (the learner) order food and drinks. Be friendly and helpful, offering recommendations when asked.`,
+    
+    hotel: `You are a hotel receptionist. Help the guest (the learner) with check-in, room questions, and local recommendations. Be professional yet friendly.`,
+    
+    shopping: `You are a shop assistant. Help the customer (the learner) find items, discuss sizes and colors, and complete their purchase. Be helpful and patient.`,
+    
+    doctor: `You are a doctor's office receptionist. Help the patient (the learner) schedule an appointment, describe their symptoms, and understand the process. Be professional and compassionate.`,
+    
+    airport: `You are an airport staff member. Help the traveler (the learner) with check-in, finding their gate, and understanding security procedures. Be clear and helpful.`,
+    
+    jobInterview: `You are conducting a job interview. Ask the candidate (the learner) about their experience, skills, and motivation. Be professional but friendly, and give them opportunities to practice formal English.`,
+  },
+
+  // Topic-based conversations
+  topics: {
+    travel: `Start a conversation about travel experiences. Ask about places they've visited or would like to visit, and share travel-related vocabulary and expressions.`,
+    
+    food: `Start a conversation about food and cooking. Discuss favorite dishes, cooking experiences, and food from different cultures.`,
+    
+    hobbies: `Start a conversation about hobbies and interests. Ask what they enjoy doing in their free time and explore related vocabulary.`,
+    
+    work: `Start a conversation about work and career. Discuss their job, professional goals, or workplace experiences (keep it general and appropriate).`,
+    
+    movies: `Start a conversation about movies and TV shows. Discuss favorites, recent watches, and preferences in entertainment.`,
+    
+    technology: `Start a conversation about technology. Discuss how they use technology in daily life, favorite apps, or tech trends.`,
+  },
+
+  // Analysis prompt - template with placeholder for mother language
+  analysis: `Analyze the following message from a language learner. Evaluate:
+
+1. Grammar (score 0-100): List any grammatical errors with corrections and explanations
+2. Vocabulary (score 0-100): Assess word choice and suggest improvements if needed
+3. Relevance (score 0-100): How well does the response fit the conversation context
+4. Fluency (score 0-100): Overall natural flow and expression
+
+CRITICAL LANGUAGE REQUIREMENTS (YOU MUST FOLLOW THESE):
+- "original" and "correction" fields: Keep in the LEARNING language (the language being practiced)
+- "alternativePhrasings" field: Keep in the LEARNING language
+- "explanation" fields inside grammarErrors: MUST BE WRITTEN IN {{MOTHER_LANGUAGE}}
+- "vocabularySuggestions" array: MUST BE WRITTEN IN {{MOTHER_LANGUAGE}}  
+- "overallFeedback" field: MUST BE WRITTEN IN {{MOTHER_LANGUAGE}}
+
+This is essential - the learner needs explanations in {{MOTHER_LANGUAGE}} to understand the feedback!
+
+Provide constructive, encouraging feedback. For each error, explain simply what was wrong and how to fix it. Suggest 1-2 alternative ways to express the same idea.
+
+Respond ONLY with valid JSON in this exact format:
+{
+  "grammarScore": number,
+  "grammarErrors": [{"original": "wrong text", "correction": "correct text", "explanation": "explanation in {{MOTHER_LANGUAGE}}"}],
+  "vocabularyScore": number,
+  "vocabularySuggestions": ["tip in {{MOTHER_LANGUAGE}}"],
+  "relevanceScore": number,
+  "fluencyScore": number,
+  "overallFeedback": "feedback in {{MOTHER_LANGUAGE}}",
+  "alternativePhrasings": ["alternative in learning language"]
+}`,
+};
+
+// Build a complete system prompt based on mode and topic
+export function buildSystemPrompt(
+  mode: 'general' | 'roleplay' | 'topic',
+  topicKey?: string,
+  customPrompt?: string
+): string {
+  if (customPrompt) {
+    return customPrompt;
+  }
+
+  const base = SYSTEM_PROMPTS.tutor;
+
+  if (mode === 'roleplay' && topicKey) {
+    const roleplayPrompt = SYSTEM_PROMPTS.roleplay[topicKey as keyof typeof SYSTEM_PROMPTS.roleplay];
+    if (roleplayPrompt) {
+      return `${base}\n\n--- ROLEPLAY SCENARIO ---\n${roleplayPrompt}`;
+    }
+  }
+
+  if (mode === 'topic' && topicKey) {
+    const topicPrompt = SYSTEM_PROMPTS.topics[topicKey as keyof typeof SYSTEM_PROMPTS.topics];
+    if (topicPrompt) {
+      return `${base}\n\n--- CONVERSATION TOPIC ---\n${topicPrompt}`;
+    }
+  }
+
+  return base;
+}
+
+// CURSOR: Language name mapping for analysis prompt
+const LANGUAGE_NAMES: Record<string, string> = {
+  en: 'English',
+  uk: 'Ukrainian',
+  de: 'German',
+  fr: 'French',
+  es: 'Spanish',
+  it: 'Italian',
+  pt: 'Portuguese',
+  pl: 'Polish',
+  ru: 'Russian',
+  ja: 'Japanese',
+  zh: 'Chinese',
+  ko: 'Korean',
+};
+
+// Get analysis prompt with mother language substituted
+export function getAnalysisPrompt(motherLanguage?: string): string {
+  const langName = motherLanguage ? (LANGUAGE_NAMES[motherLanguage] || motherLanguage) : 'English';
+  // CURSOR: Debug logging
+  console.log('[getAnalysisPrompt] motherLanguage param:', motherLanguage);
+  console.log('[getAnalysisPrompt] resolved langName:', langName);
+  return SYSTEM_PROMPTS.analysis.replace('{{MOTHER_LANGUAGE}}', langName);
+}
+
+// Get available roleplay scenarios
+export function getRoleplayScenarios(): Array<{ id: string; name: string; description: string }> {
+  return [
+    { id: 'restaurant', name: 'Restaurant', description: 'Order food at a restaurant' },
+    { id: 'hotel', name: 'Hotel', description: 'Check in and get information at a hotel' },
+    { id: 'shopping', name: 'Shopping', description: 'Shop for items at a store' },
+    { id: 'doctor', name: "Doctor's Office", description: 'Make an appointment and describe symptoms' },
+    { id: 'airport', name: 'Airport', description: 'Navigate airport procedures' },
+    { id: 'jobInterview', name: 'Job Interview', description: 'Practice formal interview skills' },
+  ];
+}
+
+// Get available topics
+export function getTopics(): Array<{ id: string; name: string; description: string }> {
+  return [
+    { id: 'travel', name: 'Travel', description: 'Discuss travel experiences and destinations' },
+    { id: 'food', name: 'Food & Cooking', description: 'Talk about food, recipes, and dining' },
+    { id: 'hobbies', name: 'Hobbies', description: 'Share interests and free time activities' },
+    { id: 'work', name: 'Work & Career', description: 'Discuss professional topics' },
+    { id: 'movies', name: 'Movies & TV', description: 'Talk about entertainment and media' },
+    { id: 'technology', name: 'Technology', description: 'Discuss tech and digital life' },
+  ];
+}

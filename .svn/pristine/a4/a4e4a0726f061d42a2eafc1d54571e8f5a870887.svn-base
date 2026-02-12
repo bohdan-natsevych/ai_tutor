@@ -1,0 +1,295 @@
+import type { AIProvider, AIModel, AIResponse, Analysis, ConversationContext, AIOptions, AIProviderStatus, RichTranslation } from '../types';
+import { getAnalysisPrompt, getRichTranslationPrompt } from '../prompts';
+
+// CURSOR: Ollama AI Provider - Local server running Ollama
+// Supports Chat Completions API (manual context management)
+// Requires Ollama to be running locally (default: http://localhost:11434)
+
+export class OllamaProvider implements AIProvider {
+  id = 'ollama';
+  name = 'Ollama (Local)';
+  type = 'local' as const;
+  contextMode = 'manual' as const;
+  
+  models: AIModel[] = [
+    { id: 'llama3.2', name: 'Llama 3.2', contextWindow: 128000, description: 'Latest Llama model' },
+    { id: 'llama3.1', name: 'Llama 3.1', contextWindow: 128000, description: 'Previous Llama model' },
+    { id: 'mistral', name: 'Mistral', contextWindow: 32000, description: 'Fast and capable' },
+    { id: 'gemma2', name: 'Gemma 2', contextWindow: 8192, description: 'Google Gemma model' },
+    { id: 'qwen2.5', name: 'Qwen 2.5', contextWindow: 128000, description: 'Alibaba Qwen model' },
+  ];
+
+  private baseUrl: string = 'http://localhost:11434';
+  private status: AIProviderStatus = {
+    initialized: false,
+    loading: false,
+  };
+
+  async initialize(): Promise<void> {
+    // CURSOR: Allow custom Ollama URL via environment variable
+    this.baseUrl = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
+    
+    // Check if Ollama is running by fetching available models
+    try {
+      this.status.loading = true;
+      const response = await fetch(`${this.baseUrl}/api/tags`, {
+        method: 'GET',
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        // CURSOR: Update models list with actually available models
+        if (data.models && Array.isArray(data.models)) {
+          const availableModels = data.models.map((m: { name: string }) => ({
+            id: m.name,
+            name: m.name,
+            contextWindow: 32000, // Default context window
+            description: 'Locally installed model',
+          }));
+          
+          if (availableModels.length > 0) {
+            this.models = availableModels;
+          }
+        }
+        
+        this.status = {
+          initialized: true,
+          loading: false,
+        };
+      } else {
+        this.status = {
+          initialized: false,
+          loading: false,
+          error: 'Failed to connect to Ollama server',
+        };
+      }
+    } catch (error) {
+      this.status = {
+        initialized: false,
+        loading: false,
+        error: 'Ollama server not available. Make sure Ollama is running.',
+      };
+    }
+  }
+
+  async chat(context: ConversationContext, message: string, options?: AIOptions): Promise<AIResponse> {
+    const model = options?.model || this.models[0]?.id || 'llama3.2';
+    
+    // CURSOR: Build messages array with full history (manual context management)
+    const messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [
+      { role: 'system', content: context.systemPrompt },
+    ];
+
+    // Add summary if available
+    if (context.summary) {
+      messages.push({
+        role: 'system',
+        content: `CONVERSATION SUMMARY (earlier messages):\n${context.summary}`,
+      });
+    }
+
+    // Add conversation history
+    messages.push(...context.messages);
+
+    // Add new user message
+    messages.push({ role: 'user', content: message });
+
+    try {
+      const response = await fetch(`${this.baseUrl}/api/chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model,
+          messages,
+          stream: false,
+          options: {
+            temperature: options?.temperature ?? 0.7,
+            num_predict: options?.maxTokens ?? 500,
+          },
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Ollama API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      return {
+        content: data.message?.content || '',
+        usage: data.eval_count ? {
+          promptTokens: data.prompt_eval_count || 0,
+          completionTokens: data.eval_count || 0,
+          totalTokens: (data.prompt_eval_count || 0) + (data.eval_count || 0),
+        } : undefined,
+      };
+    } catch (error) {
+      throw new Error(`Ollama chat failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  async analyze(context: ConversationContext, userMessage: string, options?: AIOptions): Promise<Analysis> {
+    const model = options?.model || this.models[0]?.id || 'llama3.2';
+    
+    // Build context for analysis
+    const recentMessages = context.messages.slice(-10);
+    
+    // CURSOR: Pass both languages for proper analysis
+    const prompt = `${getAnalysisPrompt(options?.motherLanguage, options?.learningLanguage)}
+
+${context.summary ? `EARLIER CONVERSATION SUMMARY:\n${context.summary}\n` : ''}
+
+RECENT CONVERSATION:
+${recentMessages.map(m => `${m.role}: ${m.content}`).join('\n')}
+
+MESSAGE TO ANALYZE:
+${userMessage}
+
+Respond with valid JSON only.`;
+
+    try {
+      const response = await fetch(`${this.baseUrl}/api/chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model,
+          messages: [
+            { 
+              role: 'system', 
+              content: 'You are a language learning analysis assistant. Respond ONLY with valid JSON, no other text.' 
+            },
+            { role: 'user', content: prompt },
+          ],
+          stream: false,
+          format: 'json',
+          options: {
+            temperature: 0.3,
+            num_predict: 1000,
+          },
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Ollama API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const content = data.message?.content || '{}';
+      
+      try {
+        return JSON.parse(content) as Analysis;
+      } catch {
+        return this.getDefaultAnalysis();
+      }
+    } catch (error) {
+      console.error('Ollama analysis failed:', error);
+      return this.getDefaultAnalysis();
+    }
+  }
+
+  private getDefaultAnalysis(): Analysis {
+    return {
+      grammarScore: 70,
+      grammarErrors: [],
+      vocabularyScore: 70,
+      vocabularySuggestions: [],
+      relevanceScore: 80,
+      fluencyScore: 70,
+      overallFeedback: 'Unable to perform detailed analysis.',
+      alternativePhrasings: [],
+    };
+  }
+
+  // CURSOR: Rich translation with definition, usage examples, and type classification
+  async richTranslate(
+    text: string,
+    learningLanguage: string,
+    motherLanguage: string,
+    options?: AIOptions
+  ): Promise<RichTranslation> {
+    const model = options?.model || this.models[0]?.id || 'llama3.2';
+    const prompt = getRichTranslationPrompt(text, learningLanguage, motherLanguage);
+
+    try {
+      const response = await fetch(`${this.baseUrl}/api/chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model,
+          messages: [
+            { 
+              role: 'system', 
+              content: 'You are a language learning assistant providing detailed translations. Respond ONLY with valid JSON.' 
+            },
+            { role: 'user', content: prompt },
+          ],
+          stream: false,
+          format: 'json',
+          options: {
+            temperature: 0.3,
+            num_predict: options?.maxTokens ?? 500,
+          },
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Ollama API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const content = data.message?.content || '{}';
+      
+      try {
+        const parsed = JSON.parse(content);
+        return {
+          translation: parsed.translation || text,
+          type: parsed.type || 'word',
+          definition: parsed.definition || '',
+          usageExamples: Array.isArray(parsed.usageExamples) ? parsed.usageExamples : [],
+          notes: parsed.notes || undefined,
+          formality: parsed.formality || 'neutral',
+        };
+      } catch {
+        return this.getDefaultRichTranslation(text);
+      }
+    } catch (error) {
+      console.error('Ollama richTranslate failed:', error);
+      return this.getDefaultRichTranslation(text);
+    }
+  }
+
+  private getDefaultRichTranslation(text: string): RichTranslation {
+    return {
+      translation: text,
+      type: 'word',
+      definition: '',
+      usageExamples: [],
+      formality: 'neutral',
+    };
+  }
+
+  async isAvailable(): Promise<boolean> {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/tags`, {
+        method: 'GET',
+        signal: AbortSignal.timeout(2000), // 2 second timeout
+      });
+      return response.ok;
+    } catch {
+      return false;
+    }
+  }
+
+  getStatus(): AIProviderStatus {
+    return this.status;
+  }
+}
+
+// Export singleton instance
+export const ollamaProvider = new OllamaProvider();

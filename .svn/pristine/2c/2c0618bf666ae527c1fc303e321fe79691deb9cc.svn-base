@@ -1,0 +1,171 @@
+'use client';
+
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
+import { Separator } from '@/components/ui/separator';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { LanguageSelector } from '@/components/settings/LanguageSelector';
+import { VoiceSelector } from '@/components/settings/VoiceSelector';
+import { AIProviderSelector } from '@/components/settings/AIProviderSelector';
+import { ContextSettings } from '@/components/settings/ContextSettings';
+import { PromptEditor } from '@/components/settings/PromptEditor';
+import { useSettingsStore } from '@/stores/settingsStore';
+
+export default function SettingsPage() {
+  const { ui, setUISettings, resetToDefaults } = useSettingsStore();
+
+  return (
+    <div className="min-h-screen gradient-bg">
+      {/* Header */}
+      <header className="border-b bg-background/80 backdrop-blur-sm sticky top-0 z-10">
+        <div className="container mx-auto px-4 py-4 flex items-center gap-4">
+          <Link href="/">
+            <Button variant="ghost" size="icon">
+              <ArrowLeftIcon className="h-5 w-5" />
+            </Button>
+          </Link>
+          <div>
+            <h1 className="text-xl font-bold">Settings</h1>
+            <p className="text-xs text-muted-foreground">Customize your learning experience</p>
+          </div>
+        </div>
+      </header>
+
+      {/* Settings content */}
+      <main className="container mx-auto px-4 py-8 max-w-2xl space-y-6">
+        {/* Language Settings */}
+        <LanguageSelector />
+
+        {/* Voice Settings */}
+        <VoiceSelector />
+
+        {/* AI Settings */}
+        <AIProviderSelector />
+
+        {/* Context & Summarization Settings */}
+        <ContextSettings />
+
+        {/* Custom Prompts */}
+        <PromptEditor />
+
+        {/* UI Settings */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Interface Settings</CardTitle>
+            <CardDescription>
+              Customize the user interface
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Listen-first mode */}
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <label className="text-sm font-medium">Listen-First Mode</label>
+                <p className="text-xs text-muted-foreground">
+                  AI message text is hidden until audio playback completes
+                </p>
+              </div>
+              <Switch
+                checked={ui.listenFirstMode}
+                onCheckedChange={(checked) => setUISettings({ listenFirstMode: checked })}
+              />
+            </div>
+
+            <Separator />
+
+            {/* Theme */}
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <label className="text-sm font-medium">Theme</label>
+                <p className="text-xs text-muted-foreground">
+                  Choose your preferred color scheme
+                </p>
+              </div>
+              <div className="flex gap-2">
+                {(['light', 'dark', 'system'] as const).map((theme) => (
+                  <Button
+                    key={theme}
+                    variant={ui.theme === theme ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setUISettings({ theme })}
+                    className="capitalize"
+                  >
+                    {theme === 'light' ? '☀️' : theme === 'dark' ? '🌙' : '💻'} {theme}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* API Keys Info */}
+        <Card>
+          <CardHeader>
+            <CardTitle>API Configuration</CardTitle>
+            <CardDescription>
+              API keys are configured in .env.local file
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="p-3 bg-muted rounded-lg text-sm">
+              <p className="font-medium mb-2">Required API Keys:</p>
+              <ul className="space-y-1 text-muted-foreground">
+                <li>• <code className="text-xs bg-background px-1 rounded">OPENAI_API_KEY</code> - For AI conversations</li>
+                <li>• <code className="text-xs bg-background px-1 rounded">DEEPL_API_KEY</code> - For translations (optional)</li>
+              </ul>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Add these keys to your <code className="bg-muted px-1 rounded">.env.local</code> file and restart the server.
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* Reset */}
+        <Card className="border-destructive/50">
+          <CardHeader>
+            <CardTitle className="text-destructive">Reset Settings</CardTitle>
+            <CardDescription>
+              Reset all settings to their default values
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button 
+              variant="destructive" 
+              onClick={() => {
+                if (confirm('Are you sure you want to reset all settings?')) {
+                  resetToDefaults();
+                }
+              }}
+            >
+              Reset to Defaults
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* About */}
+        <Card>
+          <CardContent className="pt-6 text-center">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-white font-bold text-xl mx-auto mb-3">
+              L
+            </div>
+            <h3 className="font-semibold">Lanqua</h3>
+            <p className="text-sm text-muted-foreground mb-2">AI Language Tutoring Service</p>
+            <p className="text-xs text-muted-foreground">
+              Practice speaking with AI-powered voice conversations
+            </p>
+          </CardContent>
+        </Card>
+      </main>
+    </div>
+  );
+}
+
+function ArrowLeftIcon({ className }: { className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <line x1="19" y1="12" x2="5" y2="12" />
+      <polyline points="12 19 5 12 12 5" />
+    </svg>
+  );
+}

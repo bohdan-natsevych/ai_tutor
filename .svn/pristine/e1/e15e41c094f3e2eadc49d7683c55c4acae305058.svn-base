@@ -1,0 +1,234 @@
+import OpenAI from 'openai';
+import type { AIProvider, AIModel, AIResponse, Analysis, ConversationContext, AIOptions, AIProviderStatus, RichTranslation } from '../types';
+import { getAnalysisPrompt, getRichTranslationPrompt } from '../prompts';
+
+// OpenAI Chat Completions Provider (We manage conversation history)
+export class OpenAIChatProvider implements AIProvider {
+  id = 'openai-chat';
+  name = 'OpenAI (Chat)';
+  type = 'cloud' as const;
+  contextMode = 'manual' as const;
+  
+  models: AIModel[] = [
+    { id: 'gpt-4o-mini', name: 'GPT-4o Mini', contextWindow: 128000, description: 'Fast and affordable' },
+    { id: 'gpt-4o', name: 'GPT-4o', contextWindow: 128000, description: 'Most capable' },
+    { id: 'gpt-4-turbo', name: 'GPT-4 Turbo', contextWindow: 128000, description: 'High performance' },
+    { id: 'gpt-3.5-turbo', name: 'GPT-3.5 Turbo', contextWindow: 16385, description: 'Legacy, fast' },
+  ];
+
+  private client: OpenAI | null = null;
+  private status: AIProviderStatus = {
+    initialized: false,
+    loading: false,
+  };
+
+  async initialize(): Promise<void> {
+    const apiKey = process.env.OPENAI_API_KEY;
+    
+    if (!apiKey) {
+      this.status = {
+        initialized: false,
+        loading: false,
+        error: 'OpenAI API key not configured',
+      };
+      return;
+    }
+
+    this.client = new OpenAI({ apiKey });
+    this.status = {
+      initialized: true,
+      loading: false,
+    };
+  }
+
+  async chat(context: ConversationContext, message: string, options?: AIOptions): Promise<AIResponse> {
+    if (!this.client) {
+      throw new Error('OpenAI client not initialized');
+    }
+
+    // Build messages array with full history
+    const messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [
+      { role: 'system', content: context.systemPrompt },
+    ];
+
+    // Add summary if available
+    if (context.summary) {
+      messages.push({
+        role: 'system',
+        content: `CONVERSATION SUMMARY (earlier messages):\n${context.summary}`,
+      });
+    }
+
+    // Add conversation history
+    messages.push(...context.messages);
+
+    // Add new user message
+    messages.push({ role: 'user', content: message });
+
+    const response = await this.client.chat.completions.create({
+      model: options?.model || 'gpt-4o-mini',
+      messages,
+      temperature: options?.temperature ?? 0.7,
+      max_tokens: options?.maxTokens ?? 500,
+    });
+
+    const choice = response.choices[0];
+    
+    return {
+      content: choice.message.content || '',
+      usage: response.usage ? {
+        promptTokens: response.usage.prompt_tokens,
+        completionTokens: response.usage.completion_tokens,
+        totalTokens: response.usage.total_tokens,
+      } : undefined,
+    };
+  }
+
+  async analyze(context: ConversationContext, userMessage: string, options?: AIOptions): Promise<Analysis> {
+    if (!this.client) {
+      throw new Error('OpenAI client not initialized');
+    }
+
+    // Build context for analysis
+    const recentMessages = context.messages.slice(-10); // Last 10 messages for context
+    
+    // CURSOR: Pass mother language for explanations in user's native language
+    const prompt = `${getAnalysisPrompt(options?.motherLanguage)}
+
+${context.summary ? `EARLIER CONVERSATION SUMMARY:\n${context.summary}\n` : ''}
+
+RECENT CONVERSATION:
+${recentMessages.map(m => `${m.role}: ${m.content}`).join('\n')}
+
+MESSAGE TO ANALYZE:
+${userMessage}`;
+
+    const response = await this.client.chat.completions.create({
+      model: options?.model || 'gpt-4o-mini',
+      messages: [
+        { role: 'system', content: 'You are a language learning analysis assistant. Respond only with valid JSON.' },
+        { role: 'user', content: prompt },
+      ],
+      temperature: 0.3,
+      max_tokens: 1000,
+      response_format: { type: 'json_object' },
+    });
+
+    const content = response.choices[0].message.content || '{}';
+    
+    // CURSOR: Log the raw response for debugging
+    console.log('[OpenAI Analysis] Raw response:', content);
+    
+    try {
+      const parsed = JSON.parse(content);
+      console.log('[OpenAI Analysis] Parsed keys:', Object.keys(parsed));
+      
+      // CURSOR: Normalize the response - AI might use different field names or structures
+      const analysis: Analysis = {
+        grammarScore: parsed.grammarScore ?? parsed.grammar_score ?? parsed.grammar ?? 70,
+        grammarErrors: Array.isArray(parsed.grammarErrors) ? parsed.grammarErrors 
+          : Array.isArray(parsed.grammar_errors) ? parsed.grammar_errors 
+          : Array.isArray(parsed.errors) ? parsed.errors 
+          : [],
+        vocabularyScore: parsed.vocabularyScore ?? parsed.vocabulary_score ?? parsed.vocabulary ?? 70,
+        vocabularySuggestions: Array.isArray(parsed.vocabularySuggestions) ? parsed.vocabularySuggestions
+          : Array.isArray(parsed.vocabulary_suggestions) ? parsed.vocabulary_suggestions
+          : Array.isArray(parsed.suggestions) ? parsed.suggestions
+          : [],
+        relevanceScore: parsed.relevanceScore ?? parsed.relevance_score ?? parsed.relevance ?? 80,
+        fluencyScore: parsed.fluencyScore ?? parsed.fluency_score ?? parsed.fluency ?? 70,
+        overallFeedback: parsed.overallFeedback ?? parsed.overall_feedback ?? parsed.feedback ?? 'Good effort!',
+        alternativePhrasings: Array.isArray(parsed.alternativePhrasings) ? parsed.alternativePhrasings
+          : Array.isArray(parsed.alternative_phrasings) ? parsed.alternative_phrasings
+          : Array.isArray(parsed.alternatives) ? parsed.alternatives
+          : [],
+      };
+      
+      console.log('[OpenAI Analysis] Normalized analysis:', analysis);
+      return analysis;
+    } catch (e) {
+      // CURSOR: Log parse error for debugging
+      console.error('[OpenAI Analysis] JSON parse failed:', e);
+      console.error('[OpenAI Analysis] Content was:', content);
+      return {
+        grammarScore: 70,
+        grammarErrors: [],
+        vocabularyScore: 70,
+        vocabularySuggestions: [],
+        relevanceScore: 80,
+        fluencyScore: 70,
+        overallFeedback: 'Unable to parse detailed analysis.',
+        alternativePhrasings: [],
+      };
+    }
+  }
+
+  // CURSOR: Rich translation with definition, usage examples, and type classification
+  async richTranslate(
+    text: string,
+    sourceLanguage: string,
+    targetLanguage: string,
+    options?: AIOptions
+  ): Promise<RichTranslation> {
+    if (!this.client) {
+      throw new Error('OpenAI client not initialized');
+    }
+
+    const prompt = getRichTranslationPrompt(text, sourceLanguage, targetLanguage);
+
+    const response = await this.client.chat.completions.create({
+      model: options?.model || 'gpt-4o-mini',
+      messages: [
+        { role: 'system', content: 'You are a language learning assistant providing detailed translations. Respond only with valid JSON.' },
+        { role: 'user', content: prompt },
+      ],
+      temperature: 0.3,
+      max_tokens: options?.maxTokens ?? 500,
+      response_format: { type: 'json_object' },
+    });
+
+    const content = response.choices[0].message.content || '{}';
+    
+    console.log('[OpenAI RichTranslate] Raw response:', content);
+    
+    try {
+      const parsed = JSON.parse(content);
+      
+      // CURSOR: Normalize response with fallbacks
+      const richTranslation: RichTranslation = {
+        translation: parsed.translation || text,
+        type: parsed.type || 'word',
+        definition: parsed.definition || parsed.translation || '',
+        usageExamples: Array.isArray(parsed.usageExamples) ? parsed.usageExamples
+          : Array.isArray(parsed.usage_examples) ? parsed.usage_examples
+          : Array.isArray(parsed.examples) ? parsed.examples
+          : [],
+        notes: parsed.notes || undefined,
+        formality: parsed.formality || 'neutral',
+      };
+      
+      return richTranslation;
+    } catch (e) {
+      console.error('[OpenAI RichTranslate] JSON parse failed:', e);
+      // CURSOR: Return minimal fallback
+      return {
+        translation: text,
+        type: 'word',
+        definition: '',
+        usageExamples: [],
+        formality: 'neutral',
+      };
+    }
+  }
+
+  async isAvailable(): Promise<boolean> {
+    return !!process.env.OPENAI_API_KEY;
+  }
+
+  getStatus(): AIProviderStatus {
+    return this.status;
+  }
+}
+
+// Export singleton instance
+export const openAIChatProvider = new OpenAIChatProvider();

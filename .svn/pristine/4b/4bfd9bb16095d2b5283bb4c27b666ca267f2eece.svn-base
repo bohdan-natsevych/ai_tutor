@@ -1,0 +1,168 @@
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+
+// Types
+export interface LanguageSettings {
+  learning: string;
+  dialect: string;
+  mother: string;
+}
+
+export interface TTSSettings {
+  provider: string;
+  voice: string;
+  speed: number;
+}
+
+export interface STTSettings {
+  provider: string;
+}
+
+export interface AISettings {
+  provider: string;
+  model: string;
+  openaiMode: 'chat' | 'assistant';
+  openaiAssistantId?: string;
+}
+
+export interface ContextSettings {
+  recentWindowSize: number;
+  summarizeAfterMessages: number;
+  summarizationProvider: 'same' | 'local';
+  localSummarizationModel?: string;
+  disableSummarization: boolean;
+}
+
+export interface UISettings {
+  listenFirstMode: boolean;
+  theme: 'light' | 'dark' | 'system';
+}
+
+// CURSOR: Translation mode - simple (DeepL only) or rich (LLM with definitions/usage)
+export interface TranslationSettings {
+  mode: 'simple' | 'rich';
+}
+
+export interface CustomPrompts {
+  system?: string;
+  analysis?: string;
+  topics: Record<string, string>;
+}
+
+export interface AppSettings {
+  language: LanguageSettings;
+  tts: TTSSettings;
+  stt: STTSettings;
+  ai: AISettings;
+  context: ContextSettings;
+  ui: UISettings;
+  translation: TranslationSettings;
+  prompts: CustomPrompts;
+}
+
+// Default settings
+const defaultSettings: AppSettings = {
+  language: {
+    learning: 'en',
+    dialect: 'american',
+    mother: 'uk', // Ukrainian
+  },
+  tts: {
+    provider: 'kokoro',
+    voice: 'am_echo',
+    speed: 0.85,  // CURSOR: Slower default for beginners (0.5-2.0 range)
+  },
+  stt: {
+    provider: 'web-speech-stt',
+  },
+  ai: {
+    provider: 'openai-chat',
+    model: 'gpt-4o-mini',
+    openaiMode: 'chat',
+  },
+  context: {
+    recentWindowSize: 20,
+    summarizeAfterMessages: 10,
+    summarizationProvider: 'same',
+    disableSummarization: false,
+  },
+  ui: {
+    listenFirstMode: true,
+    theme: 'system',
+  },
+  translation: {
+    mode: 'simple', // CURSOR: DeepL-only is default
+  },
+  prompts: {
+    topics: {},
+  },
+};
+
+interface SettingsState extends AppSettings {
+  // Actions
+  setLanguageSettings: (settings: Partial<LanguageSettings>) => void;
+  setTTSSettings: (settings: Partial<TTSSettings>) => void;
+  setSTTSettings: (settings: Partial<STTSettings>) => void;
+  setAISettings: (settings: Partial<AISettings>) => void;
+  setContextSettings: (settings: Partial<ContextSettings>) => void;
+  setUISettings: (settings: Partial<UISettings>) => void;
+  setTranslationSettings: (settings: Partial<TranslationSettings>) => void;
+  setCustomPrompt: (key: string, prompt: string) => void;
+  resetToDefaults: () => void;
+}
+
+export const useSettingsStore = create<SettingsState>()(
+  persist(
+    (set) => ({
+      ...defaultSettings,
+
+      setLanguageSettings: (settings) =>
+        set((state) => ({
+          language: { ...state.language, ...settings },
+        })),
+
+      setTTSSettings: (settings) =>
+        set((state) => ({
+          tts: { ...state.tts, ...settings },
+        })),
+
+      setSTTSettings: (settings) =>
+        set((state) => ({
+          stt: { ...state.stt, ...settings },
+        })),
+
+      setAISettings: (settings) =>
+        set((state) => ({
+          ai: { ...state.ai, ...settings },
+        })),
+
+      setContextSettings: (settings) =>
+        set((state) => ({
+          context: { ...state.context, ...settings },
+        })),
+
+      setUISettings: (settings) =>
+        set((state) => ({
+          ui: { ...state.ui, ...settings },
+        })),
+
+      setTranslationSettings: (settings) =>
+        set((state) => ({
+          translation: { ...state.translation, ...settings },
+        })),
+
+      setCustomPrompt: (key, prompt) =>
+        set((state) => ({
+          prompts: {
+            ...state.prompts,
+            [key]: prompt,
+          },
+        })),
+
+      resetToDefaults: () => set(defaultSettings),
+    }),
+    {
+      name: 'lanqua-settings',
+    }
+  )
+);

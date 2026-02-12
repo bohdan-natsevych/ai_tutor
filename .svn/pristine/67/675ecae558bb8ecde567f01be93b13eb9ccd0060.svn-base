@@ -1,0 +1,84 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { getChat, updateMessage, getMessage } from '@/lib/db/queries';
+import { aiManager } from '@/lib/ai/manager';
+import { contextManager } from '@/lib/ai/context';
+import { buildSystemPrompt } from '@/lib/ai/prompts';
+
+// Lazy initialization flag
+let initialized = false;
+
+async function ensureInitialized() {
+  if (!initialized) {
+    await aiManager.initialize('openai-chat');
+    initialized = true;
+  }
+}
+
+// POST /api/analyze - Analyze a user message
+export async function POST(request: NextRequest) {
+  await ensureInitialized();
+  try {
+    const body = await request.json();
+    const { chatId, messageId, content, motherLanguage } = body;
+
+    if (!chatId || (!messageId && !content)) {
+      return NextResponse.json(
+        { error: 'chatId and either messageId or content required' },
+        { status: 400 }
+      );
+    }
+
+    const chat = await getChat(chatId);
+    if (!chat) {
+      return NextResponse.json({ error: 'Chat not found' }, { status: 404 });
+    }
+
+    // Get the content to analyze
+    let textToAnalyze = content;
+    if (messageId && !content) {
+      const message = await getMessage(messageId);
+      if (!message) {
+        return NextResponse.json({ error: 'Message not found' }, { status: 404 });
+      }
+      textToAnalyze = message.content;
+    }
+
+    // CURSOR: Build context with safe JSON parsing
+    let topicDetails: Record<string, unknown> = {};
+    try {
+      topicDetails = chat.topicDetails ? JSON.parse(chat.topicDetails) : {};
+    } catch {
+      console.warn('Failed to parse topicDetails for chat:', chatId);
+    }
+    const systemPrompt = buildSystemPrompt(
+      chat.topicType as 'general' | 'roleplay' | 'topic',
+      topicDetails.topicKey
+    );
+    
+    const context = await contextManager.buildContext(chatId, systemPrompt, chat.threadId || undefined);
+
+    // CURSOR: Perform analysis with mother language for explanations
+    console.log('[Analyze API] Starting analysis for:', textToAnalyze.substring(0, 50) + '...');
+    console.log('[Analyze API] Mother language:', motherLanguage || 'uk');
+    
+    const analysis = await aiManager.analyze(context, textToAnalyze, { motherLanguage: motherLanguage || 'uk' });
+    
+    console.log('[Analyze API] Analysis result keys:', Object.keys(analysis));
+    console.log('[Analyze API] Grammar errors count:', analysis.grammarErrors?.length ?? 'undefined');
+
+    // If messageId provided, save analysis to message
+    if (messageId) {
+      await updateMessage(messageId, {
+        analysis: JSON.stringify(analysis),
+      });
+    }
+
+    return NextResponse.json({ analysis });
+  } catch (error) {
+    console.error('Analyze error:', error);
+    return NextResponse.json(
+      { error: 'Failed to analyze message' },
+      { status: 500 }
+    );
+  }
+}

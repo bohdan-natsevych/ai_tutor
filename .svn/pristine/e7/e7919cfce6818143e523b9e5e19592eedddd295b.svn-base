@@ -1,0 +1,165 @@
+'use client';
+
+import { useState } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useSettingsStore } from '@/stores/settingsStore';
+import { SYSTEM_PROMPTS } from '@/lib/ai/prompts';
+
+// CURSOR: PromptEditor Component
+// Allows users to customize AI prompts for different conversation types
+
+export function PromptEditor() {
+  const { prompts, setCustomPrompt } = useSettingsStore();
+  const [editedPrompts, setEditedPrompts] = useState({
+    system: prompts.system || '',
+    analysis: prompts.analysis || '',
+  });
+
+  const handleSave = (key: 'system' | 'analysis') => {
+    if (editedPrompts[key].trim()) {
+      setCustomPrompt(key, editedPrompts[key]);
+    } else {
+      // Clear custom prompt to use default
+      setCustomPrompt(key, '');
+    }
+  };
+
+  const handleReset = (key: 'system' | 'analysis') => {
+    setEditedPrompts(prev => ({ ...prev, [key]: '' }));
+    setCustomPrompt(key, '');
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Custom Prompts</CardTitle>
+        <CardDescription>
+          Customize how the AI tutor behaves and analyzes your messages
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Tabs defaultValue="system" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="system">System Prompt</TabsTrigger>
+            <TabsTrigger value="analysis">Analysis Prompt</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="system" className="mt-4 space-y-4">
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <label className="text-sm font-medium">Tutor Personality</label>
+                {prompts.system && (
+                  <span className="text-xs text-green-600">Custom</span>
+                )}
+              </div>
+              <Textarea
+                placeholder="Enter custom system prompt or leave empty for default..."
+                value={editedPrompts.system}
+                onChange={(e) => setEditedPrompts(prev => ({ ...prev, system: e.target.value }))}
+                rows={8}
+                className="font-mono text-sm"
+              />
+              <p className="text-xs text-muted-foreground">
+                This prompt defines how the AI tutor behaves and responds during conversations.
+              </p>
+            </div>
+
+            <div className="flex gap-2">
+              <Button 
+                onClick={() => handleSave('system')} 
+                size="sm"
+                disabled={editedPrompts.system === (prompts.system || '')}
+              >
+                Save Changes
+              </Button>
+              <Button 
+                onClick={() => handleReset('system')} 
+                size="sm" 
+                variant="outline"
+                disabled={!prompts.system && !editedPrompts.system}
+              >
+                Reset to Default
+              </Button>
+              <Button
+                onClick={() => setEditedPrompts(prev => ({ ...prev, system: SYSTEM_PROMPTS.tutor }))}
+                size="sm"
+                variant="ghost"
+              >
+                View Default
+              </Button>
+            </div>
+
+            {/* Default prompt preview */}
+            <details className="text-sm">
+              <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
+                Show default system prompt
+              </summary>
+              <pre className="mt-2 p-3 bg-muted rounded-lg text-xs overflow-auto whitespace-pre-wrap">
+                {SYSTEM_PROMPTS.tutor}
+              </pre>
+            </details>
+          </TabsContent>
+
+          <TabsContent value="analysis" className="mt-4 space-y-4">
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <label className="text-sm font-medium">Analysis Instructions</label>
+                {prompts.analysis && (
+                  <span className="text-xs text-green-600">Custom</span>
+                )}
+              </div>
+              <Textarea
+                placeholder="Enter custom analysis prompt or leave empty for default..."
+                value={editedPrompts.analysis}
+                onChange={(e) => setEditedPrompts(prev => ({ ...prev, analysis: e.target.value }))}
+                rows={8}
+                className="font-mono text-sm"
+              />
+              <p className="text-xs text-muted-foreground">
+                This prompt defines how the AI analyzes your messages for grammar, vocabulary, etc.
+              </p>
+            </div>
+
+            <div className="flex gap-2">
+              <Button 
+                onClick={() => handleSave('analysis')} 
+                size="sm"
+                disabled={editedPrompts.analysis === (prompts.analysis || '')}
+              >
+                Save Changes
+              </Button>
+              <Button 
+                onClick={() => handleReset('analysis')} 
+                size="sm" 
+                variant="outline"
+                disabled={!prompts.analysis && !editedPrompts.analysis}
+              >
+                Reset to Default
+              </Button>
+              <Button
+                onClick={() => setEditedPrompts(prev => ({ ...prev, analysis: SYSTEM_PROMPTS.analysis }))}
+                size="sm"
+                variant="ghost"
+              >
+                View Default
+              </Button>
+            </div>
+
+            {/* Default prompt preview */}
+            <details className="text-sm">
+              <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
+                Show default analysis prompt
+              </summary>
+              <pre className="mt-2 p-3 bg-muted rounded-lg text-xs overflow-auto whitespace-pre-wrap">
+                {SYSTEM_PROMPTS.analysis}
+              </pre>
+            </details>
+          </TabsContent>
+        </Tabs>
+      </CardContent>
+    </Card>
+  );
+}

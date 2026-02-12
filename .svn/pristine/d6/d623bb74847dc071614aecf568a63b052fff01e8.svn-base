@@ -1,0 +1,373 @@
+import type { AIProvider, AIModel, AIResponse, Analysis, ConversationContext, AIOptions, AIProviderStatus, RichTranslation } from '../types';
+import { getAnalysisPrompt, getRichTranslationPrompt } from '../prompts';
+
+// CURSOR: WebLLM AI Provider - Runs LLMs directly in the browser via WebGPU
+// Great for free, private AI without cloud costs
+// Requires WebGPU support (Chrome 113+, Edge 113+)
+
+export class WebLLMProvider implements AIProvider {
+  id = 'webllm';
+  name = 'WebLLM (Browser)';
+  type = 'local' as const;
+  contextMode = 'manual' as const;
+  
+  // CURSOR: List of WebLLM-compatible models
+  // Smaller models load faster and use less memory
+  models: AIModel[] = [
+    { id: 'Llama-3.2-1B-Instruct-q4f32_1-MLC', name: 'Llama 3.2 1B', contextWindow: 4096, description: 'Tiny, fast (~500MB)' },
+    { id: 'Llama-3.2-3B-Instruct-q4f32_1-MLC', name: 'Llama 3.2 3B', contextWindow: 8192, description: 'Small, balanced (~1.5GB)' },
+    { id: 'Qwen2.5-1.5B-Instruct-q4f32_1-MLC', name: 'Qwen 2.5 1.5B', contextWindow: 4096, description: 'Multilingual (~800MB)' },
+    { id: 'SmolLM2-1.7B-Instruct-q4f32_1-MLC', name: 'SmolLM2 1.7B', contextWindow: 4096, description: 'Efficient (~900MB)' },
+    { id: 'Phi-3.5-mini-instruct-q4f32_1-MLC', name: 'Phi 3.5 Mini', contextWindow: 4096, description: 'Microsoft model (~2GB)' },
+  ];
+
+  private engine: unknown = null;
+  private currentModelId: string | null = null;
+  private status: AIProviderStatus = {
+    initialized: false,
+    loading: false,
+  };
+
+  async initialize(): Promise<void> {
+    if (typeof window === 'undefined') {
+      this.status = {
+        initialized: false,
+        loading: false,
+        error: 'WebLLM requires browser environment',
+      };
+      return;
+    }
+
+    // Check WebGPU support
+    const gpu = (navigator as Navigator & { gpu?: unknown }).gpu;
+    if (!gpu) {
+      this.status = {
+        initialized: false,
+        loading: false,
+        error: 'WebGPU not supported in this browser',
+      };
+      return;
+    }
+
+    // CURSOR: Mark as initialized but model not loaded yet
+    // Model loading happens on first use to avoid blocking page load
+    this.status = {
+      initialized: true,
+      loading: false,
+    };
+  }
+
+  // CURSOR: Load a specific model (called before first use)
+  private async loadModel(modelId: string): Promise<void> {
+    if (this.engine && this.currentModelId === modelId) {
+      return; // Already loaded
+    }
+
+    this.status.loading = true;
+
+    try {
+      // CURSOR: Dynamically import WebLLM to avoid SSR issues (it only works in browser)
+      const webllm = await import('@mlc-ai/web-llm');
+      
+      // Create engine with progress callback
+      this.engine = await webllm.CreateMLCEngine(modelId, {
+        initProgressCallback: (progress: { text: string; progress: number }) => {
+          console.log(`[WebLLM] ${progress.text} (${Math.round(progress.progress * 100)}%)`);
+        },
+      });
+
+      this.currentModelId = modelId;
+      this.status = {
+        initialized: true,
+        loading: false,
+      };
+    } catch (error) {
+      this.status = {
+        initialized: false,
+        loading: false,
+        error: error instanceof Error ? error.message : 'Failed to load WebLLM model',
+      };
+      throw error;
+    }
+  }
+
+  async chat(context: ConversationContext, message: string, options?: AIOptions): Promise<AIResponse> {
+    const modelId = options?.model || this.models[0].id;
+    
+    // Load model if needed
+    await this.loadModel(modelId);
+    
+    if (!this.engine) {
+      throw new Error('WebLLM engine not initialized');
+    }
+
+    // CURSOR: Build messages array with full history (manual context management)
+    const messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [
+      { role: 'system', content: context.systemPrompt },
+    ];
+
+    // Add summary if available
+    if (context.summary) {
+      messages.push({
+        role: 'system',
+        content: `CONVERSATION SUMMARY (earlier messages):\n${context.summary}`,
+      });
+    }
+
+    // Add conversation history
+    messages.push(...context.messages);
+
+    // Add new user message
+    messages.push({ role: 'user', content: message });
+
+    try {
+      const engine = this.engine as {
+        chat: {
+          completions: {
+            create: (params: {
+              messages: typeof messages;
+              temperature?: number;
+              max_tokens?: number;
+            }) => Promise<{
+              choices: Array<{ message: { content: string } }>;
+              usage?: { prompt_tokens: number; completion_tokens: number; total_tokens: number };
+            }>;
+          };
+        };
+      };
+
+      const response = await engine.chat.completions.create({
+        messages,
+        temperature: options?.temperature ?? 0.7,
+        max_tokens: options?.maxTokens ?? 500,
+      });
+
+      const choice = response.choices[0];
+      
+      return {
+        content: choice.message.content || '',
+        usage: response.usage ? {
+          promptTokens: response.usage.prompt_tokens,
+          completionTokens: response.usage.completion_tokens,
+          totalTokens: response.usage.total_tokens,
+        } : undefined,
+      };
+    } catch (error) {
+      throw new Error(`WebLLM chat failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  async analyze(context: ConversationContext, userMessage: string, options?: AIOptions): Promise<Analysis> {
+    const modelId = options?.model || this.models[0].id;
+    
+    // Load model if needed
+    await this.loadModel(modelId);
+    
+    if (!this.engine) {
+      throw new Error('WebLLM engine not initialized');
+    }
+
+    // Build context for analysis
+    const recentMessages = context.messages.slice(-10);
+    
+    // CURSOR: Pass mother language for explanations in user's native language
+    const prompt = `${getAnalysisPrompt(options?.motherLanguage)}
+
+${context.summary ? `EARLIER CONVERSATION SUMMARY:\n${context.summary}\n` : ''}
+
+RECENT CONVERSATION:
+${recentMessages.map(m => `${m.role}: ${m.content}`).join('\n')}
+
+MESSAGE TO ANALYZE:
+${userMessage}
+
+Respond with valid JSON only, no other text.`;
+
+    try {
+      const engine = this.engine as {
+        chat: {
+          completions: {
+            create: (params: {
+              messages: Array<{ role: string; content: string }>;
+              temperature?: number;
+              max_tokens?: number;
+            }) => Promise<{
+              choices: Array<{ message: { content: string } }>;
+            }>;
+          };
+        };
+      };
+
+      const response = await engine.chat.completions.create({
+        messages: [
+          { 
+            role: 'system', 
+            content: 'You are a language learning analysis assistant. Respond ONLY with valid JSON, no other text.' 
+          },
+          { role: 'user', content: prompt },
+        ],
+        temperature: 0.3,
+        max_tokens: 1000,
+      });
+
+      const content = response.choices[0].message.content || '{}';
+      
+      // CURSOR: Try to extract JSON from response (WebLLM may include extra text)
+      try {
+        // Try direct parse first
+        return JSON.parse(content) as Analysis;
+      } catch {
+        // Try to find JSON in the response
+        const jsonMatch = content.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          return JSON.parse(jsonMatch[0]) as Analysis;
+        }
+        return this.getDefaultAnalysis();
+      }
+    } catch (error) {
+      console.error('WebLLM analysis failed:', error);
+      return this.getDefaultAnalysis();
+    }
+  }
+
+  private getDefaultAnalysis(): Analysis {
+    return {
+      grammarScore: 70,
+      grammarErrors: [],
+      vocabularyScore: 70,
+      vocabularySuggestions: [],
+      relevanceScore: 80,
+      fluencyScore: 70,
+      overallFeedback: 'Unable to perform detailed analysis.',
+      alternativePhrasings: [],
+    };
+  }
+
+  // CURSOR: Rich translation with definition, usage examples, and type classification
+  async richTranslate(
+    text: string,
+    sourceLanguage: string,
+    targetLanguage: string,
+    options?: AIOptions
+  ): Promise<RichTranslation> {
+    const modelId = options?.model || this.models[0].id;
+    
+    await this.loadModel(modelId);
+    
+    if (!this.engine) {
+      throw new Error('WebLLM engine not initialized');
+    }
+
+    const prompt = getRichTranslationPrompt(text, sourceLanguage, targetLanguage);
+
+    try {
+      const engine = this.engine as {
+        chat: {
+          completions: {
+            create: (params: {
+              messages: Array<{ role: string; content: string }>;
+              temperature?: number;
+              max_tokens?: number;
+            }) => Promise<{
+              choices: Array<{ message: { content: string } }>;
+            }>;
+          };
+        };
+      };
+
+      const response = await engine.chat.completions.create({
+        messages: [
+          { 
+            role: 'system', 
+            content: 'You are a language learning assistant providing detailed translations. Respond ONLY with valid JSON.' 
+          },
+          { role: 'user', content: prompt },
+        ],
+        temperature: 0.3,
+        max_tokens: options?.maxTokens ?? 500,
+      });
+
+      const content = response.choices[0].message.content || '{}';
+      
+      try {
+        // Try direct parse first
+        const parsed = JSON.parse(content);
+        return {
+          translation: parsed.translation || text,
+          type: parsed.type || 'word',
+          definition: parsed.definition || '',
+          usageExamples: Array.isArray(parsed.usageExamples) ? parsed.usageExamples : [],
+          notes: parsed.notes || undefined,
+          formality: parsed.formality || 'neutral',
+        };
+      } catch {
+        // Try to find JSON in the response
+        const jsonMatch = content.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          const parsed = JSON.parse(jsonMatch[0]);
+          return {
+            translation: parsed.translation || text,
+            type: parsed.type || 'word',
+            definition: parsed.definition || '',
+            usageExamples: Array.isArray(parsed.usageExamples) ? parsed.usageExamples : [],
+            notes: parsed.notes || undefined,
+            formality: parsed.formality || 'neutral',
+          };
+        }
+        return this.getDefaultRichTranslation(text);
+      }
+    } catch (error) {
+      console.error('WebLLM richTranslate failed:', error);
+      return this.getDefaultRichTranslation(text);
+    }
+  }
+
+  private getDefaultRichTranslation(text: string): RichTranslation {
+    return {
+      translation: text,
+      type: 'word',
+      definition: '',
+      usageExamples: [],
+      formality: 'neutral',
+    };
+  }
+
+  async isAvailable(): Promise<boolean> {
+    // CURSOR: WebLLM only works in browser with WebGPU
+    if (typeof window === 'undefined') return false;
+    
+    const gpu = (navigator as Navigator & { gpu?: { requestAdapter: () => Promise<unknown> } }).gpu;
+    if (!gpu) return false;
+    
+    try {
+      const adapter = await gpu.requestAdapter();
+      return adapter !== null;
+    } catch {
+      return false;
+    }
+  }
+
+  getStatus(): AIProviderStatus {
+    return this.status;
+  }
+
+  // CURSOR: Cleanup WebGPU resources
+  cleanup(): void {
+    if (this.engine) {
+      // WebLLM engine cleanup
+      const engine = this.engine as { unload?: () => Promise<void> };
+      if (engine.unload) {
+        engine.unload().catch(console.error);
+      }
+    }
+    this.engine = null;
+    this.currentModelId = null;
+    this.status = {
+      initialized: false,
+      loading: false,
+    };
+  }
+}
+
+// Export singleton instance
+export const webLLMProvider = new WebLLMProvider();

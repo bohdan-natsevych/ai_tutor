@@ -1,0 +1,166 @@
+'use client';
+
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import type { MessageAnalysis } from '@/stores/chatStore';
+
+interface MessageAnalysisPopupProps {
+  analysis: MessageAnalysis;
+  className?: string;
+}
+
+export function MessageAnalysisPopup({ analysis, className = '' }: MessageAnalysisPopupProps) {
+  // CURSOR: Defensive defaults for potentially undefined fields
+  const grammarErrors = analysis.grammarErrors ?? [];
+  const vocabularySuggestions = analysis.vocabularySuggestions ?? [];
+  const alternativePhrasings = analysis.alternativePhrasings ?? [];
+  const grammarScore = analysis.grammarScore ?? 70;
+  const vocabularyScore = analysis.vocabularyScore ?? 70;
+  const relevanceScore = analysis.relevanceScore ?? 80;
+  const fluencyScore = analysis.fluencyScore ?? 70;
+  const overallFeedback = analysis.overallFeedback ?? 'Analysis complete.';
+
+  const getScoreColor = (score: number) => {
+    if (score >= 80) return 'bg-green-500';
+    if (score >= 60) return 'bg-yellow-500';
+    return 'bg-red-500';
+  };
+
+  const getScoreLabel = (score: number) => {
+    if (score >= 90) return 'Excellent';
+    if (score >= 80) return 'Great';
+    if (score >= 70) return 'Good';
+    if (score >= 60) return 'Fair';
+    return 'Needs Work';
+  };
+
+  const averageScore = Math.round(
+    (grammarScore + vocabularyScore + relevanceScore + fluencyScore) / 4
+  );
+
+  return (
+    <div className={`w-full overflow-hidden ${className}`}>
+      <div className="p-4 pb-2 border-b bg-background">
+        <div className="flex items-center justify-between">
+          <span className="font-semibold">Message Analysis</span>
+          <Badge variant="secondary" className="text-lg">
+            {averageScore}/100
+          </Badge>
+        </div>
+      </div>
+      
+      <ScrollArea className="h-[350px]">
+        <div className="p-4">
+          {/* Score Overview */}
+          <div className="grid grid-cols-2 gap-3 mb-4">
+            <ScoreCard
+              label="Grammar"
+              score={grammarScore}
+              color={getScoreColor(grammarScore)}
+            />
+            <ScoreCard
+              label="Vocabulary"
+              score={vocabularyScore}
+              color={getScoreColor(vocabularyScore)}
+            />
+            <ScoreCard
+              label="Relevance"
+              score={relevanceScore}
+              color={getScoreColor(relevanceScore)}
+            />
+            <ScoreCard
+              label="Fluency"
+              score={fluencyScore}
+              color={getScoreColor(fluencyScore)}
+            />
+          </div>
+
+          <Separator className="my-4" />
+
+          {/* Grammar Errors */}
+          {grammarErrors.length > 0 && (
+            <div className="mb-4">
+              <h4 className="font-semibold mb-2 flex items-center gap-2">
+                <span className="w-5 h-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center">!</span>
+                <span>Grammar Corrections</span>
+              </h4>
+              <div className="space-y-2">
+                {grammarErrors.map((error, index) => (
+                  <div key={index} className="p-3 bg-muted rounded-lg">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="line-through text-muted-foreground">{error.original}</span>
+                      <span className="text-green-600">-&gt;</span>
+                      <span className="font-medium text-green-600">{error.correction}</span>
+                    </div>
+                    <p className="text-sm text-muted-foreground">{error.explanation}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Vocabulary Suggestions */}
+          {vocabularySuggestions.length > 0 && (
+            <div className="mb-4">
+              <h4 className="font-semibold mb-2 flex items-center gap-2">
+                <span className="w-5 h-5 rounded-full bg-blue-500 text-white text-xs flex items-center justify-center">i</span>
+                <span>Vocabulary Tips</span>
+              </h4>
+              <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
+                {vocabularySuggestions.map((suggestion, index) => (
+                  <li key={index}>{suggestion}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Alternative Phrasings */}
+          {alternativePhrasings.length > 0 && (
+            <div className="mb-4">
+              <h4 className="font-semibold mb-2 flex items-center gap-2">
+                <span className="w-5 h-5 rounded-full bg-purple-500 text-white text-xs flex items-center justify-center">+</span>
+                <span>Alternative Phrasings</span>
+              </h4>
+              <div className="space-y-2">
+                {alternativePhrasings.map((phrase, index) => (
+                  <div key={index} className="p-2 bg-purple-50 dark:bg-purple-950/20 rounded border border-purple-200 dark:border-purple-800">
+                    <p className="text-sm italic">{phrase}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <Separator className="my-4" />
+
+          {/* Overall Feedback */}
+          <div className="pb-2">
+            <h4 className="font-semibold mb-2 flex items-center gap-2">
+              <span className="w-5 h-5 rounded-full bg-green-500 text-white text-xs flex items-center justify-center">*</span>
+              <span>{getScoreLabel(averageScore)}!</span>
+            </h4>
+            <p className="text-sm text-muted-foreground">{overallFeedback}</p>
+          </div>
+        </div>
+      </ScrollArea>
+    </div>
+  );
+}
+
+function ScoreCard({ label, score, color }: { label: string; score: number; color: string }) {
+  return (
+    <div className="p-3 bg-muted rounded-lg">
+      <div className="flex justify-between items-center mb-1">
+        <span className="text-sm font-medium">{label}</span>
+        <span className="text-sm font-bold">{score}</span>
+      </div>
+      <div className="h-2 bg-background rounded-full overflow-hidden">
+        <div
+          className={`h-full transition-all duration-500 ${color}`}
+          style={{ width: `${score}%` }}
+        />
+      </div>
+    </div>
+  );
+}

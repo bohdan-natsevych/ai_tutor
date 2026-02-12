@@ -1,0 +1,41 @@
+import type { AIProvider } from '../types';
+import { openAIChatProvider } from './openai-chat.provider';
+import { openAIAssistantProvider } from './openai-assistant.provider';
+import { ollamaProvider } from './ollama.provider';
+import { webLLMProvider } from './webllm.provider';
+
+// Registry of all available AI providers
+export const aiProviders: Record<string, AIProvider> = {
+  'openai-chat': openAIChatProvider,
+  'openai-assistant': openAIAssistantProvider,
+  'ollama': ollamaProvider,
+  'webllm': webLLMProvider,
+};
+
+// Get provider by ID
+export function getAIProvider(id: string): AIProvider | undefined {
+  return aiProviders[id];
+}
+
+// Get all providers
+export function getAllAIProviders(): AIProvider[] {
+  return Object.values(aiProviders);
+}
+
+// Get active (non-deprecated) providers
+export function getActiveAIProviders(): AIProvider[] {
+  return Object.values(aiProviders).filter(p => !p.deprecated);
+}
+
+// Get default provider
+export async function getDefaultAIProvider(): Promise<AIProvider> {
+  // Try providers in order of preference
+  if (await openAIChatProvider.isAvailable()) {
+    return openAIChatProvider;
+  }
+  if (await ollamaProvider.isAvailable()) {
+    return ollamaProvider;
+  }
+  // Default to OpenAI Chat even if not available (will fail on use with clear error)
+  return openAIChatProvider;
+}
