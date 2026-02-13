@@ -6,28 +6,30 @@ import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { useSettingsStore } from '@/stores/settingsStore';
+import { useTranslation } from '@/lib/i18n/useTranslation';
 
 // CURSOR: Context Settings Component
 // Configures conversation context management and summarization behavior
 
 export function ContextSettings() {
   const { context, setContextSettings } = useSettingsStore();
+  const { t } = useTranslation();
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Context & Summarization</CardTitle>
+        <CardTitle>{t('settings.context.title')}</CardTitle>
         <CardDescription>
-          Control how conversation history is managed for AI context
+          {t('settings.context.description')}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Disable summarization toggle */}
         <div className="flex items-center justify-between">
           <div className="space-y-0.5">
-            <label className="text-sm font-medium">Disable Summarization</label>
+            <label className="text-sm font-medium">{t('settings.context.disableSummarization')}</label>
             <p className="text-xs text-muted-foreground">
-              Always send full conversation history (uses more tokens)
+              {t('settings.context.disableSummarizationDesc')}
             </p>
           </div>
           <Switch
@@ -44,8 +46,8 @@ export function ContextSettings() {
             {/* Recent window size */}
             <div className="space-y-3">
               <div className="flex justify-between">
-                <label className="text-sm font-medium">Recent Messages Window</label>
-                <span className="text-sm text-muted-foreground">{context.recentWindowSize} messages</span>
+                <label className="text-sm font-medium">{t('settings.context.recentWindow')}</label>
+                <span className="text-sm text-muted-foreground">{context.recentWindowSize} {t('settings.context.messages')}</span>
               </div>
               <Slider
                 value={[context.recentWindowSize]}
@@ -55,7 +57,7 @@ export function ContextSettings() {
                 onValueChange={([value]) => setContextSettings({ recentWindowSize: value })}
               />
               <p className="text-xs text-muted-foreground">
-                Number of recent messages kept in full detail (not summarized)
+                {t('settings.context.recentWindowDesc')}
               </p>
             </div>
 
@@ -64,8 +66,8 @@ export function ContextSettings() {
             {/* Summarize after N messages */}
             <div className="space-y-3">
               <div className="flex justify-between">
-                <label className="text-sm font-medium">Summarize Every</label>
-                <span className="text-sm text-muted-foreground">{context.summarizeAfterMessages} messages</span>
+                <label className="text-sm font-medium">{t('settings.context.summarizeEvery')}</label>
+                <span className="text-sm text-muted-foreground">{context.summarizeAfterMessages} {t('settings.context.messages')}</span>
               </div>
               <Slider
                 value={[context.summarizeAfterMessages]}
@@ -75,7 +77,7 @@ export function ContextSettings() {
                 onValueChange={([value]) => setContextSettings({ summarizeAfterMessages: value })}
               />
               <p className="text-xs text-muted-foreground">
-                Trigger summarization when this many messages fall outside the recent window
+                {t('settings.context.summarizeEveryDesc')}
               </p>
             </div>
 
@@ -83,33 +85,33 @@ export function ContextSettings() {
 
             {/* Summarization provider */}
             <div className="space-y-2">
-              <label className="text-sm font-medium">Summarization Provider</label>
+              <label className="text-sm font-medium">{t('settings.context.summarizationProvider')}</label>
               <Select
                 value={context.summarizationProvider}
                 onValueChange={(value: 'same' | 'local') => setContextSettings({ summarizationProvider: value })}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select provider" />
+                  <SelectValue placeholder={t('settings.context.selectProvider')} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="same">
                     <div className="flex flex-col">
-                      <span>Same as Chat</span>
-                      <span className="text-xs text-muted-foreground">Use your chat AI provider</span>
+                      <span>{t('settings.context.sameAsChat')}</span>
+                      <span className="text-xs text-muted-foreground">{t('settings.context.sameAsChatDesc')}</span>
                     </div>
                   </SelectItem>
                   <SelectItem value="local">
                     <div className="flex flex-col">
-                      <span>Local (WebLLM/Ollama)</span>
-                      <span className="text-xs text-muted-foreground">Free, uses local processing</span>
+                      <span>{t('settings.context.local')}</span>
+                      <span className="text-xs text-muted-foreground">{t('settings.context.localDesc')}</span>
                     </div>
                   </SelectItem>
                 </SelectContent>
               </Select>
               <p className="text-xs text-muted-foreground">
                 {context.summarizationProvider === 'local' 
-                  ? 'Summaries will be generated locally for free (requires WebLLM or Ollama)'
-                  : 'Summaries will use your selected chat AI provider (may incur costs)'}
+                  ? t('settings.context.localProviderNote')
+                  : t('settings.context.sameProviderNote')}
               </p>
             </div>
           </>
@@ -117,10 +119,10 @@ export function ContextSettings() {
 
         {/* Token savings estimate */}
         <div className="p-3 bg-muted rounded-lg">
-          <h4 className="text-sm font-medium mb-1">Estimated Token Savings</h4>
+          <h4 className="text-sm font-medium mb-1">{t('settings.context.tokenSavings')}</h4>
           <p className="text-xs text-muted-foreground">
             {context.disableSummarization 
-              ? 'No savings - full history sent each time'
+              ? t('settings.context.noSavings')
               : `With window size ${context.recentWindowSize}: ~50-70% token reduction for long conversations`}
           </p>
         </div>

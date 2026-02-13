@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { MessageAnalysisPopup } from './MessageAnalysis';
 import { useChatStore } from '@/stores/chatStore';
 import { useSettingsStore } from '@/stores/settingsStore';
+import { useTranslation } from '@/lib/i18n/useTranslation';
 
 export function AnalysisPanel() {
   const analysisPanelOpen = useChatStore((s) => s.analysisPanelOpen);
@@ -13,6 +14,7 @@ export function AnalysisPanel() {
   const messages = useChatStore((s) => s.messages);
   const setAnalysisPanelOpen = useChatStore((s) => s.setAnalysisPanelOpen);
   const language = useSettingsStore((s) => s.language);
+  const { t, lang } = useTranslation();
 
   // Find the message whose analysis to display
   const targetMessage = useMemo(() => {
@@ -45,26 +47,18 @@ export function AnalysisPanel() {
 
   return (
     <div className="w-[380px] shrink-0 border-l bg-background flex flex-col h-full overflow-hidden">
-      {/* Panel header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b bg-background">
-        <div className="flex items-center gap-2 min-w-0">
-          <AnalysisIcon className="h-4 w-4 text-primary shrink-0" />
-          <span className="font-semibold text-sm truncate">Analysis</span>
-        </div>
-        <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => setAnalysisPanelOpen(false)}>
-          <CloseIcon className="h-4 w-4" />
-        </Button>
-      </div>
+      {/* Panel header removed as per user request */}
+
 
       {/* Message indicator */}
       {targetMessage && (
         <div className="px-4 py-2 border-b bg-muted/50">
           <div className="flex items-center gap-2">
             <Badge variant="outline" className="shrink-0 text-xs">
-              Message #{userMessageIndex}
+              {t('settings.context.messages')} #{userMessageIndex}
             </Badge>
             <span className="text-xs text-muted-foreground truncate">
-              {formatTime(targetMessage.createdAt)}
+              {formatTime(targetMessage.createdAt, lang)}
             </span>
           </div>
           <p className="text-xs text-muted-foreground mt-1 line-clamp-2 italic">
@@ -84,14 +78,13 @@ export function AnalysisPanel() {
         ) : targetMessage ? (
           <div className="flex flex-col items-center justify-center py-12 px-4 text-center text-muted-foreground">
             <AnalysisIcon className="h-8 w-8 mb-3 opacity-40" />
-            <p className="text-sm">No analysis available for this message.</p>
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center py-12 px-4 text-center text-muted-foreground">
             <AnalysisIcon className="h-8 w-8 mb-3 opacity-40" />
-            <p className="text-sm">Send a message to see analysis here.</p>
+            <p className="text-sm">{t('chat.analysis.startPrompt')}</p>
             <p className="text-xs mt-1 opacity-70">
-              Analysis will appear automatically after each message, or click &quot;Analyze&quot; on any user message.
+              {t('chat.analysis.autoPrompt')}
             </p>
           </div>
         )}
@@ -100,13 +93,14 @@ export function AnalysisPanel() {
   );
 }
 
-function formatTime(date: Date): string {
-  return new Intl.DateTimeFormat('en-US', {
+function formatTime(date: Date, locale: string): string {
+  return new Intl.DateTimeFormat(locale, {
     hour: 'numeric',
     minute: '2-digit',
     hour12: true,
   }).format(new Date(date));
 }
+
 
 function AnalysisIcon({ className }: { className?: string }) {
   return (
@@ -117,6 +111,7 @@ function AnalysisIcon({ className }: { className?: string }) {
     </svg>
   );
 }
+
 
 function CloseIcon({ className }: { className?: string }) {
   return (

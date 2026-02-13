@@ -5,8 +5,8 @@ import { v4 as uuidv4 } from 'uuid';
 
 // ============= CHAT OPERATIONS =============
 
-export async function createChat(data: Omit<NewChat, 'id' | 'createdAt' | 'updatedAt'>): Promise<Chat> {
-  const id = uuidv4();
+export async function createChat(data: Omit<NewChat, 'id' | 'createdAt' | 'updatedAt'>, existingId?: string): Promise<Chat> {
+  const id = existingId || uuidv4();
   const now = new Date();
   
   await db.insert(chats).values({
@@ -41,8 +41,8 @@ export async function deleteChat(id: string): Promise<void> {
 
 // ============= MESSAGE OPERATIONS =============
 
-export async function createMessage(data: Omit<NewMessage, 'id' | 'createdAt'>): Promise<Message> {
-  const id = uuidv4();
+export async function createMessage(data: Omit<NewMessage, 'id' | 'createdAt'>, existingId?: string): Promise<Message> {
+  const id = existingId || uuidv4();
   const now = new Date();
   
   await db.insert(messages).values({

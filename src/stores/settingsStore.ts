@@ -21,6 +21,7 @@ export interface STTSettings {
 export interface AISettings {
   provider: string;
   model: string;
+  textModel: string;
   openaiMode: 'chat' | 'assistant';
   openaiAssistantId?: string;
 }
@@ -36,6 +37,7 @@ export interface ContextSettings {
 export interface UISettings {
   listenFirstMode: boolean;
   theme: 'light' | 'dark' | 'system';
+  interfaceLanguage: string; // 'auto' = use mother language, or explicit code like 'en', 'uk'
 }
 
 // CURSOR: Translation mode - simple (DeepL only) or rich (LLM with definitions/usage)
@@ -69,15 +71,16 @@ const defaultSettings: AppSettings = {
   },
   tts: {
     provider: 'kokoro',
-    voice: 'am_echo',
-    speed: 0.85,  // CURSOR: Slower default for beginners (0.5-2.0 range)
+    voice: 'af_heart',
+    speed: 1,  // CURSOR: Slower default for beginners (0.5-2.0 range)
   },
   stt: {
     provider: 'web-speech-stt',
   },
   ai: {
     provider: 'openai-chat',
-    model: 'gpt-4o-audio-preview',
+    model: 'gpt-audio',
+    textModel: 'gpt-5.2',
     openaiMode: 'chat',
   },
   context: {
@@ -89,6 +92,7 @@ const defaultSettings: AppSettings = {
   ui: {
     listenFirstMode: true,
     theme: 'system',
+    interfaceLanguage: 'auto',
   },
   translation: {
     mode: 'simple', // CURSOR: DeepL-only is default
@@ -163,13 +167,25 @@ export const useSettingsStore = create<SettingsState>()(
     }),
     {
       name: 'lanqua-settings',
-      version: 1,
+      version: 3,
       migrate: (persisted: unknown, version: number) => {
         const state = persisted as AppSettings;
         if (version === 0) {
           // v0 → v1: Ensure AI model is audio-capable (old default was gpt-4o-mini)
           if (state.ai && !state.ai.model.includes('audio')) {
             state.ai.model = 'gpt-4o-audio-preview';
+          }
+        }
+        if (version < 2) {
+          // v1 → v2: Add text model setting
+          if (state.ai && !state.ai.textModel) {
+            state.ai.textModel = 'gpt-4o-mini';
+          }
+        }
+        if (version < 3) {
+          // v2 → v3: Add interface language setting
+          if (state.ui && !(state.ui as Record<string, unknown>).interfaceLanguage) {
+            (state.ui as Record<string, unknown>).interfaceLanguage = 'auto';
           }
         }
         return state;

@@ -57,10 +57,6 @@ export async function GET(request: NextRequest) {
 // POST /api/chat - Create new chat or send message
 export async function POST(request: NextRequest) {
   try {
-    // Debug: Log environment
-    console.log('[Chat API] DATABASE_URL configured:', !!process.env.DATABASE_URL);
-    console.log('[Chat API] Database type:', process.env.DATABASE_URL?.substring(0, 10));
-    
     const contentType = request.headers.get('content-type') || '';
     const isFormData = contentType.includes('multipart/form-data');
     let body: Record<string, unknown> = {};
@@ -83,7 +79,7 @@ export async function POST(request: NextRequest) {
       body = await request.json();
     }
 
-    const { action, aiProvider, aiModel } = body as { action?: string; aiProvider?: string; aiModel?: string };
+    const { action, aiProvider, aiModel, aiTextModel } = body as { action?: string; aiProvider?: string; aiModel?: string; aiTextModel?: string };
     
     // CURSOR: Initialize with provider/model from request (from user settings)
     try {
@@ -108,10 +104,15 @@ export async function POST(request: NextRequest) {
     }
 
     if (action === 'create') {
-      // Create new chat
+      // Create new chat - DON'T save to DB yet, just generate the data
       const { title, topicType, topicKey, language, dialect, aiMode } = body as Record<string, string | undefined>;
+      const { v4: uuidv4 } = await import('uuid');
+      const chatId = uuidv4();
+      const messageId = uuidv4();
+      const now = new Date();
       
-      const chat = await createChat({
+      const chat = {
+        id: chatId,
         title: title || 'New Conversation',
         topicType: (topicType as 'general' | 'roleplay' | 'topic') || 'general',
         topicDetails: topicKey ? JSON.stringify({ topicKey }) : undefined,
@@ -119,28 +120,36 @@ export async function POST(request: NextRequest) {
         dialect: dialect || 'american',
         aiProvider: aiProvider || 'openai-chat',
         aiMode: (aiMode as 'chat' | 'assistant') || 'chat',
-      });
+        createdAt: now,
+        updatedAt: now,
+        threadId: null,
+      };
 
       // Generate opening message from AI
       const systemPrompt = buildSystemPrompt((topicType as 'general' | 'roleplay' | 'topic') || 'general', topicKey, undefined, language || 'en');
-      const context = await contextManager.buildContext(chat.id, systemPrompt);
+      const context = await contextManager.buildContext(chatId, systemPrompt);
       
       const openingPrompt = topicType === 'roleplay'
-        ? 'Start the roleplay scenario with an appropriate opening.'
+        ? 'You are starting roleplay scenario with an appropriate opening. User didn\'t say anything yet, so just set the scene. Speak in the learning language.'
         : topicType === 'topic'
-        ? 'Start a conversation about the given topic.'
-        : 'Greet the learner warmly and ask how they are doing today.';
+        ? 'You are starting this conversation about the given topic. User didn\'t say anything yet, so just set the scene. Speak in the learning language.'
+        : 'You are starting this conversation. The learner has not said anything yet. Greet them warmly and ask an ONE simple question to get them talking. Speak in the learning language.';
       
-      const response = await aiManager.generate(context, openingPrompt);
+      const response = await aiManager.generate(context, openingPrompt, { model: aiTextModel || aiModel });
       
-      // Save the AI's opening message
-      const aiMessage = await createMessage({
-        chatId: chat.id,
-        role: 'assistant',
+      // Create opening message object (DON'T save to DB yet)
+      const aiMessage = {
+        id: messageId,
+        chatId: chatId,
+        role: 'assistant' as const,
         content: response.content,
-      });
+        createdAt: now,
+        audioBlob: null,
+        audioFormat: null,
+      };
 
       return NextResponse.json({ 
+        pending: true,
         chat, 
         openingMessage: {
           ...aiMessage,
@@ -154,6 +163,37 @@ export async function POST(request: NextRequest) {
       const { chatId, content, motherLanguage } = body as { chatId?: string; content?: string; motherLanguage?: string };
       if (!chatId || (!content && !audioBuffer)) {
         return NextResponse.json({ error: 'chatId and either content or audio required' }, { status: 400 });
+      }
+      
+      // Check if this is the first message with pending chat data
+      let pendingChatRaw = (body as any).pendingChat;
+      let pendingOpeningMessageRaw = (body as any).pendingOpeningMessage;
+      
+      // Handle FormData case where these come as JSON strings
+      if (typeof pendingChatRaw === 'string') {
+        try { pendingChatRaw = JSON.parse(pendingChatRaw); } catch {}
+      }
+      if (typeof pendingOpeningMessageRaw === 'string') {
+        try { pendingOpeningMessageRaw = JSON.parse(pendingOpeningMessageRaw); } catch {}
+      }
+      
+      // If pending data exists, save the chat and opening message first
+      if (pendingChatRaw && pendingOpeningMessageRaw) {
+        await createChat({
+          title: pendingChatRaw.title,
+          topicType: pendingChatRaw.topicType,
+          topicDetails: pendingChatRaw.topicDetails,
+          language: pendingChatRaw.language,
+          dialect: pendingChatRaw.dialect,
+          aiProvider: pendingChatRaw.aiProvider,
+          aiMode: pendingChatRaw.aiMode,
+        }, pendingChatRaw.id);
+        
+        await createMessage({
+          chatId: pendingChatRaw.id,
+          role: 'assistant',
+          content: pendingOpeningMessageRaw.content,
+        }, pendingOpeningMessageRaw.id);
       }
       
       const chat = await getChat(chatId);

@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { useChatStore } from '@/stores/chatStore';
 import { sttManager } from '@/lib/stt/manager';
+import { useTranslation } from '@/lib/i18n/useTranslation';
 
 interface VoiceRecorderProps {
   // CURSOR: Sends transcript (from Web Speech API) + raw audio blob
@@ -27,6 +28,7 @@ export function VoiceRecorder({
   const transcript = useChatStore((state) => state.transcript);
   const setRecording = useChatStore((state) => state.setRecording);
   const setTranscript = useChatStore((state) => state.setTranscript);
+  const { t } = useTranslation();
 
   // CURSOR: Track accumulated transcript from all segments
   const accumulatedTranscriptRef = useRef('');
@@ -115,7 +117,7 @@ export function VoiceRecorder({
       };
       recorder.onerror = () => {
         cleanupAudioStream();
-        setError('Recording failed');
+        setError(t('voice.recordingFailed'));
         pendingSendRef.current = false;
       };
       recorder.start();
@@ -123,7 +125,7 @@ export function VoiceRecorder({
       cleanupAudioStream();
       sttManager.stopListening();
       setRecording(false);
-      setError('Failed to access microphone');
+      setError(t('voice.failedMic'));
     }
   };
 
@@ -134,7 +136,7 @@ export function VoiceRecorder({
         await sttManager.initialize();
         setIsInitialized(true);
       } catch (e) {
-        setError('Failed to initialize speech recognition');
+        setError(t('voice.failedInit'));
         console.error(e);
       }
     };
@@ -217,7 +219,7 @@ export function VoiceRecorder({
       <div className={`flex items-center gap-2 text-destructive text-sm ${className}`}>
         <span>{error}</span>
         <Button variant="ghost" size="sm" onClick={() => setError(null)}>
-          Retry
+          {t('common.retry')}
         </Button>
       </div>
     );
@@ -229,7 +231,7 @@ export function VoiceRecorder({
         <div className="flex items-center gap-2 p-2 bg-muted rounded-lg">
           <div className="h-3 w-3 bg-red-500 rounded-full animate-pulse shrink-0" />
           <span className="text-sm flex-1 line-clamp-2 break-words">
-            {transcript || 'Listening...'}
+            {transcript || t('voice.listening')}
           </span>
         </div>
       )}
@@ -244,12 +246,12 @@ export function VoiceRecorder({
         {isRecording ? (
           <>
             <StopIcon className="h-5 w-5" />
-            Stop Recording
+            {t('voice.stopRecording')}
           </>
         ) : (
           <>
             <MicIcon className="h-5 w-5" />
-            Start Recording
+            {t('voice.startRecording')}
           </>
         )}
       </Button>

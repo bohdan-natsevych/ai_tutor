@@ -148,7 +148,7 @@ const initialState = {
   currentlyPlayingId: null,
   isPaused: false,
   currentWordIndex: -1, // CURSOR: -1 means no word is highlighted
-  analysisPanelOpen: false,
+  analysisPanelOpen: true,
   analysisPanelMessageId: null as string | null,
   suggestions: [] as ReplySuggestion[],
   previousSuggestions: [] as ReplySuggestion[],

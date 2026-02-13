@@ -25,7 +25,7 @@ async function ensureInitialized(providerId?: string, model?: string) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { chatId, count = 3, aiProvider, aiModel } = body;
+    const { chatId, count = 3, aiProvider, aiModel, chatContext, recentMessages } = body;
     
     // CURSOR: Initialize with provider/model from request (from user settings)
     await ensureInitialized(aiProvider, aiModel);
@@ -34,43 +34,73 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Chat ID required' }, { status: 400 });
     }
     
+    // Try to get chat from DB, fall back to inline context for pending chats
     const chat = await getChat(chatId);
-    if (!chat) {
+    
+    let topicType: string;
+    let learningLanguage: string;
+    let topicDetails: Record<string, unknown> = {};
+    let conversationMessages: { role: string; content: string }[];
+    
+    if (chat) {
+      // Chat exists in DB - use DB data
+      topicType = chat.topicType || 'general';
+      learningLanguage = chat.language || 'en';
+      try {
+        topicDetails = chat.topicDetails ? JSON.parse(chat.topicDetails) : {};
+      } catch {
+        console.warn('Failed to parse topicDetails for chat:', chatId);
+      }
+      const messages = await getChatMessages(chatId);
+      conversationMessages = messages.slice(-6).map(m => ({
+        role: m.role,
+        content: m.content,
+      }));
+    } else if (chatContext && recentMessages) {
+      // Pending chat - use inline context from client
+      topicType = chatContext.topicType || 'general';
+      learningLanguage = chatContext.language || 'en';
+      try {
+        topicDetails = chatContext.topicDetails ? JSON.parse(chatContext.topicDetails) : {};
+      } catch {
+        topicDetails = {};
+      }
+      conversationMessages = recentMessages;
+    } else {
       return NextResponse.json({ error: 'Chat not found' }, { status: 404 });
     }
     
-    // CURSOR: Get recent messages for context
-    const messages = await getChatMessages(chatId);
-    
-    // CURSOR: Build context with the conversation history
-    let topicDetails: Record<string, unknown> = {};
-    try {
-      topicDetails = chat.topicDetails ? JSON.parse(chat.topicDetails) : {};
-    } catch {
-      console.warn('Failed to parse topicDetails for chat:', chatId);
-    }
-    
-    // CURSOR: Get learning language from chat
-    const learningLanguage = chat.language || 'en';
-    
     const systemPrompt = buildSystemPrompt(
-      chat.topicType as 'general' | 'roleplay' | 'topic',
+      topicType as 'general' | 'roleplay' | 'topic',
       topicDetails.topicKey as string | undefined,
       undefined,
       learningLanguage
     );
     
-    const context = await contextManager.buildContext(chatId, systemPrompt, chat.threadId || undefined);
+    // Build context - use DB context if available, otherwise build from inline messages
+    let context;
+    if (chat) {
+      context = await contextManager.buildContext(chatId, systemPrompt, chat.threadId || undefined);
+    } else {
+      context = {
+        chatId,
+        messages: conversationMessages.map(m => ({
+          role: m.role as 'user' | 'assistant',
+          content: m.content,
+        })),
+        systemPrompt,
+      };
+    }
     
-    // CURSOR: Get the suggestion prompt with learning language
+    // CURSOR: Get suggestion prompt with learning language
     const suggestionPrompt = getSuggestionPrompt(count, learningLanguage);
     
-    // CURSOR: Build a prompt that includes recent conversation for context
-    const recentMessages = messages.slice(-6).map(m => 
+    // CURSOR: Build recent messages string for the prompt
+    const recentMessagesStr = conversationMessages.map(m => 
       `${m.role === 'user' ? 'Learner' : 'Tutor'}: ${m.content}`
     ).join('\n');
     
-    const fullPrompt = `${suggestionPrompt}\n\nRecent conversation:\n${recentMessages}\n\nGenerate ${count} natural reply suggestions for the learner:`;
+    const fullPrompt = `${suggestionPrompt}\n\nRecent conversation:\n${recentMessagesStr}\n\nGenerate ${count} natural reply suggestions for the learner:`;
     
     const response = await aiManager.generate(context, fullPrompt);
     

@@ -6,7 +6,9 @@ import { Button } from '@/components/ui/button';
 import { SelectableText } from './SelectableText';
 import type { ChatMessage } from '@/stores/chatStore';
 import { useChatStore } from '@/stores/chatStore';
+
 import { useSettingsStore } from '@/stores/settingsStore';
+import { useTranslation } from '@/lib/i18n/useTranslation';
 
 interface ChatMessageProps {
   message: ChatMessage;
@@ -47,7 +49,9 @@ export function ChatMessageBubble({
   const ui = useSettingsStore((state) => state.ui);
   const language = useSettingsStore((state) => state.language);
   const showAnalysisForMessage = useChatStore((state) => state.showAnalysisForMessage);
+
   const analysisPanelMessageId = useChatStore((state) => state.analysisPanelMessageId);
+  const { t, lang } = useTranslation();
   
   const isUser = message.role === 'user';
   const isHidden = ui.listenFirstMode && 
@@ -168,13 +172,13 @@ export function ChatMessageBubble({
                 <span className="w-2 h-2 bg-current rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
               </div>
               <span className="text-sm opacity-70">
-                {message.state === 'generating' ? 'Thinking...' : 'Preparing audio...'}
+                {message.state === 'generating' ? t('chat.msg.thinking') : t('chat.msg.preparingAudio')}
               </span>
             </div>
           ) : isHidden ? (
             <div className="flex items-center gap-2">
               <WaveformIcon className="w-5 h-5 animate-pulse" />
-              <span className="text-sm">Listen to the message...</span>
+              <span className="text-sm">{t('chat.msg.listen')}</span>
             </div>
           ) : showContent ? (
             <>
@@ -204,9 +208,9 @@ export function ChatMessageBubble({
               className="text-xs gap-1 min-w-[120px]"
             >
               {isPlayingUserAudio ? (
-                <><StopIcon className="h-3 w-3" /> Stop recording</>
+                <><StopIcon className="h-3 w-3" /> {t('chat.msg.stopRecording')}</>
               ) : (
-                <><PlayIcon className="h-3 w-3" /> Play recording</>
+                <><PlayIcon className="h-3 w-3" /> {t('chat.msg.playRecording')}</>
               )}
             </Button>
           )}
@@ -225,7 +229,7 @@ export function ChatMessageBubble({
                       className="text-xs gap-1"
                     >
                       <PlayIcon className="h-3 w-3" />
-                      Resume
+                      {t('chat.msg.resume')}
                     </Button>
                   ) : (
                     <Button
@@ -235,7 +239,7 @@ export function ChatMessageBubble({
                       className="text-xs gap-1"
                     >
                       <PauseIcon className="h-3 w-3" />
-                      Pause
+                      {t('chat.msg.pause')}
                     </Button>
                   )}
                   {/* Stop button */}
@@ -246,7 +250,7 @@ export function ChatMessageBubble({
                     className="text-xs gap-1"
                   >
                     <StopIcon className="h-3 w-3" />
-                    Stop
+                    {t('chat.msg.stop')}
                   </Button>
                   {/* Speed control during playback */}
                   <select
@@ -278,7 +282,7 @@ export function ChatMessageBubble({
                     className="text-xs gap-1"
                   >
                     <PlayIcon className="h-3 w-3" />
-                    Replay
+                    {t('chat.msg.replay')}
                   </Button>
                   {/* Speed selector when not playing */}
                   <select
@@ -314,7 +318,7 @@ export function ChatMessageBubble({
               disabled={isTranslating}
               className="text-xs"
             >
-              {isTranslating ? 'Translating...' : showTranslation ? 'Hide Translation' : 'Translate'}
+              {isTranslating ? t('chat.msg.translating') : showTranslation ? t('chat.msg.hideTranslation') : t('chat.msg.translate')}
             </Button>
           )}
 
@@ -326,22 +330,22 @@ export function ChatMessageBubble({
               className={analysisPanelMessageId === message.id ? 'text-xs ring-2 ring-primary/30' : 'text-xs'}
               onClick={() => showAnalysisForMessage(message.id)}
             >
-              Analyze
+              {t('chat.msg.analyze')}
             </Button>
           )}
         </div>
 
         {/* Timestamp */}
         <span className="text-xs text-muted-foreground">
-          {formatTime(message.createdAt)}
+          {formatTime(message.createdAt, lang)}
         </span>
       </div>
     </div>
   );
 }
 
-function formatTime(date: Date): string {
-  return new Intl.DateTimeFormat('en-US', {
+function formatTime(date: Date, locale: string): string {
+  return new Intl.DateTimeFormat(locale, {
     hour: 'numeric',
     minute: '2-digit',
     hour12: true,

@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { SelectableText } from './SelectableText';
 import type { ReplySuggestion } from '@/stores/chatStore';
+import { useTranslation } from '@/lib/i18n/useTranslation';
 
 interface SuggestionBubbleProps {
   suggestion: ReplySuggestion;
@@ -42,6 +43,7 @@ export function SuggestionBubble({
   const [showTranslation, setShowTranslation] = useState(false);
   const [translation, setTranslation] = useState<string | null>(suggestion.translation || null);
   const [isTranslating, setIsTranslating] = useState(false);
+  const { t } = useTranslation();
   
   const playbackSpeed = suggestion.playbackSpeed ?? 1.0;
   
@@ -116,7 +118,7 @@ export function SuggestionBubble({
           {/* Suggestion label */}
           <div className="flex items-center gap-1 mb-1 text-xs text-emerald-700 dark:text-emerald-400">
             <LightbulbIcon className="h-3 w-3" />
-            <span>{isChosen ? 'Your chosen reply - now say it!' : 'Suggestion'}</span>
+            <span>{isChosen ? t('suggestion.chosenReply') : t('suggestion.label')}</span>
           </div>
           
           {/* Text content */}
@@ -149,7 +151,7 @@ export function SuggestionBubble({
                   className="text-xs gap-1"
                 >
                   <PlayIcon className="h-3 w-3" />
-                  Resume
+                  {t('chat.msg.resume')}
                 </Button>
               ) : (
                 <Button
@@ -159,7 +161,7 @@ export function SuggestionBubble({
                   className="text-xs gap-1"
                 >
                   <PauseIcon className="h-3 w-3" />
-                  Pause
+                  {t('chat.msg.pause')}
                 </Button>
               )}
               <Button
@@ -169,7 +171,7 @@ export function SuggestionBubble({
                 className="text-xs gap-1"
               >
                 <StopIcon className="h-3 w-3" />
-                Stop
+                {t('chat.msg.stop')}
               </Button>
               {/* Speed control */}
               <select
@@ -201,7 +203,7 @@ export function SuggestionBubble({
                 className="text-xs gap-1"
               >
                 <PlayIcon className="h-3 w-3" />
-                Play
+                {t('chat.msg.play')}
               </Button>
               {/* Speed selector when not playing */}
               <select
@@ -234,7 +236,7 @@ export function SuggestionBubble({
             disabled={isTranslating}
             className="text-xs"
           >
-            {isTranslating ? 'Translating...' : showTranslation ? 'Hide Translation' : 'Translate'}
+            {isTranslating ? t('chat.msg.translating') : showTranslation ? t('chat.msg.hideTranslation') : t('chat.msg.translate')}
           </Button>
           
           {/* Undo button - show when chosen */}
@@ -246,7 +248,7 @@ export function SuggestionBubble({
               className="text-xs gap-1 bg-amber-50 dark:bg-amber-900/20 hover:bg-amber-100 dark:hover:bg-amber-900/40"
             >
               <UndoIcon className="h-3 w-3" />
-              Undo
+              {t('suggestion.undo')}
             </Button>
           )}
           
@@ -259,7 +261,7 @@ export function SuggestionBubble({
               className="text-xs gap-1 bg-emerald-50 dark:bg-emerald-900/20 hover:bg-emerald-100 dark:hover:bg-emerald-900/40"
             >
               <CheckIcon className="h-3 w-3" />
-              Use This
+              {t('suggestion.useThis')}
             </Button>
           )}
         </div>

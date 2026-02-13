@@ -119,7 +119,7 @@ export function TranslationPopup({
           sourceLanguage: language.learning,
           mode: translationMode, // CURSOR: Pass translation mode
           aiProvider: aiSettings.provider, // CURSOR: Pass AI settings for rich mode
-          aiModel: aiSettings.model,
+          aiModel: aiSettings.textModel,
         }),
       });
 

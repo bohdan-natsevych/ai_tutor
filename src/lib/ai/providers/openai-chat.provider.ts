@@ -60,15 +60,11 @@ export class OpenAIChatProvider implements AIProvider {
     messages.push(...context.messages);
     messages.push({ role: 'user', content: message });
 
-    // Audio-only models require audio input/output — fall back to text equivalent for text-only calls
-    const requestedModel = options?.model || 'gpt-4o-audio-preview';
-    const model = requestedModel.includes('audio') ? requestedModel.replace('-audio-preview', '').replace('-audio', '') : requestedModel;
+    const model = options?.model || this.config.model;
 
     const response = await this.client.chat.completions.create({
       model,
       messages,
-      temperature: options?.temperature ?? 0.7,
-      max_tokens: options?.maxTokens ?? 500,
     });
 
     const choice = response.choices[0];
@@ -122,14 +118,11 @@ export class OpenAIChatProvider implements AIProvider {
             ] as unknown as string,
           },
         ],
-        temperature: options?.temperature ?? 0.3,
-        max_tokens: 4000,
       });
     } else {
-      // Text-only mode - for providers that received STT transcript
+      // Text-only mode - use model directly (caller provides text model)
       console.log('[OpenAI Respond] Text mode');
-      const requestedModel = options?.model || 'gpt-4o-audio-preview';
-      const textModel = requestedModel.includes('audio') ? requestedModel.replace('-audio-preview', '').replace('-audio', '') : requestedModel;
+      const textModel = options?.model || 'gpt-4o';
 
       response = await this.client.chat.completions.create({
         model: textModel,
@@ -143,8 +136,6 @@ export class OpenAIChatProvider implements AIProvider {
             content: `${conversationContext}\n\nMESSAGE TO RESPOND TO AND ANALYZE:\n${userMessage}`,
           },
         ],
-        temperature: options?.temperature ?? 0.3,
-        max_tokens: options?.maxTokens ?? 2000,
         response_format: { type: 'json_object' },
       });
     }
@@ -234,8 +225,8 @@ export class OpenAIChatProvider implements AIProvider {
 
     const prompt = getRichTranslationPrompt(text, learningLanguage, motherLanguage);
 
-    // CURSOR: Force text model - audio models (gpt-4o-audio-preview) don't work for text-only tasks
-    const textModel = options?.model?.includes('audio') ? 'gpt-4o-mini' : (options?.model || 'gpt-4o-mini');
+    // Use model passed in options directly (caller provides correct text model)
+    const textModel = options?.model || 'gpt-4o-mini';
 
     const response = await this.client.chat.completions.create({
       model: textModel,
@@ -243,8 +234,6 @@ export class OpenAIChatProvider implements AIProvider {
         { role: 'system', content: 'You are a language learning assistant providing detailed translations. Respond only with valid JSON.' },
         { role: 'user', content: prompt },
       ],
-      temperature: 0.3,
-      max_tokens: options?.maxTokens ?? 500,
       response_format: { type: 'json_object' },
     });
 

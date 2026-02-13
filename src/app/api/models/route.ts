@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
 
 export interface OpenAIModel {
@@ -9,7 +9,8 @@ export interface OpenAIModel {
 }
 
 // CURSOR: Fetch available models from OpenAI API dynamically
-export async function GET() {
+// ?type=text returns standard text chat models; default returns audio-capable models
+export async function GET(request: NextRequest) {
   const apiKey = process.env.OPENAI_API_KEY;
   
   if (!apiKey) {
@@ -19,23 +20,41 @@ export async function GET() {
     );
   }
 
+  const { searchParams } = new URL(request.url);
+  const type = searchParams.get('type'); // 'text' or null (default = audio)
+
   try {
     const client = new OpenAI({ apiKey });
     const response = await client.models.list();
     
-    // CURSOR: Filter to only audio-capable models for our voice tutoring use case
-    const chatModels = response.data
-      .filter(model => model.id.startsWith('gpt-') && model.id.includes('audio'))
-      // CURSOR: Exclude specific model types that aren't for chat
-      .filter(model => !model.id.includes('instruct') && !model.id.includes('realtime') && !model.id.includes('transcribe') && !model.id.includes('tts'))
-      .map(model => ({
-        id: model.id,
-        name: formatModelName(model.id),
-        description: getModelDescription(model.id),
-        contextWindow: getContextWindow(model.id),
-      }))
-      // CURSOR: Sort by capability (newer/better models first)
-      .sort((a, b) => getModelPriority(b.id) - getModelPriority(a.id));
+    const excludePatterns = ['instruct', 'realtime', 'transcribe', 'tts'];
+    
+    let chatModels;
+    if (type === 'text') {
+      // Text models: standard GPT chat models (no audio)
+      chatModels = response.data
+        .filter(model => model.id.startsWith('gpt-') && !model.id.includes('audio'))
+        .filter(model => !excludePatterns.some(p => model.id.includes(p)))
+        .map(model => ({
+          id: model.id,
+          name: formatModelName(model.id),
+          description: getModelDescription(model.id),
+          contextWindow: getContextWindow(model.id),
+        }))
+        .sort((a, b) => getModelPriority(b.id) - getModelPriority(a.id));
+    } else {
+      // Audio models (default): audio-capable models for voice tutoring
+      chatModels = response.data
+        .filter(model => model.id.startsWith('gpt-') && model.id.includes('audio'))
+        .filter(model => !excludePatterns.some(p => model.id.includes(p)))
+        .map(model => ({
+          id: model.id,
+          name: formatModelName(model.id),
+          description: getModelDescription(model.id),
+          contextWindow: getContextWindow(model.id),
+        }))
+        .sort((a, b) => getModelPriority(b.id) - getModelPriority(a.id));
+    }
 
     return NextResponse.json({ models: chatModels });
   } catch (error) {

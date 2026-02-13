@@ -3,20 +3,9 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useSettingsStore } from '@/stores/settingsStore';
+import { useTranslation } from '@/lib/i18n/useTranslation';
 
-const LANGUAGES = [
-  { id: 'en', name: 'English', flag: 'en' },
-  { id: 'uk', name: 'Ukrainian', flag: '🇺🇦' },
-  { id: 'de', name: 'German', flag: '🇩🇪' },
-  { id: 'fr', name: 'French', flag: '🇫🇷' },
-  { id: 'es', name: 'Spanish', flag: '🇪🇸' },
-  { id: 'it', name: 'Italian', flag: '🇮🇹' },
-  { id: 'pt', name: 'Portuguese', flag: '🇵🇹' },
-  { id: 'pl', name: 'Polish', flag: '🇵🇱' },
-  { id: 'ja', name: 'Japanese', flag: '🇯🇵' },
-  { id: 'zh', name: 'Chinese', flag: '🇨🇳' },
-  { id: 'ko', name: 'Korean', flag: '🇰🇷' },
-];
+import { LANGUAGES } from '@/lib/i18n/translations';
 
 const DIALECTS: Record<string, Array<{ id: string; name: string }>> = {
   en: [
@@ -28,26 +17,27 @@ const DIALECTS: Record<string, Array<{ id: string; name: string }>> = {
 
 export function LanguageSelector() {
   const { language, setLanguageSettings } = useSettingsStore();
+  const { t } = useTranslation();
   const dialects = DIALECTS[language.learning] || [];
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Language Settings</CardTitle>
+        <CardTitle>{t('settings.lang.title')}</CardTitle>
         <CardDescription>
-          Configure your learning and native languages
+          {t('settings.lang.description')}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Language to learn */}
         <div className="space-y-2">
-          <label className="text-sm font-medium">Language to Learn</label>
+          <label className="text-sm font-medium">{t('settings.lang.learning')}</label>
           <Select
             value={language.learning}
             onValueChange={(value) => setLanguageSettings({ learning: value })}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Select language" />
+              <SelectValue placeholder={t('settings.lang.selectLanguage')} />
             </SelectTrigger>
             <SelectContent>
               {LANGUAGES.map((lang) => (
@@ -65,13 +55,13 @@ export function LanguageSelector() {
         {/* Dialect selection (if available) */}
         {dialects.length > 0 && (
           <div className="space-y-2">
-            <label className="text-sm font-medium">Dialect</label>
+            <label className="text-sm font-medium">{t('settings.lang.dialect')}</label>
             <Select
               value={language.dialect}
               onValueChange={(value) => setLanguageSettings({ dialect: value })}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select dialect" />
+                <SelectValue placeholder={t('settings.lang.selectDialect')} />
               </SelectTrigger>
               <SelectContent>
                 {dialects.map((dialect) => (
@@ -86,13 +76,13 @@ export function LanguageSelector() {
 
         {/* Mother language */}
         <div className="space-y-2">
-          <label className="text-sm font-medium">Native Language</label>
+          <label className="text-sm font-medium">{t('settings.lang.native')}</label>
           <Select
             value={language.mother}
             onValueChange={(value) => setLanguageSettings({ mother: value })}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Select your native language" />
+              <SelectValue placeholder={t('settings.lang.selectNative')} />
             </SelectTrigger>
             <SelectContent>
               {LANGUAGES.map((lang) => (
@@ -106,7 +96,7 @@ export function LanguageSelector() {
             </SelectContent>
           </Select>
           <p className="text-xs text-muted-foreground">
-            Translations will be shown in this language
+            {t('settings.lang.nativeHint')}
           </p>
         </div>
       </CardContent>

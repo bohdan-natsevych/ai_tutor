@@ -12,6 +12,9 @@ import { useChatStore, type ChatMessage as ChatMessageType, type WordTimestamp, 
 import { getWordTimestamps } from '@/lib/whisper/wordTiming';
 import { useSettingsStore } from '@/stores/settingsStore';
 import { ttsManager } from '@/lib/tts/manager';
+import { useTranslation } from '@/lib/i18n/useTranslation';
+import { HeaderLanguageSelector } from '@/components/layout/HeaderLanguageSelector';
+import { getDisplayTitle } from '@/lib/chatUtils';
 
 interface ChatPageProps {
   params: Promise<{ id: string }>;
@@ -70,6 +73,7 @@ export default function ChatPage({ params }: ChatPageProps) {
   const ui = useSettingsStore((state) => state.ui);
   const ai = useSettingsStore((state) => state.ai);
   const language = useSettingsStore((state) => state.language);
+  const { t } = useTranslation();
   
   // CURSOR: Default playback speed from settings, used for first playback
   const defaultSpeed = tts.speed;
@@ -241,11 +245,39 @@ export default function ChatPage({ params }: ChatPageProps) {
   // CURSOR: Build hint placeholder from language settings
   const hintPlaceholder = `Type in ${languageNames[language.mother] || 'Ukrainian'} to add ${languageNames[language.learning] || 'English'} hint...`;
 
+  // CURSOR: Track pending chat data (not yet saved to DB) for first message send
+  const pendingChatRef = useRef<{ chat: any; openingMessage: any } | null>(null);
+
   // Fetch chat and messages
   useEffect(() => {
     const fetchChat = async () => {
       setLoading(true);
       try {
+        // Check for pending chat data in sessionStorage (new chat, not yet persisted)
+        const pendingKey = `pendingChat:${chatId}`;
+        const pendingData = sessionStorage.getItem(pendingKey);
+        
+        if (pendingData) {
+          const parsed = JSON.parse(pendingData);
+          pendingChatRef.current = parsed;
+          
+          setCurrentChat({
+            ...parsed.chat,
+            createdAt: new Date(parsed.chat.createdAt),
+            updatedAt: new Date(parsed.chat.updatedAt),
+          });
+          
+          // Set the opening message as needing playback
+          setMessages([{
+            ...parsed.openingMessage,
+            createdAt: new Date(parsed.openingMessage.createdAt),
+            state: 'audio_loading',
+            audioPlayed: false,
+          }]);
+          
+          return;
+        }
+
         const response = await fetch(`/api/chat?id=${chatId}`);
         const data = await response.json();
         
@@ -483,7 +515,7 @@ export default function ChatPage({ params }: ChatPageProps) {
       id: tempUserMessageId,
       chatId,
       role: 'user',
-      content: text || '🎤 Processing audio...',
+      content: text || t('chat.processingAudio'),
       state: 'revealed',
       audioBlob: audio?.blob,
       audioFormat: audio?.format,
@@ -516,29 +548,48 @@ export default function ChatPage({ params }: ChatPageProps) {
         if (audio.sttTranscript) formData.append('whisperTranscription', audio.sttTranscript);
         formData.append('aiProvider', ai.provider);
         formData.append('aiModel', ai.model);
+        formData.append('aiTextModel', ai.textModel);
         formData.append('audioFormat', audio.format);
         formData.append('motherLanguage', language.mother);
+        // Include pending chat data if this is the first message
+        if (pendingChatRef.current) {
+          formData.append('pendingChat', JSON.stringify(pendingChatRef.current.chat));
+          formData.append('pendingOpeningMessage', JSON.stringify(pendingChatRef.current.openingMessage));
+        }
         formData.append('audio', audio.blob, `recording.${audio.format}`);
         response = await fetch('/api/chat', {
           method: 'POST',
           body: formData,
         });
       } else {
+        const messageBody: Record<string, unknown> = {
+          action: 'message',
+          chatId,
+          content: text,
+          motherLanguage: language.mother,
+          aiProvider: ai.provider,
+          aiModel: ai.model,
+          aiTextModel: ai.textModel,
+        };
+        // Include pending chat data if this is the first message
+        if (pendingChatRef.current) {
+          messageBody.pendingChat = pendingChatRef.current.chat;
+          messageBody.pendingOpeningMessage = pendingChatRef.current.openingMessage;
+        }
         response = await fetch('/api/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            action: 'message',
-            chatId,
-            content: text,
-            motherLanguage: language.mother,
-            aiProvider: ai.provider,
-            aiModel: ai.model,
-          }),
+          body: JSON.stringify(messageBody),
         });
       }
 
       const data = await response.json();
+
+      // Clear pending state after successful first message
+      if (pendingChatRef.current) {
+        sessionStorage.removeItem(`pendingChat:${chatId}`);
+        pendingChatRef.current = null;
+      }
 
       if (data.aiMessage) {
         const realAiMessageId = data.aiMessage.id;
@@ -546,10 +597,24 @@ export default function ChatPage({ params }: ChatPageProps) {
         // Update user message with real ID, content (AI transcription), and analysis
         if (data.userMessage) {
           let parsedAnalysis;
-          try {
-            parsedAnalysis = data.userMessage.analysis ? JSON.parse(data.userMessage.analysis) : undefined;
-          } catch (e) {
-            console.error('Failed to parse analysis:', e);
+          if (data.userMessage.analysis) {
+            try {
+              parsedAnalysis = JSON.parse(data.userMessage.analysis);
+            } catch (e) {
+              console.error('Failed to parse analysis:', e);
+              parsedAnalysis = {
+                grammarScore: 0,
+                grammarErrors: [],
+                vocabularyScore: 0,
+                vocabularySuggestions: [],
+                relevanceScore: 0,
+                relevanceFeedback: '',
+                overallFeedback: 'Failed to get analysis.',
+                alternativePhrasings: [],
+              };
+            }
+          } else {
+            // Analysis not available
             parsedAnalysis = {
               grammarScore: 0,
               grammarErrors: [],
@@ -557,7 +622,7 @@ export default function ChatPage({ params }: ChatPageProps) {
               vocabularySuggestions: [],
               relevanceScore: 0,
               relevanceFeedback: '',
-              overallFeedback: 'Analysis failed. Please try again.',
+              overallFeedback: 'Failed to get analysis.',
               alternativePhrasings: [],
             };
           }
@@ -722,9 +787,19 @@ export default function ChatPage({ params }: ChatPageProps) {
         body: JSON.stringify({
           chatId,
           count: 3,
-          // CURSOR: Pass AI settings from user preferences
+          // CURSOR: Pass text model for suggestions (not audio model)
           aiProvider: ai.provider,
-          aiModel: ai.model,
+          aiModel: ai.textModel,
+          // CURSOR: Pass chat context inline so suggest works for pending chats not yet in DB
+          chatContext: {
+            topicType: currentChat?.topicType || 'general',
+            language: currentChat?.language || language.learning,
+            topicDetails: currentChat?.topicDetails,
+          },
+          recentMessages: messages.slice(-6).map(m => ({
+            role: m.role,
+            content: m.content,
+          })),
         }),
       });
       
@@ -743,7 +818,7 @@ export default function ChatPage({ params }: ChatPageProps) {
     } finally {
       setSuggestionsLoading(false);
     }
-  }, [hintsVisible, suggestions.length, chatId, isSuggestionsLoading, defaultSpeed, setSuggestions, setSuggestionsLoading, ai.provider, ai.model]);
+  }, [hintsVisible, suggestions.length, chatId, isSuggestionsLoading, defaultSpeed, setSuggestions, setSuggestionsLoading, ai.provider, ai.textModel, currentChat, language.learning, messages]);
 
   // CURSOR: Play suggestion audio with TTS
   const handlePlaySuggestion = useCallback(async (suggestion: ReplySuggestion) => {
@@ -884,7 +959,7 @@ export default function ChatPage({ params }: ChatPageProps) {
           sourceLanguage: language.learning,
           // CURSOR: Pass AI settings in case rich mode is used
           aiProvider: ai.provider,
-          aiModel: ai.model,
+          aiModel: ai.textModel,
         }),
       });
       
@@ -899,7 +974,7 @@ export default function ChatPage({ params }: ChatPageProps) {
     }
     
     return null;
-  }, [suggestions, language.mother, language.learning, updateSuggestion, ai.provider, ai.model]);
+  }, [suggestions, language.mother, language.learning, updateSuggestion, ai.provider, ai.textModel]);
 
   // CURSOR: Use a suggestion - keep only the chosen one, user must speak it themselves
   const useSuggestion = useCallback((suggestionId: string) => {
@@ -966,25 +1041,26 @@ export default function ChatPage({ params }: ChatPageProps) {
           </Link>
           <div className="flex-1">
             <h1 className="font-semibold line-clamp-1">
-              {currentChat?.title || 'Conversation'}
+              {getDisplayTitle(currentChat, t)}
             </h1>
             <p className="text-xs text-muted-foreground">
-              {currentChat?.topicType === 'general' ? '💬 Free conversation' : 
-               currentChat?.topicType === 'roleplay' ? '🎭 Roleplay' : 
-               '📚 Topic discussion'}
+              {currentChat?.topicType === 'general' ? `💬 ${t('chat.freeConversation')}` : 
+               currentChat?.topicType === 'roleplay' ? `🎭 ${t('chat.roleplay')}` : 
+               `📚 ${t('chat.topicDiscussion')}`}
             </p>
           </div>
           {ttsError && (
-            <span className="text-xs text-amber-500">⚠️ TTS unavailable</span>
+            <span className="text-xs text-amber-500">⚠️ {t('chat.ttsUnavailable')}</span>
           )}
+          <HeaderLanguageSelector className="mr-2" />
           <Button
-            variant={analysisPanelOpen ? 'secondary' : 'outline'}
+            variant={analysisPanelOpen ? 'default' : 'outline'}
             size="sm"
             onClick={() => setAnalysisPanelOpen(!analysisPanelOpen)}
             className="text-xs gap-1 shrink-0"
           >
             <AnalysisToggleIcon className="h-4 w-4" />
-            Analysis
+            {t('chat.analysis')}
           </Button>
         </div>
       </header>
@@ -998,7 +1074,7 @@ export default function ChatPage({ params }: ChatPageProps) {
             </div>
           ) : messages.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              Start the conversation...
+              {t('chat.startConversation')}
             </div>
           ) : (
             <>
@@ -1030,7 +1106,7 @@ export default function ChatPage({ params }: ChatPageProps) {
                 <div ref={hintsRef} className="space-y-3 pt-2">
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     <span className="h-px flex-1 bg-border" />
-                    <span>Reply suggestions</span>
+                    <span>{t('chat.replySuggestions')}</span>
                     <span className="h-px flex-1 bg-border" />
                   </div>
                   

@@ -11,6 +11,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { getRoleplayScenarios, getTopics } from '@/lib/ai/prompts';
 import { useSettingsStore } from '@/stores/settingsStore';
 import type { Chat } from '@/stores/chatStore';
+import { useTranslation } from '@/lib/i18n/useTranslation';
+import { HeaderLanguageSelector } from '@/components/layout/HeaderLanguageSelector';
+import { getDisplayTitle } from '@/lib/chatUtils';
 
 export default function HomePage() {
   const router = useRouter();
@@ -20,6 +23,7 @@ export default function HomePage() {
   const [newChatTitle, setNewChatTitle] = useState('');
   const [showNewChatDialog, setShowNewChatDialog] = useState(false);
   const [selectedTab, setSelectedTab] = useState<'general' | 'roleplay' | 'topic'>('general');
+  const { t, lang } = useTranslation();
 
   const ai = useSettingsStore((state) => state.ai);
 
@@ -52,11 +56,19 @@ export default function HomePage() {
           topicKey,
           aiProvider: ai.provider,
           aiModel: ai.model,
+          aiTextModel: ai.textModel,
         }),
       });
 
       const data = await response.json();
       if (data.chat) {
+        // Store pending chat data in sessionStorage for the chat page to pick up
+        if (data.pending) {
+          sessionStorage.setItem(`pendingChat:${data.chat.id}`, JSON.stringify({
+            chat: data.chat,
+            openingMessage: data.openingMessage,
+          }));
+        }
         router.push(`/chat/${data.chat.id}`);
       }
     } catch (error) {
@@ -116,15 +128,16 @@ export default function HomePage() {
             <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-semibold text-sm">
               AI
             </div>
-            <span className="text-lg font-semibold tracking-tight">AI Tutor</span>
+            <span className="text-lg font-semibold tracking-tight">{t('common.appName')}</span>
           </Link>
           <div className="flex items-center gap-1">
             <Link href="/vocabulary">
               <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground">
                 <BookIcon className="h-4 w-4" />
-                <span className="hidden sm:inline">Vocabulary</span>
+                <span className="hidden sm:inline">{t('common.vocabulary')}</span>
               </Button>
             </Link>
+            <HeaderLanguageSelector />
             <Link href="/settings">
               <Button variant="ghost" size="icon" className="text-muted-foreground">
                 <SettingsIcon className="h-4 w-4" />
@@ -138,102 +151,100 @@ export default function HomePage() {
         {/* Hero banner */}
         <section className="relative py-12 sm:py-16 mb-10 overflow-hidden">
           <div className="absolute inset-0 -z-10 rounded-3xl bg-gradient-to-br from-primary/5 via-primary/[0.02] to-transparent" />
-          <div className="max-w-2xl">
-            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mb-3">
-              Practice speaking with&nbsp;AI
-            </h1>
-            <p className="text-base text-muted-foreground leading-relaxed mb-6 max-w-lg">
-              Have natural voice conversations and get instant feedback on your grammar, vocabulary, and pronunciation — all powered by AI.
-            </p>
-            <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-              <span className="inline-flex items-center gap-1.5">
-                <MicIcon className="h-4 w-4 text-blue-500" />
-                Voice input
-              </span>
-              <span className="inline-flex items-center gap-1.5">
-                <CheckIcon className="h-4 w-4 text-emerald-500" />
-                Grammar correction
-              </span>
-              <span className="inline-flex items-center gap-1.5">
-                <SparklesIcon className="h-4 w-4 text-amber-500" />
-                Smart suggestions
-              </span>
-              <span className="inline-flex items-center gap-1.5">
-                <TranslateIcon className="h-4 w-4 text-violet-500" />
-                Translation on tap
-              </span>
+          <div className="max-w-2xl px-6 sm:px-8 py-4">
+                <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl md:text-6xl lg:text-7xl mb-6">
+                  {t('home.hero.title')}
+                </h1>
+                <p className="max-w-[700px] text-lg text-muted-foreground sm:text-xl mb-8 leading-relaxed">
+                  {t('home.hero.subtitle')}
+                </p>
+            <div className="flex flex-wrap gap-x-6 gap-y-3 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-2">
+                    <div className="bg-primary/10 p-2 rounded-full">🎤</div>
+                    <span className="text-sm font-medium">{t('home.hero.voiceInput')}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="bg-primary/10 p-2 rounded-full">✨</div>
+                    <span className="text-sm font-medium">{t('home.hero.grammarCorrection')}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="bg-primary/10 p-2 rounded-full">💡</div>
+                    <span className="text-sm font-medium">{t('home.hero.smartSuggestions')}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="bg-primary/10 p-2 rounded-full">🔍</div>
+                    <span className="text-sm font-medium">{t('home.hero.translationOnTap')}</span>
+                  </div>
             </div>
           </div>
         </section>
 
         {/* Quick start cards */}
         <section className="mb-12">
-          <h2 className="text-lg font-semibold tracking-tight mb-1">Start a conversation</h2>
-          <p className="text-sm text-muted-foreground mb-5">Pick a mode that fits your mood</p>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {/* Free conversation */}
-            <Card
-              className="cursor-pointer border-2 border-transparent hover:border-blue-500/30 transition-all hover:shadow-md group relative overflow-hidden"
-              onClick={() => createChat('general')}
-            >
-              <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/5 rounded-full -translate-y-8 translate-x-8 group-hover:scale-150 transition-transform duration-500" />
-              <CardContent className="p-6 relative">
-                <div className="w-11 h-11 rounded-xl bg-blue-500/10 text-blue-600 flex items-center justify-center text-xl mb-4">
-                  💬
-                </div>
-                <h3 className="font-semibold mb-1.5">Free Chat</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed mb-4">
-                  Open conversation about anything you like. Perfect for casual daily practice.
-                </p>
-                <div className="flex flex-wrap gap-1.5">
-                  <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-600">Casual</span>
-                  <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-600">Any topic</span>
-                  <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-600">Beginner friendly</span>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold tracking-tight">{t('home.pickMode')}</h2>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Free Chat Card */}
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer border-primary/20" onClick={() => createChat('general')}>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <span>💬</span> {t('home.freeChat')}
+                </CardTitle>
+                <CardDescription>
+                  {t('home.freeChatDesc')}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-wrap gap-2">
+                  <span className="px-2 py-1 bg-muted rounded-md text-xs font-medium">{t('home.freeChatTagCasual')}</span>
+                  <span className="px-2 py-1 bg-muted rounded-md text-xs font-medium">{t('home.freeChatTagAny')}</span>
+                  <span className="px-2 py-1 bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 rounded-md text-xs font-medium">{t('home.freeChatTagBeginner')}</span>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Roleplay */}
-            <Card
-              className="cursor-pointer border-2 border-transparent hover:border-amber-500/30 transition-all hover:shadow-md group relative overflow-hidden"
-              onClick={() => { setSelectedTab('roleplay'); setShowNewChatDialog(true); }}
-            >
-              <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 rounded-full -translate-y-8 translate-x-8 group-hover:scale-150 transition-transform duration-500" />
-              <CardContent className="p-6 relative">
-                <div className="w-11 h-11 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center text-xl mb-4">
-                  🎭
-                </div>
-                <h3 className="font-semibold mb-1.5">Roleplay</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed mb-4">
-                  Simulate real-life situations — order food, attend interviews, check into a hotel.
-                </p>
-                <div className="flex flex-wrap gap-1.5">
-                  <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600">{roleplayScenarios.length} scenarios</span>
-                  <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600">Immersive</span>
-                  <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600">Practical</span>
+            {/* Roleplay Card */}
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => {
+              setSelectedTab('roleplay');
+              setShowNewChatDialog(true);
+            }}>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <span>🎭</span> {t('home.roleplay')}
+                </CardTitle>
+                <CardDescription>
+                  {t('home.roleplayDesc')}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-wrap gap-2">
+                  <span className="px-2 py-1 bg-muted rounded-md text-xs font-medium">{getRoleplayScenarios().length} {t('home.scenariosCount')}</span>
+                  <span className="px-2 py-1 bg-muted rounded-md text-xs font-medium">{t('home.roleplayTagImmersive')}</span>
+                  <span className="px-2 py-1 bg-muted rounded-md text-xs font-medium">{t('home.roleplayTagPractical')}</span>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Topics */}
-            <Card
-              className="cursor-pointer border-2 border-transparent hover:border-emerald-500/30 transition-all hover:shadow-md group relative overflow-hidden"
-              onClick={() => { setSelectedTab('topic'); setShowNewChatDialog(true); }}
-            >
-              <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full -translate-y-8 translate-x-8 group-hover:scale-150 transition-transform duration-500" />
-              <CardContent className="p-6 relative">
-                <div className="w-11 h-11 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center text-xl mb-4">
-                  📚
-                </div>
-                <h3 className="font-semibold mb-1.5">Topics</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed mb-4">
-                  Dive into specific subjects to build vocabulary and confidence in focused areas.
-                </p>
-                <div className="flex flex-wrap gap-1.5">
-                  <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600">{topics.length} topics</span>
-                  <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600">Focused</span>
-                  <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600">Vocabulary</span>
+            {/* Topics Card */}
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => {
+              setSelectedTab('topic');
+              setShowNewChatDialog(true);
+            }}>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <span>📚</span> {t('home.topics')}
+                </CardTitle>
+                <CardDescription>
+                  {t('home.topicsDesc')}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-wrap gap-2">
+                  <span className="px-2 py-1 bg-muted rounded-md text-xs font-medium">{getTopics().length} {t('home.topicsCount')}</span>
+                  <span className="px-2 py-1 bg-muted rounded-md text-xs font-medium">{t('home.topicsTagFocused')}</span>
+                  <span className="px-2 py-1 bg-muted rounded-md text-xs font-medium">{t('home.topicsTagVocabulary')}</span>
                 </div>
               </CardContent>
             </Card>
@@ -241,105 +252,90 @@ export default function HomePage() {
         </section>
 
         {/* Scenario/topic picker dialog */}
-        <Dialog open={showNewChatDialog} onOpenChange={setShowNewChatDialog}>
-          <DialogContent className="max-w-lg">
-            <DialogHeader>
-              <DialogTitle>Pick a scenario</DialogTitle>
-              <DialogDescription>
-                Choose a scenario or topic, then start chatting
-              </DialogDescription>
-            </DialogHeader>
-
-            <Input
-              placeholder="Custom name (optional)"
-              value={newChatTitle}
-              onChange={(e) => setNewChatTitle(e.target.value)}
-            />
-
-            <Tabs value={selectedTab} onValueChange={(v) => setSelectedTab(v as typeof selectedTab)} className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="roleplay">Roleplay</TabsTrigger>
-                <TabsTrigger value="topic">Topics</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="roleplay" className="mt-3 max-h-72 overflow-y-auto">
-                <div className="grid gap-1">
-                  {roleplayScenarios.map((scenario) => (
-                    <button
-                      key={scenario.id}
-                      className="flex items-start gap-3 p-3 rounded-lg text-left hover:bg-muted/60 transition-colors"
-                      onClick={() => createChat('roleplay', scenario.id)}
-                      disabled={isCreating}
-                    >
-                      <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center text-sm shrink-0 mt-0.5">🎭</div>
-                      <div className="min-w-0">
-                        <div className="text-sm font-medium">{scenario.name}</div>
-                        <div className="text-xs text-muted-foreground line-clamp-2">{scenario.description}</div>
-                      </div>
-                      <ArrowRightIcon className="h-4 w-4 text-muted-foreground/40 shrink-0 mt-1 opacity-0 group-hover:opacity-100" />
-                    </button>
-                  ))}
+        {showNewChatDialog && (
+          <Dialog open={showNewChatDialog} onOpenChange={setShowNewChatDialog}>
+            <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>{t('home.dialog.title')}</DialogTitle>
+                <DialogDescription>
+                  {t('home.dialog.description')}
+                </DialogDescription>
+              </DialogHeader>
+              
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  {/* Optional Custom Topic/Title Input */}
+                  <Input
+                    placeholder={t('home.dialog.customName')}
+                    value={newChatTitle}
+                    onChange={(e) => setNewChatTitle(e.target.value)}
+                  />
                 </div>
-              </TabsContent>
 
-              <TabsContent value="topic" className="mt-3 max-h-72 overflow-y-auto">
-                <div className="grid gap-1">
-                  {topics.map((topic) => (
-                    <button
-                      key={topic.id}
-                      className="flex items-start gap-3 p-3 rounded-lg text-left hover:bg-muted/60 transition-colors"
-                      onClick={() => createChat('topic', topic.id)}
-                      disabled={isCreating}
-                    >
-                      <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-sm shrink-0 mt-0.5">📚</div>
-                      <div className="min-w-0">
-                        <div className="text-sm font-medium">{topic.name}</div>
-                        <div className="text-xs text-muted-foreground line-clamp-2">{topic.description}</div>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </TabsContent>
-            </Tabs>
-          </DialogContent>
-        </Dialog>
-
+                <Tabs value={selectedTab} onValueChange={(v) => setSelectedTab(v as any)}>
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="roleplay">{t('home.dialog.tabRoleplay')}</TabsTrigger>
+                    <TabsTrigger value="topic">{t('home.dialog.tabTopics')}</TabsTrigger>
+                  </TabsList>
+                  
+                  <TabsContent value="roleplay" className="mt-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {getRoleplayScenarios().map((scenario) => (
+                        <Card 
+                          key={scenario.id} 
+                          className="cursor-pointer hover:border-primary transition-colors"
+                          onClick={() => createChat('roleplay', scenario.id)}
+                        >
+                          <CardHeader className="p-4">
+                            <CardTitle className="text-base flex items-center gap-2">
+                              <span>{scenario.icon}</span> {scenario.title}
+                            </CardTitle>
+                            <CardDescription className="text-xs">
+                              {scenario.description}
+                            </CardDescription>
+                          </CardHeader>
+                        </Card>
+                      ))}
+                    </div>
+                  </TabsContent>
+                  
+                  <TabsContent value="topic" className="mt-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {getTopics().map((topic) => (
+                        <Card 
+                          key={topic.id} 
+                          className="cursor-pointer hover:border-primary transition-colors"
+                          onClick={() => createChat('topic', topic.id)}
+                        >
+                          <CardHeader className="p-4">
+                            <CardTitle className="text-base flex items-center gap-2">
+                              <span>{topic.icon}</span> {topic.title}
+                            </CardTitle>
+                            <CardDescription className="text-xs">
+                              {topic.description}
+                            </CardDescription>
+                          </CardHeader>
+                        </Card>
+                      ))}
+                    </div>
+                  </TabsContent>
+                </Tabs>
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
         {/* Recent conversations */}
         <section className="mb-12">
-          <div className="flex items-center justify-between mb-5">
-            <div>
-              <h2 className="text-lg font-semibold tracking-tight mb-0.5">Recent conversations</h2>
-              {chats.length > 0 && (
-                <p className="text-xs text-muted-foreground">{chats.length} conversation{chats.length !== 1 ? 's' : ''}</p>
-              )}
-            </div>
-          </div>
+          <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-bold">{t('home.recentConversations')}</h2>
+        </div>
 
-          {isLoading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {[1, 2, 3].map((i) => (
-                <Card key={i} className="animate-pulse">
-                  <CardContent className="p-5">
-                    <div className="h-4 bg-muted rounded w-3/4 mb-3" />
-                    <div className="h-3 bg-muted rounded w-1/2 mb-2" />
-                    <div className="h-3 bg-muted rounded w-1/3" />
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          ) : chats.length === 0 ? (
-            <Card className="border-dashed">
-              <CardContent className="flex flex-col items-center justify-center py-14 text-center">
-                <div className="w-12 h-12 rounded-2xl bg-muted flex items-center justify-center mb-4">
-                  <ChatBubbleIcon className="h-6 w-6 text-muted-foreground" />
-                </div>
-                <h3 className="font-medium mb-1">No conversations yet</h3>
-                <p className="text-sm text-muted-foreground max-w-xs">
-                  Start your first conversation above — pick Free Chat to jump right in, or choose a scenario.
-                </p>
-              </CardContent>
-            </Card>
-          ) : (
+        {chats.length === 0 ? (
+          <div className="text-center py-12 bg-muted/30 rounded-lg border border-dashed">
+            <p className="text-muted-foreground font-medium mb-2">{t('home.noConversationsYet')}</p>
+            <p className="text-sm text-muted-foreground">{t('home.noConversationsDesc')}</p>
+          </div>
+        ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {chats.map((chat) => {
                 const typeConfig = chat.topicType === 'roleplay'
@@ -365,13 +361,13 @@ export default function HomePage() {
                             <TrashIcon className="h-3.5 w-3.5" />
                           </Button>
                         </div>
-                        <h3 className="text-sm font-medium line-clamp-2 mb-2">{chat.title}</h3>
+                        <h3 className="text-sm font-medium line-clamp-2 mb-2">{getDisplayTitle(chat, t)}</h3>
                         <div className="flex items-center justify-between">
-                          <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${typeConfig.bg} ${typeConfig.text}`}>
-                            {typeConfig.label}
-                          </span>
+                          <span className="text-xs bg-muted px-2 py-0.5 rounded-full capitalize">
+                        {chat.topicType === 'general' ? t('home.typeGeneral') : chat.topicType === 'roleplay' ? t('home.typeRoleplay') : t('home.typeTopic')}
+                      </span>
                           <span className="text-xs text-muted-foreground">
-                            {formatDate(chat.updatedAt)}
+                            {formatDate(chat.updatedAt, t, lang)}
                           </span>
                         </div>
                       </CardContent>
@@ -387,16 +383,18 @@ export default function HomePage() {
   );
 }
 
-function formatDate(date: Date | string): string {
+function formatDate(date: Date | string, t: (key: string) => string, locale: string): string {
   const d = new Date(date);
-  const now = new Date();
-  const diff = now.getTime() - d.getTime();
+  // Format date relative to now
+    const now = new Date();
+    const diff = now.getTime() - d.getTime();
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(minutes / 60);
 
-  if (diff < 60000) return 'Just now';
-  if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
-  if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
-
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    if (minutes < 1) return t('home.date.justNow');
+    if (minutes < 60) return `${minutes}${t('home.date.mAgo')}`;
+    if (hours < 24) return `${hours}${t('home.date.hAgo')}`;
+    return d.toLocaleDateString(locale, { month: 'short', day: 'numeric' });
 }
 
 // Icons

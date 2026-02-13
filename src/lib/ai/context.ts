@@ -9,6 +9,7 @@ export interface ContextSettings {
   summarizeAfterMessages: number; // Trigger summarization every N messages (default: 10)
   summarizationProvider: 'same' | 'local'; // Use chat provider or local
   localSummarizationModel?: string;
+  textModel?: string; // Text model for summarization (from user settings)
   disableSummarization: boolean;
 }
 
@@ -120,7 +121,7 @@ SUMMARY:`;
           systemPrompt: 'You are a summarization assistant. Create concise, informative summaries.',
         },
         prompt,
-        { temperature: 0.3, maxTokens: 500 }
+        { temperature: 0.3, maxTokens: 500, model: this.settings.textModel }
       );
 
       return response.content;
@@ -151,7 +152,7 @@ MERGED SUMMARY:`;
           systemPrompt: 'You are a summarization assistant. Merge summaries coherently.',
         },
         prompt,
-        { temperature: 0.3, maxTokens: 500 }
+        { temperature: 0.3, maxTokens: 500, model: this.settings.textModel }
       );
 
       return response.content;

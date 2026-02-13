@@ -7,12 +7,14 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useSettingsStore } from '@/stores/settingsStore';
 import { SYSTEM_PROMPTS } from '@/lib/ai/prompts';
+import { useTranslation } from '@/lib/i18n/useTranslation';
 
 // CURSOR: PromptEditor Component
 // Allows users to customize AI prompts for different conversation types
 
 export function PromptEditor() {
   const { prompts, setCustomPrompt } = useSettingsStore();
+  const { t } = useTranslation();
   const [editedPrompts, setEditedPrompts] = useState({
     system: prompts.system || '',
     analysis: prompts.analysis || '',
@@ -35,35 +37,35 @@ export function PromptEditor() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Custom Prompts</CardTitle>
+        <CardTitle>{t('settings.prompts.title')}</CardTitle>
         <CardDescription>
-          Customize how the AI tutor behaves and analyzes your messages
+          {t('settings.prompts.description')}
         </CardDescription>
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="system" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="system">System Prompt</TabsTrigger>
-            <TabsTrigger value="analysis">Analysis Prompt</TabsTrigger>
+            <TabsTrigger value="system">{t('settings.prompts.systemTab')}</TabsTrigger>
+            <TabsTrigger value="analysis">{t('settings.prompts.analysisTab')}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="system" className="mt-4 space-y-4">
             <div className="space-y-2">
               <div className="flex justify-between items-center">
-                <label className="text-sm font-medium">Tutor Personality</label>
+                <label className="text-sm font-medium">{t('settings.prompts.tutorPersonality')}</label>
                 {prompts.system && (
-                  <span className="text-xs text-green-600">Custom</span>
+                  <span className="text-xs text-green-600">{t('common.custom')}</span>
                 )}
               </div>
               <Textarea
-                placeholder="Enter custom system prompt or leave empty for default..."
+                placeholder={t('settings.prompts.systemPlaceholder')}
                 value={editedPrompts.system}
                 onChange={(e) => setEditedPrompts(prev => ({ ...prev, system: e.target.value }))}
                 rows={8}
                 className="font-mono text-sm"
               />
               <p className="text-xs text-muted-foreground">
-                This prompt defines how the AI tutor behaves and responds during conversations.
+                {t('settings.prompts.systemHint')}
               </p>
             </div>
 
@@ -73,7 +75,7 @@ export function PromptEditor() {
                 size="sm"
                 disabled={editedPrompts.system === (prompts.system || '')}
               >
-                Save Changes
+                {t('settings.prompts.saveChanges')}
               </Button>
               <Button 
                 onClick={() => handleReset('system')} 
@@ -81,21 +83,21 @@ export function PromptEditor() {
                 variant="outline"
                 disabled={!prompts.system && !editedPrompts.system}
               >
-                Reset to Default
+                {t('settings.prompts.resetToDefault')}
               </Button>
               <Button
                 onClick={() => setEditedPrompts(prev => ({ ...prev, system: SYSTEM_PROMPTS.tutor }))}
                 size="sm"
                 variant="ghost"
               >
-                View Default
+                {t('settings.prompts.viewDefault')}
               </Button>
             </div>
 
             {/* Default prompt preview */}
             <details className="text-sm">
               <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
-                Show default system prompt
+                {t('settings.prompts.showDefaultSystem')}
               </summary>
               <pre className="mt-2 p-3 bg-muted rounded-lg text-xs overflow-auto whitespace-pre-wrap">
                 {SYSTEM_PROMPTS.tutor}
@@ -106,20 +108,20 @@ export function PromptEditor() {
           <TabsContent value="analysis" className="mt-4 space-y-4">
             <div className="space-y-2">
               <div className="flex justify-between items-center">
-                <label className="text-sm font-medium">Response & Analysis Instructions</label>
+                <label className="text-sm font-medium">{t('settings.prompts.analysisLabel')}</label>
                 {prompts.analysis && (
-                  <span className="text-xs text-green-600">Custom</span>
+                  <span className="text-xs text-green-600">{t('common.custom')}</span>
                 )}
               </div>
               <Textarea
-                placeholder="Enter custom analysis prompt or leave empty for default..."
+                placeholder={t('settings.prompts.analysisPlaceholder')}
                 value={editedPrompts.analysis}
                 onChange={(e) => setEditedPrompts(prev => ({ ...prev, analysis: e.target.value }))}
                 rows={8}
                 className="font-mono text-sm"
               />
               <p className="text-xs text-muted-foreground">
-                This prompt defines how the AI responds to your messages and analyzes grammar, vocabulary, pronunciation, etc.
+                {t('settings.prompts.analysisHint')}
               </p>
             </div>
 
@@ -129,7 +131,7 @@ export function PromptEditor() {
                 size="sm"
                 disabled={editedPrompts.analysis === (prompts.analysis || '')}
               >
-                Save Changes
+                {t('settings.prompts.saveChanges')}
               </Button>
               <Button 
                 onClick={() => handleReset('analysis')} 
@@ -137,21 +139,21 @@ export function PromptEditor() {
                 variant="outline"
                 disabled={!prompts.analysis && !editedPrompts.analysis}
               >
-                Reset to Default
+                {t('settings.prompts.resetToDefault')}
               </Button>
               <Button
                 onClick={() => setEditedPrompts(prev => ({ ...prev, analysis: SYSTEM_PROMPTS.unifiedResponseAudio }))}
                 size="sm"
                 variant="ghost"
               >
-                View Default
+                {t('settings.prompts.viewDefault')}
               </Button>
             </div>
 
             {/* Default prompt preview */}
             <details className="text-sm">
               <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
-                Show default response & analysis prompt
+                {t('settings.prompts.showDefaultAnalysis')}
               </summary>
               <pre className="mt-2 p-3 bg-muted rounded-lg text-xs overflow-auto whitespace-pre-wrap">
                 {SYSTEM_PROMPTS.unifiedResponseAudio}

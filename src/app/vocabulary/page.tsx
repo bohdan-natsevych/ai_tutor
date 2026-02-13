@@ -20,6 +20,7 @@ interface VocabularyEntry {
 export default function VocabularyPage() {
   const [vocabulary, setVocabulary] = useState<VocabularyEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { t } = useTranslation();
 
   useEffect(() => {
     fetchVocabulary();
@@ -38,7 +39,7 @@ export default function VocabularyPage() {
   };
 
   const deleteWord = async (id: string) => {
-    if (!confirm('Delete this word from your vocabulary?')) return;
+    if (!confirm(t('vocab.deleteConfirm'))) return;
     
     try {
       const response = await fetch(`/api/vocabulary?id=${id}`, {
@@ -64,9 +65,9 @@ export default function VocabularyPage() {
             </Button>
           </Link>
           <div className="flex-1">
-            <h1 className="text-xl font-bold">My Vocabulary</h1>
+            <h1 className="text-xl font-bold">{t('vocab.title')}</h1>
             <p className="text-xs text-muted-foreground">
-              {vocabulary.length} words saved
+              {vocabulary.length} {t('vocab.wordsSaved')}
             </p>
           </div>
         </div>
@@ -82,12 +83,12 @@ export default function VocabularyPage() {
           <Card className="text-center p-8">
             <CardContent className="pt-6">
               <div className="text-4xl mb-3">📚</div>
-              <h3 className="font-semibold mb-1">No saved words yet</h3>
+              <h3 className="font-semibold mb-1">{t('vocab.noSavedWords')}</h3>
               <p className="text-sm text-muted-foreground mb-4">
-                Select text in chat messages and click "Translate" to save words here
+                {t('vocab.noSavedWordsDesc')}
               </p>
               <Link href="/">
-                <Button>Start a Conversation</Button>
+                <Button>{t('vocab.startConversation')}</Button>
               </Link>
             </CardContent>
           </Card>
@@ -102,7 +103,7 @@ export default function VocabularyPage() {
                         <div className="flex items-baseline gap-2 mb-1">
                           <span className="font-semibold text-lg">{entry.word}</span>
                           <span className="text-muted-foreground">-</span>
-                          <span className="text-muted-foreground">{entry.translation || 'No translation'}</span>
+                          <span className="text-muted-foreground">{entry.translation || t('vocab.noTranslation')}</span>
                         </div>
                         {entry.example && (
                           <p className="text-sm text-muted-foreground italic mt-1">
@@ -110,7 +111,7 @@ export default function VocabularyPage() {
                           </p>
                         )}
                         <p className="text-xs text-muted-foreground mt-2">
-                          Saved {formatDate(entry.createdAt)}
+                          {t('vocab.saved')} {formatDate(entry.createdAt, t)}
                         </p>
                       </div>
                       <Button
@@ -133,16 +134,16 @@ export default function VocabularyPage() {
   );
 }
 
-function formatDate(date: string): string {
+function formatDate(date: string, t: (key: any) => string): string {
   const d = new Date(date);
   const now = new Date();
   const diff = now.getTime() - d.getTime();
   
-  if (diff < 60000) return 'just now';
-  if (diff < 3600000) return `${Math.floor(diff / 60000)} min ago`;
-  if (diff < 86400000) return `${Math.floor(diff / 3600000)} hours ago`;
+  if (diff < 60000) return t('vocab.date.justNow');
+  if (diff < 3600000) return `${Math.floor(diff / 60000)} ${t('vocab.date.minAgo')}`;
+  if (diff < 86400000) return `${Math.floor(diff / 3600000)} ${t('vocab.date.hoursAgo')}`;
   
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  return d.toLocaleDateString();
 }
 
 function ArrowLeftIcon({ className }: { className?: string }) {

@@ -28,7 +28,7 @@ export class KokoroProvider implements TTSProvider {
     { id: 'am_eric', name: 'Eric (American Male)', language: 'en', dialect: 'american', gender: 'male' },
     { id: 'am_liam', name: 'Liam (American Male)', language: 'en', dialect: 'american', gender: 'male' },
     { id: 'am_onyx', name: 'Onyx (American Male)', language: 'en', dialect: 'american', gender: 'male' },
-    // British English voices
+  // British English voices
     { id: 'bf_emma', name: 'Emma (British Female)', language: 'en', dialect: 'british', gender: 'female' },
     { id: 'bf_alice', name: 'Alice (British Female)', language: 'en', dialect: 'british', gender: 'female' },
     { id: 'bf_isabella', name: 'Isabella (British Female)', language: 'en', dialect: 'british', gender: 'female' },
@@ -37,6 +37,33 @@ export class KokoroProvider implements TTSProvider {
     { id: 'bm_daniel', name: 'Daniel (British Male)', language: 'en', dialect: 'british', gender: 'male' },
     { id: 'bm_fable', name: 'Fable (British Male)', language: 'en', dialect: 'british', gender: 'male' },
     { id: 'bm_lewis', name: 'Lewis (British Male)', language: 'en', dialect: 'british', gender: 'male' },
+    // French voices
+    { id: 'ff_siwis', name: 'Siwis (French Female)', language: 'fr', gender: 'female' },
+    // Japanese voices
+    { id: 'jf_alpha', name: 'Alpha (Japanese Female)', language: 'ja', gender: 'female' },
+    { id: 'jf_gongitsune', name: 'Gongitsune (Japanese Female)', language: 'ja', gender: 'female' },
+    { id: 'jf_nezumi', name: 'Nezumi (Japanese Female)', language: 'ja', gender: 'female' },
+    { id: 'jf_tebukuro', name: 'Tebukuro (Japanese Female)', language: 'ja', gender: 'female' },
+    // Mandarin Chinese voices
+    { id: 'zf_xiaobei', name: 'Xiaobei (Chinese Female)', language: 'zh', gender: 'female' },
+    { id: 'zf_xiaomi', name: 'Xiaomi (Chinese Female)', language: 'zh', gender: 'female' },
+    { id: 'zf_xiaoxiao', name: 'Xiaoxiao (Chinese Female)', language: 'zh', gender: 'female' },
+    { id: 'zf_xiaoyi', name: 'Xiaoyi (Chinese Female)', language: 'zh', gender: 'female' },
+    { id: 'zm_yunjian', name: 'Yunjian (Chinese Male)', language: 'zh', gender: 'male' },
+    { id: 'zm_yunxi', name: 'Yunxi (Chinese Male)', language: 'zh', gender: 'male' },
+    { id: 'zm_yunxia', name: 'Yunxia (Chinese Male)', language: 'zh', gender: 'male' },
+    { id: 'zm_yunyang', name: 'Yunyang (Chinese Male)', language: 'zh', gender: 'male' },
+    // Spanish voices
+    { id: 'ef_dora', name: 'Dora (Spanish Female)', language: 'es', gender: 'female' },
+    { id: 'em_alex', name: 'Alex (Spanish Male)', language: 'es', gender: 'male' },
+    { id: 'em_santa', name: 'Santa (Spanish Male)', language: 'es', gender: 'male' },
+    // Italian voices
+    { id: 'if_sara', name: 'Sara (Italian Female)', language: 'it', gender: 'female' },
+    { id: 'im_nicola', name: 'Nicola (Italian Male)', language: 'it', gender: 'male' },
+    // Portuguese voices
+    { id: 'pf_dora', name: 'Dora (Portuguese Female)', language: 'pt', gender: 'female' },
+    { id: 'pm_alex', name: 'Alex (Portuguese Male)', language: 'pt', gender: 'male' },
+    { id: 'pm_santa', name: 'Santa (Portuguese Male)', language: 'pt', gender: 'male' },
   ];
 
   private kokoro: unknown = null;

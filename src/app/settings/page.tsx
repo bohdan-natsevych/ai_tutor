@@ -5,15 +5,20 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { LanguageSelector } from '@/components/settings/LanguageSelector';
+import { HeaderLanguageSelector } from '@/components/layout/HeaderLanguageSelector';
 import { VoiceSelector } from '@/components/settings/VoiceSelector';
 import { AIProviderSelector } from '@/components/settings/AIProviderSelector';
 import { ContextSettings } from '@/components/settings/ContextSettings';
 import { PromptEditor } from '@/components/settings/PromptEditor';
 import { useSettingsStore } from '@/stores/settingsStore';
+import { useTranslation } from '@/lib/i18n/useTranslation';
+import { INTERFACE_LANGUAGES } from '@/lib/i18n/translations';
 
 export default function SettingsPage() {
   const { ui, setUISettings, translation, setTranslationSettings, resetToDefaults } = useSettingsStore();
+  const { t } = useTranslation();
 
   return (
     <div className="min-h-screen gradient-bg">
@@ -26,9 +31,10 @@ export default function SettingsPage() {
             </Button>
           </Link>
           <div>
-            <h1 className="text-xl font-bold">Settings</h1>
-            <p className="text-xs text-muted-foreground">Customize your learning experience</p>
+            <h1 className="text-xl font-bold">{t('settings.title')}</h1>
+            <p className="text-xs text-muted-foreground">{t('settings.subtitle')}</p>
           </div>
+          <HeaderLanguageSelector className="ml-auto" />
         </div>
       </header>
 
@@ -52,18 +58,18 @@ export default function SettingsPage() {
         {/* Translation Settings */}
         <Card>
           <CardHeader>
-            <CardTitle>Translation Settings</CardTitle>
+            <CardTitle>{t('settings.translation.title')}</CardTitle>
             <CardDescription>
-              Configure how word and phrase translations are displayed
+              {t('settings.translation.description')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {/* Translation Mode */}
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
-                <label className="text-sm font-medium">Rich Translation</label>
+                <label className="text-sm font-medium">{t('settings.translation.richTranslation')}</label>
                 <p className="text-xs text-muted-foreground">
-                  Show definition, usage examples, and identify idioms/phrases (uses AI)
+                  {t('settings.translation.richTranslationDesc')}
                 </p>
               </div>
               <Switch
@@ -74,9 +80,9 @@ export default function SettingsPage() {
             
             <div className="p-3 bg-muted rounded-lg text-xs text-muted-foreground">
               {translation.mode === 'simple' ? (
-                <p>Simple mode: Shows translation only (DeepL)</p>
+                <p>{t('settings.translation.simpleNote')}</p>
               ) : (
-                <p>Rich mode: Shows translation, definition, usage examples, and identifies if the text is a word, phrase, idiom, or collocation (AI-powered)</p>
+                <p>{t('settings.translation.richNote')}</p>
               )}
             </div>
           </CardContent>
@@ -85,18 +91,18 @@ export default function SettingsPage() {
         {/* UI Settings */}
         <Card>
           <CardHeader>
-            <CardTitle>Interface Settings</CardTitle>
+            <CardTitle>{t('settings.interface.title')}</CardTitle>
             <CardDescription>
-              Customize the user interface
+              {t('settings.interface.description')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {/* Listen-first mode */}
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
-                <label className="text-sm font-medium">Listen-First Mode</label>
+                <label className="text-sm font-medium">{t('settings.interface.listenFirst')}</label>
                 <p className="text-xs text-muted-foreground">
-                  AI message text is hidden until audio playback completes
+                  {t('settings.interface.listenFirstDesc')}
                 </p>
               </div>
               <Switch
@@ -110,9 +116,9 @@ export default function SettingsPage() {
             {/* Theme */}
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
-                <label className="text-sm font-medium">Theme</label>
+                <label className="text-sm font-medium">{t('settings.interface.theme')}</label>
                 <p className="text-xs text-muted-foreground">
-                  Choose your preferred color scheme
+                  {t('settings.interface.themeDesc')}
                 </p>
               </div>
               <div className="flex gap-2">
@@ -124,10 +130,37 @@ export default function SettingsPage() {
                     onClick={() => setUISettings({ theme })}
                     className="capitalize"
                   >
-                    {theme === 'light' ? 'Light' : theme === 'dark' ? 'Dark' : 'System'}
+                    {theme === 'light' ? t('settings.interface.themeLight') : theme === 'dark' ? t('settings.interface.themeDark') : t('settings.interface.themeSystem')}
                   </Button>
                 ))}
               </div>
+            </div>
+
+            <Separator />
+
+            {/* Interface Language */}
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <label className="text-sm font-medium">{t('settings.interface.language')}</label>
+                <p className="text-xs text-muted-foreground">
+                  {t('settings.interface.languageDesc')}
+                </p>
+              </div>
+              <Select
+                value={ui.interfaceLanguage}
+                onValueChange={(value) => setUISettings({ interfaceLanguage: value })}
+              >
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {INTERFACE_LANGUAGES.map((lang) => (
+                    <SelectItem key={lang.id} value={lang.id}>
+                      {lang.id === 'auto' ? t('settings.interface.languageAuto') : lang.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </CardContent>
         </Card>
@@ -135,21 +168,21 @@ export default function SettingsPage() {
         {/* Reset */}
         <Card className="border-destructive/50">
           <CardHeader>
-            <CardTitle className="text-destructive">Reset Settings</CardTitle>
+            <CardTitle className="text-destructive">{t('settings.reset.title')}</CardTitle>
             <CardDescription>
-              Reset all settings to their default values
+              {t('settings.reset.description')}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Button 
               variant="destructive" 
               onClick={() => {
-                if (confirm('Are you sure you want to reset all settings?')) {
+                if (confirm(t('settings.reset.confirm'))) {
                   resetToDefaults();
                 }
               }}
             >
-              Reset to Defaults
+              {t('settings.reset.button')}
             </Button>
           </CardContent>
         </Card>

@@ -35,11 +35,11 @@ export class WebSpeechProvider implements TTSProvider {
         this.systemVoices = this.synthesis!.getVoices();
         if (this.systemVoices.length > 0) {
           this.voices = this.systemVoices
-            .filter(v => v.lang.startsWith('en'))
+            // Remove filter to support all languages
             .map(v => ({
               id: v.voiceURI,
               name: v.name,
-              language: v.lang.split('-')[0],
+              language: v.lang.split('-')[0], // 'en', 'uk', etc.
               dialect: v.lang.includes('US') ? 'american' : 
                        v.lang.includes('GB') ? 'british' : 
                        v.lang.includes('AU') ? 'australian' : undefined,
@@ -78,11 +78,13 @@ export class WebSpeechProvider implements TTSProvider {
     return new Promise((resolve, reject) => {
       const utterance = new SpeechSynthesisUtterance(text);
       
-      // Find the selected voice
       const selectedVoice = this.systemVoices.find(v => v.voiceURI === options.voice);
       if (selectedVoice) {
         utterance.voice = selectedVoice;
       }
+
+      // Ensure language is set for correct pronunciation if voice is not specific or Auto
+      utterance.lang = options.language || 'en-US';
       
       utterance.rate = options.speed;
       if (options.pitch) {

@@ -7,6 +7,7 @@ import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
 import { useSettingsStore } from '@/stores/settingsStore';
 import { ttsManager } from '@/lib/tts/manager';
+import { useTranslation } from '@/lib/i18n/useTranslation';
 
 const TTS_PROVIDERS = [
   { id: 'kokoro', name: 'Kokoro TTS', description: 'High-quality local TTS (WebGPU)', type: 'local' },
@@ -59,19 +60,86 @@ const VOICES: Record<string, Array<{ id: string; name: string; gender: string }>
     { id: 'nova', name: 'Nova', gender: 'Female' },
     { id: 'shimmer', name: 'Shimmer', gender: 'Female' },
   ],
+  'kokoro_mix': [ // Internal use for mixing
+  ]
 };
+
+// Add non-English voices to Kokoro
+const KOKORO_VOICES = VOICES['kokoro'];
+// Japanese
+KOKORO_VOICES.push(
+  { id: 'jf_alpha', name: 'Alpha', gender: 'Female (Japanese)' },
+  { id: 'jf_gongitsune', name: 'Gongitsune', gender: 'Female (Japanese)' },
+  { id: 'jf_nezumi', name: 'Nezumi', gender: 'Female (Japanese)' },
+  { id: 'jf_tebukuro', name: 'Tebukuro', gender: 'Female (Japanese)' }
+);
+// Mandarin
+KOKORO_VOICES.push(
+  { id: 'zf_xiaobei', name: 'Xiaobei', gender: 'Female (Chinese)' },
+  { id: 'zf_xiaomi', name: 'Xiaomi', gender: 'Female (Chinese)' },
+  { id: 'zf_xiaoxiao', name: 'Xiaoxiao', gender: 'Female (Chinese)' },
+  { id: 'zf_xiaoyi', name: 'Xiaoyi', gender: 'Female (Chinese)' },
+  { id: 'zm_yunjian', name: 'Yunjian', gender: 'Male (Chinese)' },
+  { id: 'zm_yunxi', name: 'Yunxi', gender: 'Male (Chinese)' },
+  { id: 'zm_yunxia', name: 'Yunxia', gender: 'Male (Chinese)' },
+  { id: 'zm_yunyang', name: 'Yunyang', gender: 'Male (Chinese)' }
+);
+// French
+KOKORO_VOICES.push(
+  { id: 'ff_siwis', name: 'Siwis', gender: 'Female (French)' }
+);
+// Spanish
+KOKORO_VOICES.push(
+  { id: 'ef_dora', name: 'Dora', gender: 'Female (Spanish)' },
+  { id: 'em_alex', name: 'Alex', gender: 'Male (Spanish)' },
+  { id: 'em_santa', name: 'Santa', gender: 'Male (Spanish)' }
+);
+// Italian
+KOKORO_VOICES.push(
+  { id: 'if_sara', name: 'Sara', gender: 'Female (Italian)' },
+  { id: 'im_nicola', name: 'Nicola', gender: 'Male (Italian)' }
+);
+// Portuguese
+KOKORO_VOICES.push(
+  { id: 'pf_dora', name: 'Dora', gender: 'Female (Portuguese)' },
+  { id: 'pm_alex', name: 'Alex', gender: 'Male (Portuguese)' },
+  { id: 'pm_santa', name: 'Santa', gender: 'Male (Portuguese)' }
+);
 
 export function VoiceSelector() {
   const { tts, language, setTTSSettings } = useSettingsStore();
+  const { t } = useTranslation();
   
-  // Filter voices by dialect for Kokoro provider
+  // Filter voices by language and dialect for Kokoro provider
   const allVoices = VOICES[tts.provider] || [];
   const voices = tts.provider === 'kokoro' 
     ? allVoices.filter(voice => {
-        const dialectMatch = language.dialect === 'american' 
-          ? voice.id.startsWith('am_') || voice.id.startsWith('af_')
-          : voice.id.startsWith('bm_') || voice.id.startsWith('bf_');
-        return dialectMatch;
+        // English
+        if (language.learning === 'en') {
+          const dialectMatch = language.dialect === 'american' 
+            ? voice.id.startsWith('am_') || voice.id.startsWith('af_')
+            : voice.id.startsWith('bm_') || voice.id.startsWith('bf_');
+          return dialectMatch;
+        }
+        
+        // Other languages - map based on prefix
+        // ja -> j, zh -> z, fr -> f, es -> e, it -> i, pt -> p
+        const prefixMap: Record<string, string> = {
+          'ja': 'j',
+          'zh': 'z',
+          'fr': 'f',
+          'es': 'e',
+          'it': 'i',
+          'pt': 'p',
+        };
+        
+        const prefix = prefixMap[language.learning];
+        if (prefix) {
+          return voice.id.startsWith(prefix);
+        }
+        
+        // No fallback for unsupported languages - return nothing so user knows it's not supported
+        return false;
       })
     : allVoices;
   
@@ -151,20 +219,20 @@ export function VoiceSelector() {
       setTTSSettings({ voice: voices[0].id });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [language.dialect, tts.provider]);
+  }, [language.dialect, language.learning, tts.provider]);
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Voice Settings</CardTitle>
+        <CardTitle>{t('settings.voice.title')}</CardTitle>
         <CardDescription>
-          Configure text-to-speech for AI responses
+          {t('settings.voice.description')}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* TTS Provider */}
         <div className="space-y-2">
-          <label className="text-sm font-medium">TTS Provider</label>
+          <label className="text-sm font-medium">{t('settings.voice.provider')}</label>
           <Select
             value={tts.provider}
             onValueChange={(value) => {
@@ -173,10 +241,26 @@ export function VoiceSelector() {
               const allProviderVoices = VOICES[value] || [];
               const filteredVoices = value === 'kokoro'
                 ? allProviderVoices.filter(voice => {
-                    const dialectMatch = language.dialect === 'american' 
-                      ? voice.id.startsWith('am_') || voice.id.startsWith('af_')
-                      : voice.id.startsWith('bm_') || voice.id.startsWith('bf_');
-                    return dialectMatch;
+                    // Replicate filtering logic (this logic is duplicated, ideally should be a function)
+                    // English
+                    if (language.learning === 'en') {
+                      const dialectMatch = language.dialect === 'american' 
+                        ? voice.id.startsWith('am_') || voice.id.startsWith('af_')
+                        : voice.id.startsWith('bm_') || voice.id.startsWith('bf_');
+                      return dialectMatch;
+                    }
+                    
+                    const prefixMap: Record<string, string> = {
+                      'ja': 'j',
+                      'zh': 'z',
+                      'fr': 'f',
+                      'es': 'e',
+                      'it': 'i',
+                      'pt': 'p',
+                    };
+                    const prefix = prefixMap[language.learning];
+                    if (prefix) return voice.id.startsWith(prefix);
+                    return false;
                   })
                 : allProviderVoices;
               
@@ -186,7 +270,7 @@ export function VoiceSelector() {
             }}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Select TTS provider" />
+              <SelectValue placeholder={t('settings.voice.selectProvider')} />
             </SelectTrigger>
             <SelectContent>
               {TTS_PROVIDERS.map((provider) => (
@@ -204,9 +288,9 @@ export function VoiceSelector() {
         </div>
 
         {/* Voice selection */}
-        {voices.length > 0 && (
+        {voices.length > 0 ? (
           <div className="space-y-2">
-            <label className="text-sm font-medium">Voice</label>
+            <label className="text-sm font-medium">{t('settings.voice.voice')}</label>
             <div className="flex gap-2">
               <Select
                 value={tts.voice}
@@ -216,7 +300,7 @@ export function VoiceSelector() {
                 }}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select voice" />
+                  <SelectValue placeholder={t('settings.voice.selectVoice')} />
                 </SelectTrigger>
                 <SelectContent>
                   {voices.map((voice) => (
@@ -241,23 +325,39 @@ export function VoiceSelector() {
                 {isPlayingPreview ? (
                   <span className="flex items-center gap-1">
                     <span className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                    Playing...
+                    {t('settings.voice.playing')}
                   </span>
                 ) : (
                   <span className="flex items-center gap-1">
                     <PlayIcon className="h-4 w-4" />
-                    Test
+                    {t('settings.voice.test')}
                   </span>
                 )}
               </Button>
             </div>
           </div>
-        )}
+        ) : tts.provider === 'kokoro' ? (
+          <div className="rounded-md bg-yellow-50 p-4 border border-yellow-100">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <AlertTriangle className="h-5 w-5 text-yellow-400" />
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-yellow-800">Language not supported by Kokoro TTS</h3>
+                <div className="mt-2 text-sm text-yellow-700">
+                  <p>
+                    Kokoro TTS does not yet support this language. Please switch to <b>Web Speech</b> or <b>OpenAI</b> for the best experience.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : null}
 
         {/* Speech speed */}
         <div className="space-y-3">
           <div className="flex justify-between">
-            <label className="text-sm font-medium">Speech Speed</label>
+            <label className="text-sm font-medium">{t('settings.voice.speed')}</label>
             <span className="text-sm text-muted-foreground">{tts.speed.toFixed(2)}x</span>
           </div>
           <Slider
@@ -268,8 +368,8 @@ export function VoiceSelector() {
             onValueChange={([value]) => setTTSSettings({ speed: value })}
           />
           <div className="flex justify-between text-xs text-muted-foreground">
-            <span>Slower (0.5x)</span>
-            <span>Faster (1.5x)</span>
+            <span>{t('settings.voice.slower')}</span>
+            <span>{t('settings.voice.faster')}</span>
           </div>
         </div>
       </CardContent>
@@ -286,6 +386,25 @@ function PlayIcon({ className }: { className?: string }) {
       className={className}
     >
       <path d="M8 5.14v14l11-7-11-7z" />
+    </svg>
+  );
+}
+
+function AlertTriangle({ className }: { className?: string }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+    >
+      <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+      <line x1="12" y1="9" x2="12" y2="13" />
+      <line x1="12" y1="17" x2="12.01" y2="17" />
     </svg>
   );
 }

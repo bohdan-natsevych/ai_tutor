@@ -1,6 +1,6 @@
 import { sqliteTable, text, integer, blob } from 'drizzle-orm/sqlite-core';
 
-// Chats table - using Date mode for compatibility with PostgreSQL schema
+// Chats table
 export const chats = sqliteTable('chats', {
   id: text('id').primaryKey(),
   title: text('title'),
@@ -11,8 +11,8 @@ export const chats = sqliteTable('chats', {
   threadId: text('thread_id'), // OpenAI Assistants API thread ID
   aiProvider: text('ai_provider').default('openai'),
   aiMode: text('ai_mode').$type<'chat' | 'assistant'>().default('chat'),
-  createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
-  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+  createdAt: integer('created_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
 });
 
 // Messages table
@@ -25,7 +25,7 @@ export const messages = sqliteTable('messages', {
   audioBlob: blob('audio_blob', { mode: 'buffer' }),
   audioFormat: text('audio_format'),
   analysis: text('analysis'), // JSON string with analysis data
-  createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+  createdAt: integer('created_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
 });
 
 // Settings table (key-value store)
@@ -41,7 +41,7 @@ export const vocabulary = sqliteTable('vocabulary', {
   translation: text('translation'),
   example: text('example'),
   context: text('context'), // From which chat
-  createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+  createdAt: integer('created_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
 });
 
 // Chat summaries table (for context management)
