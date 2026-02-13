@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
-
+import { useTranslation } from '@/lib/i18n/useTranslation';
 // CURSOR: Vocabulary Page - View and manage saved words
 
 interface VocabularyEntry {

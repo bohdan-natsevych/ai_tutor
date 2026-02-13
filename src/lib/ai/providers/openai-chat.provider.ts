@@ -60,7 +60,7 @@ export class OpenAIChatProvider implements AIProvider {
     messages.push(...context.messages);
     messages.push({ role: 'user', content: message });
 
-    const model = options?.model || this.config.model;
+    const model = options?.model || this.models[0].id;
 
     const response = await this.client.chat.completions.create({
       model,

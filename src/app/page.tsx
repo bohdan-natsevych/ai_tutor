@@ -12,6 +12,7 @@ import { getRoleplayScenarios, getTopics } from '@/lib/ai/prompts';
 import { useSettingsStore } from '@/stores/settingsStore';
 import type { Chat } from '@/stores/chatStore';
 import { useTranslation } from '@/lib/i18n/useTranslation';
+import type { TranslationKey } from '@/lib/i18n/translations';
 import { HeaderLanguageSelector } from '@/components/layout/HeaderLanguageSelector';
 import { getDisplayTitle } from '@/lib/chatUtils';
 
@@ -288,7 +289,7 @@ export default function HomePage() {
                         >
                           <CardHeader className="p-4">
                             <CardTitle className="text-base flex items-center gap-2">
-                              <span>{scenario.icon}</span> {scenario.title}
+                              {scenario.name}
                             </CardTitle>
                             <CardDescription className="text-xs">
                               {scenario.description}
@@ -309,7 +310,7 @@ export default function HomePage() {
                         >
                           <CardHeader className="p-4">
                             <CardTitle className="text-base flex items-center gap-2">
-                              <span>{topic.icon}</span> {topic.title}
+                              {topic.name}
                             </CardTitle>
                             <CardDescription className="text-xs">
                               {topic.description}
@@ -383,7 +384,7 @@ export default function HomePage() {
   );
 }
 
-function formatDate(date: Date | string, t: (key: string) => string, locale: string): string {
+function formatDate(date: Date | string, t: (key: TranslationKey) => string, locale: string): string {
   const d = new Date(date);
   // Format date relative to now
     const now = new Date();

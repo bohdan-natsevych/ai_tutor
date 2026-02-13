@@ -184,8 +184,8 @@ export const useSettingsStore = create<SettingsState>()(
         }
         if (version < 3) {
           // v2 → v3: Add interface language setting
-          if (state.ui && !(state.ui as Record<string, unknown>).interfaceLanguage) {
-            (state.ui as Record<string, unknown>).interfaceLanguage = 'auto';
+          if (state.ui && !(state.ui as unknown as Record<string, unknown>).interfaceLanguage) {
+            (state.ui as unknown as Record<string, unknown>).interfaceLanguage = 'auto';
           }
         }
         return state;

@@ -1,7 +1,8 @@
 
 import { Chat } from '@/stores/chatStore';
+import { TranslationKey } from '@/lib/i18n/translations';
 
-export function getDisplayTitle(chat: Chat | null | undefined, t: (key: string) => string): string {
+export function getDisplayTitle(chat: Chat | null | undefined, t: (key: TranslationKey) => string): string {
   if (!chat) return t('common.conversation');
 
   // Check for default titles and translate them
