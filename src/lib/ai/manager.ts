@@ -1,5 +1,5 @@
-import type { AIProvider, AIResponse, UnifiedResponse, ConversationContext, AIOptions, AIModel, AIProviderConfig, RichTranslation } from './types';
-import { getAllAIProviders, getAIProvider, getDefaultAIProvider } from './providers';
+import type { AIProvider, AIResponse, UnifiedResponse, ConversationContext, AIOptions, AIModel, AIProviderConfig, RichTranslation, ChatMessage } from './types';
+import { getAIProvider, getDefaultAIProvider } from './providers';
 
 // AI Manager - Handles provider selection and AI interactions
 
@@ -21,10 +21,9 @@ class AIManager {
         this.currentProvider = provider;
         this.config.providerId = providerId;
         
-        // CURSOR: Only reset model for local providers - cloud providers accept any valid model
-        // since they have many models not in our static list
-        if (provider.type === 'local' && provider.models.length > 0 && !provider.models.find(m => m.id === this.config.model)) {
-          this.config.model = provider.models[0].id;
+        // Only reset model for local providers - cloud providers accept any valid model
+        if (provider.id !== 'openai-chat' && provider.id !== 'openai-assistant') {
+          // Future proofing for local providers
         }
         return;
       }
@@ -47,11 +46,6 @@ class AIManager {
     await provider.initialize();
     this.currentProvider = provider;
     this.config.providerId = providerId;
-
-    // CURSOR: Only reset model for local providers - cloud providers accept any valid model
-    if (provider.type === 'local' && !provider.models.find(m => m.id === this.config.model) && provider.models.length > 0) {
-      this.config.model = provider.models[0].id;
-    }
   }
 
   // Set model
@@ -82,11 +76,6 @@ class AIManager {
   // Get available models for current provider
   getModels(): AIModel[] {
     return this.currentProvider?.models || [];
-  }
-
-  // Get all available providers
-  getProviders(): AIProvider[] {
-    return getAllAIProviders();
   }
 
   // Simple text generation (opening messages, suggestions)
@@ -124,7 +113,7 @@ class AIManager {
     return this.currentProvider.respond(context, userMessage, fullOptions);
   }
 
-  // CURSOR: Rich translate - get translation with definition, usage examples, and type classification
+  // Rich translate - get translation with definition, usage examples, and type classification
   async richTranslate(
     text: string,
     learningLanguage: string,
@@ -137,7 +126,7 @@ class AIManager {
 
     const fullOptions: AIOptions = {
       model: options?.model || this.config.model,
-      temperature: 0.3, // Lower temperature for consistent output
+      temperature: 0.3,
       maxTokens: options?.maxTokens ?? 500,
     };
 
@@ -151,7 +140,7 @@ class AIManager {
   }
 
   // Get thread messages (for Assistants API)
-  async getThreadMessages(threadId: string) {
+  async getThreadMessages(threadId: string): Promise<ChatMessage[]> {
     if (!this.currentProvider) return [];
     return this.currentProvider.getThreadMessages?.(threadId) || [];
   }

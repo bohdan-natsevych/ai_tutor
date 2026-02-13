@@ -1,4 +1,4 @@
-// System prompts for the AI tutor
+﻿// System prompts for the AI tutor
 
 export const SYSTEM_PROMPTS = {
   // Main tutor system prompt - uses {{LEARNING_LANGUAGE}} placeholder
@@ -7,7 +7,6 @@ export const SYSTEM_PROMPTS = {
 1. Have natural, engaging conversations in {{LEARNING_LANGUAGE}}
 2. Adapt your language complexity to the learner's level
 3. Use varied vocabulary and expressions to help expand their language skills
-4. Point out off-topic or unrelated responses - this teaches conversational skills
 
 
 Guidelines:
@@ -15,18 +14,8 @@ Guidelines:
 - Use conversational {{LEARNING_LANGUAGE}} appropriate for speaking practice
 - Ask a follow-up question to keep the conversation flowing
 - NEVER ask more than ONE question at a time. Pick the single most natural follow-up question.
-
-CRITICAL - Handling Off-Topic Responses:
-When the learner's response does NOT answer your question or is completely unrelated:
-- Point out that their response didn't answer your question
-- Acknowledge what they said briefly, then redirect to your original question
-- This teaches real-world communication skills
-
-Example:
-- You ask: "Do you like to cook pasta?"
-- Learner says: "I am carpenter"
-- BAD response: "Oh, being a carpenter is nice! What kind of things do you build?"
-- GOOD response: "A carpenter - interesting! But this response doesn't fit the context. Let's try again. Do you like pasta?"`,
+- Keep conversation natural and engaging
+`,
 
   // Role-play scenarios
   roleplay: {
@@ -180,53 +169,6 @@ Respond ONLY with valid JSON:
     "alternativePhrasings": ["phrase 1", "phrase 2" /* add more as needed */]
   }
 }`,
-
-  // Unified response prompt (text only) - for providers without audio support
-  unifiedResponseText: `You are a {{LEARNING_LANGUAGE}} language tutor AND analyzer.
-
-You receive the learner's text message and conversation history.
-
-YOUR TWO TASKS (do both in one response):
-
-TASK 1 - RESPOND as a tutor:
-- Reply naturally in {{LEARNING_LANGUAGE}} (2-3 sentences)
-- Ask ONE follow-up question to keep conversation flowing. NEVER ask more than one question at a time.
-- If the learner's response is off-topic or doesn't answer your question, point it out briefly and redirect
-- Adapt complexity to the learner's level
-
-TASK 2 - ANALYZE the learner's text message:
-
-Grammar (0-100): Are sentences grammatically correct? List errors with corrections.
-Vocabulary (0-100): Word choice quality. Suggest improvements.
-Relevance (0-100): Does the response answer/address what was previously asked?
-  80-100: Directly answers or continues conversation
-  50-79: Somewhat related but doesn't fully address
-  20-49: Mostly off-topic
-  0-19: Completely ignores what was asked
-
-FIELD LANGUAGE RULES:
-- "reply": {{LEARNING_LANGUAGE}}
-- "grammarErrors": original/correction in {{LEARNING_LANGUAGE}}, explanation in {{MOTHER_LANGUAGE}}
-- "vocabularySuggestions": Tips in {{MOTHER_LANGUAGE}} (full sentences)
-- "alternativePhrasings": Alternative {{LEARNING_LANGUAGE}} sentences
-- "relevanceFeedback": In {{MOTHER_LANGUAGE}} (include example corrections in {{LEARNING_LANGUAGE}})
-- "overallFeedback": In {{MOTHER_LANGUAGE}}
-
-Respond ONLY with valid JSON:
-{
-  "reply": "your conversational response in {{LEARNING_LANGUAGE}}",
-  "analysis": {
-    "grammarScore": number,
-    "grammarErrors": [{"original": "wrong", "correction": "correct", "explanation": "why"}, {"original": "wrong2", "correction": "correct2", "explanation": "why2"} /* add more entries for each error */],
-    "vocabularyScore": number,
-    "vocabularySuggestions": ["tip 1", "tip 2" /* add more as needed */],
-    "relevanceScore": number,
-    "relevanceFeedback": "in {{MOTHER_LANGUAGE}}",
-    "overallFeedback": "in {{MOTHER_LANGUAGE}}",
-    "alternativePhrasings": ["phrase 1", "phrase 2" /* add more as needed */]
-  }
-}`,
-
 };
 
 // Build a complete system prompt based on mode and topic
@@ -278,22 +220,18 @@ const LANGUAGE_NAMES: Record<string, string> = {
   ko: 'Korean',
 };
 
-// Get unified response prompt (tutor reply + analysis in one call)
-// hasAudio: true for providers that receive audio (includes pronunciation), false for text-only
+// Get unified response prompt (tutor reply + audio analysis in one call)
 export function getUnifiedResponsePrompt(
   motherLanguage?: string,
   learningLanguage?: string,
-  hasAudio: boolean = true
 ): string {
   const motherLangName = motherLanguage ? (LANGUAGE_NAMES[motherLanguage] || motherLanguage) : 'English';
   const learningLangName = learningLanguage ? (LANGUAGE_NAMES[learningLanguage] || learningLanguage) : 'English';
-  const template = hasAudio
-    ? SYSTEM_PROMPTS.unifiedResponseAudio
-    : SYSTEM_PROMPTS.unifiedResponseText;
-  return template
+  return SYSTEM_PROMPTS.unifiedResponseAudio
     .replace(/\{\{MOTHER_LANGUAGE\}\}/g, motherLangName)
     .replace(/\{\{LEARNING_LANGUAGE\}\}/g, learningLangName);
 }
+
 
 // CURSOR: Get suggestion prompt with count and language substituted
 export function getSuggestionPrompt(count: number = 3, learningLanguage?: string): string {

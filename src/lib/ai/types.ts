@@ -59,7 +59,7 @@ export interface UnifiedResponse {
   };
 }
 
-// CURSOR: Rich translation result with definition, usage, and type info
+// Rich translation result with definition, usage, and type info
 export interface RichTranslation {
   translation: string;
   type: 'word' | 'phrase' | 'idiom' | 'collocation' | 'expression';
@@ -86,11 +86,11 @@ export interface AIOptions {
   model: string;
   temperature?: number;
   maxTokens?: number;
-  motherLanguage?: string; // CURSOR: For analysis - explanations in this language
-  learningLanguage?: string; // CURSOR: For analysis - the language being practiced
-  audioBase64?: string; // CURSOR: Audio data for unified analysis (audio + text in one call)
-  audioFormat?: string; // CURSOR: Audio format (e.g., 'wav')
-  whisperTranscription?: string; // CURSOR: Pre-transcribed text from Whisper (accurate, used as ground truth)
+  motherLanguage?: string;
+  learningLanguage?: string;
+  audioBase64?: string;
+  audioFormat?: string;
+  whisperTranscription?: string;
 }
 
 export interface AIProvider {
@@ -108,7 +108,7 @@ export interface AIProvider {
   
   /** Available models */
   models: AIModel[];
-
+  
   /** Whether this provider is deprecated (hidden from UI) */
   deprecated?: boolean;
   

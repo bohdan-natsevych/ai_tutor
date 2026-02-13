@@ -260,8 +260,8 @@ export async function POST(request: NextRequest) {
         whisperTranscription,
       });
 
-      // CURSOR: Use Whisper transcription as authoritative text (not the model's hallucinated version)
-      const finalContent = whisperTranscription || response.analysis.pronunciation?.transcribedText || content || '[audio]';
+      // CURSOR: Use AI transcription (which may correct the draft) as authoritative text
+      const finalContent = response.analysis.pronunciation?.transcribedText || whisperTranscription || content || '[audio]';
 
       // Update user message with transcription and analysis
       await updateMessage(userMessage.id, {

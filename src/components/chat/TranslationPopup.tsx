@@ -237,33 +237,35 @@ export function TranslationPopup({
             {/* Header - fixed */}
             <div className="p-3 border-b bg-background flex-shrink-0">
               <div className="flex items-center justify-between gap-2 mb-1">
-                <p className="font-medium">{text}</p>
+                <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                  <p className="font-medium truncate">{text}</p>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handlePlayTranslation}
+                    className="h-6 w-6 p-0 shrink-0"
+                    title={isPlayingTTS ? 'Stop' : 'Listen'}
+                  >
+                    {isPlayingTTS ? (
+                      <StopIcon className="h-3 w-3" />
+                    ) : (
+                      <SpeakerIcon className="h-3 w-3" />
+                    )}
+                  </Button>
+                </div>
                 <div className="flex gap-1 flex-shrink-0">
-                  <Badge variant={getTypeBadgeVariant(richTranslation.type)} className="text-xs">
-                    {richTranslation.type}
-                  </Badge>
                   {getFormalityLabel(richTranslation.formality) && (
-                    <Badge variant="outline" className="text-xs">
+                    <Badge variant="outline" className="text-xs h-5 px-1.5">
                       {getFormalityLabel(richTranslation.formality)}
                     </Badge>
                   )}
+                  <Badge variant={getTypeBadgeVariant(richTranslation.type)} className="text-xs h-5 px-1.5">
+                    {richTranslation.type}
+                  </Badge>
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <p className="text-lg font-semibold text-primary">{richTranslation.translation}</p>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handlePlayTranslation}
-                  className="h-7 w-7 p-0 shrink-0"
-                  title={isPlayingTTS ? 'Stop' : 'Listen to translation'}
-                >
-                  {isPlayingTTS ? (
-                    <StopIcon className="h-4 w-4" />
-                  ) : (
-                    <SpeakerIcon className="h-4 w-4" />
-                  )}
-                </Button>
+                <p className="text-lg font-semibold text-primary break-words">{richTranslation.translation}</p>
               </div>
             </div>
             
@@ -323,7 +325,22 @@ export function TranslationPopup({
             {/* Original text */}
             <div>
               <span className="text-xs text-muted-foreground">Original:</span>
-              <p className="font-medium">{text}</p>
+              <div className="flex items-center gap-2">
+                <p className="font-medium break-words">{text}</p>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handlePlayTranslation}
+                  className="h-6 w-6 p-0 shrink-0"
+                  title={isPlayingTTS ? 'Stop' : 'Listen'}
+                >
+                  {isPlayingTTS ? (
+                    <StopIcon className="h-3 w-3" />
+                  ) : (
+                    <SpeakerIcon className="h-3 w-3" />
+                  )}
+                </Button>
+              </div>
             </div>
 
             {/* Translation */}
@@ -331,19 +348,6 @@ export function TranslationPopup({
               <span className="text-xs text-muted-foreground">Translation:</span>
               <div className="flex items-center gap-2">
                 <p className="font-medium">{translation.translatedText}</p>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handlePlayTranslation}
-                  className="h-7 w-7 p-0 shrink-0"
-                  title={isPlayingTTS ? 'Stop' : 'Listen to translation'}
-                >
-                  {isPlayingTTS ? (
-                    <StopIcon className="h-4 w-4" />
-                  ) : (
-                    <SpeakerIcon className="h-4 w-4" />
-                  )}
-                </Button>
               </div>
             </div>
 

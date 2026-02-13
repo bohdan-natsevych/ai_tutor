@@ -138,7 +138,7 @@ export class OpenAIAssistantProvider implements AIProvider {
     }
 
     const hasAudio = !!(options?.audioBase64 && options?.audioFormat);
-    const unifiedPrompt = getUnifiedResponsePrompt(options?.motherLanguage, options?.learningLanguage, hasAudio);
+    const unifiedPrompt = getUnifiedResponsePrompt(options?.motherLanguage, options?.learningLanguage);
 
     const recentMessages = context.messages.slice(-10);
     const conversationContext = `${context.summary ? `EARLIER CONVERSATION SUMMARY:\n${context.summary}\n\n` : ''}RECENT CONVERSATION:\n${recentMessages.map(m => `${m.role}: ${m.content}`).join('\n')}`;

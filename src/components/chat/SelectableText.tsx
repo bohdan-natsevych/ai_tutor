@@ -2,6 +2,9 @@
 
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { TranslationPopup } from './TranslationPopup';
+import { Button } from '@/components/ui/button';
+import { ttsManager } from '@/lib/tts/manager';
+import { Play, Square, Languages } from 'lucide-react';
 
 // CURSOR: SelectableText - Allows users to select words/phrases for translation
 // Wraps message content and handles text selection
@@ -18,14 +21,60 @@ export function SelectableText({ text, chatId, className = '', highlightedWordIn
   const [selectedText, setSelectedText] = useState<string | null>(null);
   const [popoverPosition, setPopoverPosition] = useState<{ x: number; y: number } | null>(null);
   const [popoverOpen, setPopoverOpen] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const buttonRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // Clean up audio on unmount
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, []);
 
   // CURSOR: Parse text into tokens (words and whitespace/punctuation) for highlighting
   // We preserve whitespace and punctuation to maintain original formatting
   const tokens = useMemo(() => {
     return parseTextIntoTokens(text);
   }, [text]);
+
+  const handlePlay = async () => {
+    if (isPlaying) {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+      setIsPlaying(false);
+      return;
+    }
+
+    if (!selectedText) return;
+
+    setIsPlaying(true);
+    try {
+      const audio = await ttsManager.createAudioElement(selectedText);
+      audioRef.current = audio;
+      
+      audio.onended = () => {
+        setIsPlaying(false);
+        audioRef.current = null;
+      };
+      
+      audio.onerror = () => {
+        setIsPlaying(false);
+        audioRef.current = null;
+      };
+      
+      await audio.play();
+    } catch (err) {
+      console.error('TTS playback failed:', err);
+      setIsPlaying(false);
+    }
+  };
 
   // CURSOR: Listen for mousedown outside to dismiss the translate button
   useEffect(() => {
@@ -34,10 +83,17 @@ export function SelectableText({ text, chatId, className = '', highlightedWordIn
     const handleDocumentMouseDown = (e: MouseEvent) => {
       // Don't dismiss if the popover is open (user is interacting with translation)
       if (popoverOpen) return;
-      // Don't dismiss if clicking on the translate button itself
-      if (buttonRef.current?.contains(e.target as Node)) return;
+      // Don't dismiss if clicking on the menu itself
+      if (menuRef.current?.contains(e.target as Node)) return;
       // Don't dismiss if selecting within this component
       if (containerRef.current?.contains(e.target as Node)) return;
+
+      // Stop audio if playing
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+        setIsPlaying(false);
+      }
 
       setSelectedText(null);
       setPopoverPosition(null);
@@ -55,6 +111,11 @@ export function SelectableText({ text, chatId, className = '', highlightedWordIn
       if (popoverOpen) return;
       const selection = window.getSelection();
       if (!selection?.toString().trim()) {
+        if (audioRef.current) {
+          audioRef.current.pause();
+          audioRef.current = null;
+          setIsPlaying(false);
+        }
         setSelectedText(null);
         setPopoverPosition(null);
       }
@@ -118,29 +179,61 @@ export function SelectableText({ text, chatId, className = '', highlightedWordIn
         {renderHighlightedText()}
       </p>
       
-      {/* Translation popup for selected text */}
+      {/* Selection action menu */}
       {selectedText && popoverPosition && (
         <div 
-          ref={buttonRef}
-          className="fixed z-50"
+          ref={menuRef}
+          className="fixed z-50 flex items-center gap-1 p-1 bg-background border rounded-lg shadow-lg animate-in fade-in zoom-in-95 duration-100"
           style={{ 
             left: popoverPosition.x, 
             top: popoverPosition.y - 10,
             transform: 'translate(-50%, -100%)',
           }}
         >
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-8 w-8 p-0"
+            onClick={handlePlay}
+            title={isPlaying ? "Stop" : "Read Aloud"}
+          >
+            {isPlaying ? (
+              <Square className="h-4 w-4 fill-current" />
+            ) : (
+              <Play className="h-4 w-4 fill-current" />
+            )}
+          </Button>
+
+          <div className="w-[1px] h-4 bg-border mx-0.5" />
+
           <TranslationPopup 
             text={selectedText} 
             chatId={chatId}
-            onOpenChange={setPopoverOpen}
+            onOpenChange={(open) => {
+              setPopoverOpen(open);
+              if (open && isPlaying) {
+                // Stop audio when opening translation to avoid overlay
+                if (audioRef.current) {
+                  audioRef.current.pause();
+                  audioRef.current = null;
+                  setIsPlaying(false);
+                }
+              }
+            }}
             onSaveToVocabulary={() => {
               setSelectedText(null);
               setPopoverPosition(null);
             }}
           >
-            <button className="px-3 py-1.5 bg-primary text-primary-foreground rounded-lg shadow-lg text-sm font-medium hover:bg-primary/90 transition-colors">
-              Translate
-            </button>
+            <Button 
+              size="sm"
+              variant="ghost"
+              className="h-8 gap-2 px-2"
+              title="Translate"
+            >
+              <Languages className="h-4 w-4" />
+              <span className="text-xs font-medium">Translate</span>
+            </Button>
           </TranslationPopup>
         </div>
       )}
