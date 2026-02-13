@@ -29,8 +29,6 @@ export interface AISettings {
 export interface ContextSettings {
   recentWindowSize: number;
   summarizeAfterMessages: number;
-  summarizationProvider: 'same' | 'local';
-  localSummarizationModel?: string;
   disableSummarization: boolean;
 }
 
@@ -86,7 +84,6 @@ const defaultSettings: AppSettings = {
   context: {
     recentWindowSize: 20,
     summarizeAfterMessages: 10,
-    summarizationProvider: 'same',
     disableSummarization: false,
   },
   ui: {

@@ -8,6 +8,7 @@ export class OpenAIChatProvider implements AIProvider {
   name = 'OpenAI (Chat)';
   type = 'cloud' as const;
   contextMode = 'manual' as const;
+
   
   models: AIModel[] = [
     { id: 'gpt-4o-mini', name: 'GPT-4o Mini', contextWindow: 128000, description: 'Fast and affordable' },
@@ -97,18 +98,18 @@ export class OpenAIChatProvider implements AIProvider {
       const model = options?.model || 'gpt-4o-audio-preview';
       console.log('[OpenAI Respond] Audio mode, model:', model);
 
-      // CURSOR: Build user message with Whisper transcription as ground truth
+      // CURSOR: Build user message with Whisper transcription
       const whisperText = options?.whisperTranscription;
       const userTextContent = whisperText
-        ? `${conversationContext}\n\nVERIFIED TRANSCRIPTION (from Whisper, use this EXACTLY as transcribedText): "${whisperText}"\n\nNow listen to the audio ONLY for pronunciation analysis. The transcription above is correct - do NOT change it. Respond as a tutor to what the learner said, and analyze their pronunciation from the audio.`
-        : `${conversationContext}\n\nNow listen to the audio, respond as a tutor, and analyze the learner's message. JSON only. List ALL mispronounced words.`;
+        ? `${conversationContext}\n\nDRAFT TRANSCRIPTION (from local STT): "${whisperText}"\n\nNote: This transcription may contain errors. Use it as a guide, but if the audio clearly indicates a different word (especially names or proper nouns).`
+        : `${conversationContext}\n\nNow listen to the audio, respond as a tutor, and analyze the learner's message and pronunciation. JSON only. List ALL mispronounced words.`;
 
       response = await this.client.chat.completions.create({
         model,
         messages: [
           {
             role: 'system',
-            content: `${unifiedPrompt}\n\nCRITICAL: Respond ONLY with valid JSON. Start with { and end with }. Nothing else.\n${whisperText ? 'CRITICAL: The transcribedText field MUST be EXACTLY: "' + whisperText + '". This was verified by Whisper. Do NOT modify, rephrase, or reinterpret it.' : 'CRITICAL: The mispronunciations array MUST contain ALL mispronounced words. Do NOT truncate or limit this array.'}`,
+            content: `${unifiedPrompt}\n\nCRITICAL: Respond ONLY with valid JSON. Start with { and end with }. Nothing else.\n${whisperText ? 'CRITICAL: The transcribedText field should match the audio. If the draft transcription differs from what you hear, use your correction.' : 'CRITICAL: The mispronunciations array MUST contain ALL mispronounced words. Do NOT truncate or limit this array.'}`,
           },
           {
             role: 'user',
@@ -176,9 +177,8 @@ export class OpenAIChatProvider implements AIProvider {
       if (hasAudio) {
         analysis.pronunciation = {
           pronunciationScore: parsed.analysis?.pronunciationScore ?? 70,
-          // CURSOR: Always use Whisper transcription as ground truth - it's accurate
-          // The chat model hallucinates transcriptions based on conversation context
-          transcribedText: whisperTranscription || parsed.analysis?.transcribedText || '',
+          // CURSOR: AI transcription is now grounded by the draft, so we can trust it to correct errors
+          transcribedText: parsed.analysis?.transcribedText || whisperTranscription || '',
           mispronunciations: Array.isArray(parsed.analysis?.mispronunciations)
             ? parsed.analysis.mispronunciations.map((item: { word?: string; heardAs?: string; correctPronunciation?: string }) => ({
                 word: item.word ?? '',

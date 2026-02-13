@@ -1,7 +1,6 @@
 'use client';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
@@ -81,39 +80,7 @@ export function ContextSettings() {
               </p>
             </div>
 
-            <Separator />
 
-            {/* Summarization provider */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium">{t('settings.context.summarizationProvider')}</label>
-              <Select
-                value={context.summarizationProvider}
-                onValueChange={(value: 'same' | 'local') => setContextSettings({ summarizationProvider: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder={t('settings.context.selectProvider')} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="same">
-                    <div className="flex flex-col">
-                      <span>{t('settings.context.sameAsChat')}</span>
-                      <span className="text-xs text-muted-foreground">{t('settings.context.sameAsChatDesc')}</span>
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="local">
-                    <div className="flex flex-col">
-                      <span>{t('settings.context.local')}</span>
-                      <span className="text-xs text-muted-foreground">{t('settings.context.localDesc')}</span>
-                    </div>
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground">
-                {context.summarizationProvider === 'local' 
-                  ? t('settings.context.localProviderNote')
-                  : t('settings.context.sameProviderNote')}
-              </p>
-            </div>
           </>
         )}
 

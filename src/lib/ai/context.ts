@@ -7,8 +7,6 @@ import { aiManager } from './manager';
 export interface ContextSettings {
   recentWindowSize: number; // Messages kept in full (default: 20)
   summarizeAfterMessages: number; // Trigger summarization every N messages (default: 10)
-  summarizationProvider: 'same' | 'local'; // Use chat provider or local
-  localSummarizationModel?: string;
   textModel?: string; // Text model for summarization (from user settings)
   disableSummarization: boolean;
 }
@@ -17,7 +15,6 @@ export interface ContextSettings {
 export const DEFAULT_CONTEXT_SETTINGS: ContextSettings = {
   recentWindowSize: 20,
   summarizeAfterMessages: 10,
-  summarizationProvider: 'same',
   disableSummarization: false,
 };
 

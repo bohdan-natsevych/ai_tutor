@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
 import { useSettingsStore } from '@/stores/settingsStore';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 
@@ -14,49 +13,25 @@ interface ModelInfo {
   contextWindow?: number;
 }
 
-interface ProviderInfo {
-  id: string;
-  name: string;
-  type: string;
-  contextMode: string;
-  description: string;
-}
-
 export function AIProviderSelector() {
   const { ai, setAISettings } = useSettingsStore();
   const { t } = useTranslation();
 
-  // Dynamically fetched providers and models
-  const [providers, setProviders] = useState<ProviderInfo[]>([]);
+  // Dynamically fetched models
   const [models, setModels] = useState<ModelInfo[]>([]);
   const [textModels, setTextModels] = useState<ModelInfo[]>([]);
-  const [loadingProviders, setLoadingProviders] = useState(true);
   const [loadingModels, setLoadingModels] = useState(false);
   const [loadingTextModels, setLoadingTextModels] = useState(false);
   const [modelsError, setModelsError] = useState<string | null>(null);
   const [textModelsError, setTextModelsError] = useState<string | null>(null);
 
-  // Fetch available providers on mount
-  useEffect(() => {
-    setLoadingProviders(true);
-    fetch('/api/providers')
-      .then(res => res.json())
-      .then(data => {
-        setProviders(data.providers || []);
-      })
-      .catch(err => {
-        console.error('[AIProviderSelector] Failed to fetch providers:', err);
-        setProviders([]);
-      })
-      .finally(() => setLoadingProviders(false));
-  }, []);
-
-  // Fetch audio models when provider changes
+  // Fetch audio models on mount or provider change
   useEffect(() => {
     setLoadingModels(true);
     setModelsError(null);
 
-    fetch('/api/models')
+    // Fetch models for the selected provider
+    fetch(`/api/models?provider=${ai.provider}`)
       .then(res => res.json())
       .then(data => {
         if (data.error) {
@@ -74,7 +49,7 @@ export function AIProviderSelector() {
       .finally(() => setLoadingModels(false));
   }, [ai.provider]);
 
-  // Fetch text models when provider changes
+  // Fetch text models on mount
   useEffect(() => {
     setLoadingTextModels(true);
     setTextModelsError(null);
@@ -95,9 +70,7 @@ export function AIProviderSelector() {
         setTextModels([]);
       })
       .finally(() => setLoadingTextModels(false));
-  }, [ai.provider]);
-
-  const currentProvider = providers.find(p => p.id === ai.provider);
+  }, []);
 
   return (
     <Card>
@@ -108,42 +81,21 @@ export function AIProviderSelector() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* AI Provider */}
+        {/* Provider Selection (Chat vs Assistant) */}
         <div className="space-y-2">
           <label className="text-sm font-medium">{t('settings.ai.provider')}</label>
-          {loadingProviders ? (
-            <div className="h-10 flex items-center px-3 border rounded-md bg-muted">
-              <span className="text-sm text-muted-foreground">{t('settings.ai.loadingProviders')}</span>
-            </div>
-          ) : (
-            <Select
-              value={ai.provider}
-              onValueChange={(value) => {
-                setAISettings({ provider: value });
-              }}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder={t('settings.ai.selectProvider')} />
-              </SelectTrigger>
-              <SelectContent>
-                {providers.map((provider) => (
-                  <SelectItem key={provider.id} value={provider.id}>
-                    <div className="flex items-center gap-2">
-                      <span>{provider.name}</span>
-                      <Badge variant="outline" className="text-xs">
-                        {provider.type}
-                      </Badge>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
-          {currentProvider && (
-            <p className="text-xs text-muted-foreground">
-              {currentProvider.description}
-            </p>
-          )}
+          <Select
+            value={ai.provider}
+            onValueChange={(value) => setAISettings({ provider: value })}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select Provider" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="openai-chat">OpenAI (Chat)</SelectItem>
+              <SelectItem value="openai-assistant">OpenAI (Assistant)</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Audio Model selection */}

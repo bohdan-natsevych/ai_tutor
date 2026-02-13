@@ -134,8 +134,6 @@ export interface AISettings {
 export interface ContextSettings {
   recentWindowSize: number;
   summarizeAfterMessages: number;
-  summarizationProvider: 'same' | 'local';
-  localSummarizationModel?: string;
   disableSummarization: boolean;
 }
 
