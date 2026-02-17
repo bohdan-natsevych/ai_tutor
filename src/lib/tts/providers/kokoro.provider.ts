@@ -1,6 +1,6 @@
 import type { TTSProvider, TTSOptions, Voice, TTSProviderStatus } from '../types';
 
-// Kokoro TTS Provider (Local WebGPU)
+// CURSOR: Kokoro TTS Provider with dynamic device selection (WebGPU -> WASM fallback)
 // Uses kokoro-js library for high-quality local TTS
 
 export class KokoroProvider implements TTSProvider {
@@ -72,13 +72,28 @@ export class KokoroProvider implements TTSProvider {
     loading: false,
   };
 
+  // CURSOR: Detect the best available device: WebGPU if supported, otherwise WASM
+  private async detectDevice(): Promise<'webgpu' | 'wasm'> {
+    try {
+      const gpu = (navigator as Navigator & { gpu?: { requestAdapter: () => Promise<unknown> } }).gpu;
+      if (gpu) {
+        const adapter = await gpu.requestAdapter();
+        if (adapter) {
+          return 'webgpu';
+        }
+      }
+    } catch {
+      // WebGPU not available, fall through to WASM
+    }
+    return 'wasm';
+  }
+
   async initialize(): Promise<void> {
     // CURSOR: Skip if already initialized or currently loading
     if (this.status.initialized) {
       return;
     }
     if (this.status.loading) {
-      // Already loading, wait for it to complete by polling
       return new Promise((resolve) => {
         const checkStatus = () => {
           if (!this.status.loading) {
@@ -100,28 +115,21 @@ export class KokoroProvider implements TTSProvider {
       return;
     }
 
-    // Check WebGPU support
-    const gpu = (navigator as Navigator & { gpu?: unknown }).gpu;
-    if (!gpu) {
-      this.status = {
-        initialized: false,
-        loading: false,
-        error: 'WebGPU not supported in this browser',
-      };
-      return;
-    }
-
     this.status.loading = true;
     this.status.progress = 0;
 
+    const device = await this.detectDevice();
+    console.log(`[Kokoro TTS] Using device: ${device}`);
+
     try {
-      // Dynamically import kokoro-js to avoid SSR issues
       const { KokoroTTS } = await import('kokoro-js');
       
-      // Initialize Kokoro TTS
+      // CURSOR: Use fp32 for WebGPU (recommended by kokoro-js), default dtype for WASM
+      const dtype = device === 'webgpu' ? 'fp32' : 'q8';
+
       this.kokoro = await KokoroTTS.from_pretrained('onnx-community/Kokoro-82M-v1.0-ONNX', {
-        dtype: 'fp32',
-        device: 'webgpu',
+        dtype,
+        device,
         progress_callback: (progress: unknown) => {
           const p = progress as { progress?: number };
           if (p.progress !== undefined) {
@@ -134,6 +142,7 @@ export class KokoroProvider implements TTSProvider {
         initialized: true,
         loading: false,
         progress: 100,
+        device,
       };
     } catch (error) {
       this.status = {
@@ -171,25 +180,16 @@ export class KokoroProvider implements TTSProvider {
     return this.voices;
   }
 
+  // CURSOR: Kokoro is available in any browser env (WebGPU for speed, WASM as fallback)
   async isAvailable(): Promise<boolean> {
-    if (typeof window === 'undefined') return false;
-    
-    const gpu = (navigator as Navigator & { gpu?: { requestAdapter: () => Promise<unknown> } }).gpu;
-    if (!gpu) return false;
-    
-    try {
-      const adapter = await gpu.requestAdapter();
-      return adapter !== null;
-    } catch {
-      return false;
-    }
+    return typeof window !== 'undefined';
   }
 
   getStatus(): TTSProviderStatus {
     return this.status;
   }
 
-  // CURSOR: Cleanup WebGPU resources
+  // CURSOR: Cleanup resources
   cleanup(): void {
     this.kokoro = null;
     this.status = {

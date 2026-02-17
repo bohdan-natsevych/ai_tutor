@@ -56,6 +56,7 @@ export interface TTSProviderStatus {
   loading: boolean;
   error?: string;
   progress?: number; // 0-100 for model downloads
+  device?: 'webgpu' | 'wasm'; // CURSOR: Active device backend for local providers
 }
 
 export interface TTSProviderConfig {
