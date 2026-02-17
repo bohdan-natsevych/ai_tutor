@@ -88,22 +88,30 @@ export class KokoroProvider implements TTSProvider {
     return 'wasm';
   }
 
+  // CURSOR: Wait for an in-progress initialization, then verify it succeeded
+  private waitForLoading(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const check = () => {
+        if (!this.status.loading) {
+          if (this.status.initialized) {
+            resolve();
+          } else {
+            reject(new Error(this.status.error || 'Kokoro TTS initialization failed'));
+          }
+        } else {
+          setTimeout(check, 100);
+        }
+      };
+      check();
+    });
+  }
+
   async initialize(): Promise<void> {
-    // CURSOR: Skip if already initialized or currently loading
     if (this.status.initialized) {
       return;
     }
     if (this.status.loading) {
-      return new Promise((resolve) => {
-        const checkStatus = () => {
-          if (!this.status.loading) {
-            resolve();
-          } else {
-            setTimeout(checkStatus, 100);
-          }
-        };
-        checkStatus();
-      });
+      return this.waitForLoading();
     }
 
     if (typeof window === 'undefined') {
@@ -112,7 +120,7 @@ export class KokoroProvider implements TTSProvider {
         loading: false,
         error: 'Kokoro TTS requires browser environment',
       };
-      return;
+      throw new Error('Kokoro TTS requires browser environment');
     }
 
     this.status.loading = true;
@@ -124,7 +132,7 @@ export class KokoroProvider implements TTSProvider {
     try {
       const { KokoroTTS } = await import('kokoro-js');
       
-      // CURSOR: Use fp32 for WebGPU (recommended by kokoro-js), default dtype for WASM
+      // CURSOR: Use fp32 for WebGPU (recommended by kokoro-js), q8 for WASM (smaller download)
       const dtype = device === 'webgpu' ? 'fp32' : 'q8';
 
       this.kokoro = await KokoroTTS.from_pretrained('onnx-community/Kokoro-82M-v1.0-ONNX', {
@@ -145,11 +153,13 @@ export class KokoroProvider implements TTSProvider {
         device,
       };
     } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to initialize Kokoro TTS';
       this.status = {
         initialized: false,
         loading: false,
-        error: error instanceof Error ? error.message : 'Failed to initialize Kokoro TTS',
+        error: message,
       };
+      throw new Error(message);
     }
   }
 

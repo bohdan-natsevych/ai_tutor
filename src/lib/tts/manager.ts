@@ -26,6 +26,10 @@ class TTSManager {
       const provider = getTTSProvider(providerId);
       if (provider) {
         await provider.initialize();
+        // CURSOR: Verify initialization succeeded before assigning
+        if (!provider.getStatus().initialized) {
+          throw new Error(`Failed to initialize TTS provider: ${providerId}`);
+        }
         this.currentProvider = provider;
         this.config.providerId = providerId;
         return;
@@ -35,6 +39,9 @@ class TTSManager {
     // Use default provider
     const defaultProvider = await getDefaultTTSProvider();
     await defaultProvider.initialize();
+    if (!defaultProvider.getStatus().initialized) {
+      throw new Error(`Failed to initialize default TTS provider: ${defaultProvider.id}`);
+    }
     this.currentProvider = defaultProvider;
     this.config.providerId = defaultProvider.id;
   }
