@@ -111,10 +111,6 @@ export async function POST(request: NextRequest) {
       const messageId = uuidv4();
       const now = new Date();
       
-      // CURSOR: Create thread if provider needs it (e.g. Assistants API)
-      // Returns undefined for providers that don't implementation it (like standard chat)
-      const threadId = await aiManager.createThread();
-      
       const chat = {
         id: chatId,
         title: title || 'New Conversation',
@@ -126,7 +122,7 @@ export async function POST(request: NextRequest) {
         aiMode: (aiMode as 'chat' | 'assistant') || 'chat',
         createdAt: now,
         updatedAt: now,
-        threadId: threadId || null,
+        threadId: null,
       };
 
       // Generate opening message from AI

@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
 import { useSettingsStore } from '@/stores/settingsStore';
-import { ttsManager, createValidatedAudioElement } from '@/lib/tts/manager';
+import { ttsManager } from '@/lib/tts/manager';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 
 const TTS_PROVIDERS = [
@@ -175,25 +175,23 @@ export function VoiceSelector() {
       
       const sampleText = "Hello! This is how I sound. Nice to meet you!";
       const audioData = await ttsManager.synthesize(sampleText);
-      const { audio, audioUrl } = await createValidatedAudioElement(audioData);
+      const blob = new Blob([audioData], { type: 'audio/wav' });
+      const audioUrl = URL.createObjectURL(blob);
+      const audio = new Audio(audioUrl);
       audioRef.current = audio;
-      const cleanup = () => {
+      audio.onended = () => {
         URL.revokeObjectURL(audioUrl);
         if (audioRef.current === audio) audioRef.current = null;
         setIsPlayingPreview(false);
       };
-      audio.onended = cleanup;
       audio.onerror = () => {
-        console.error('[Voice Preview] Audio playback error:', audio.error?.message);
-        cleanup();
-      };
-      audio.onabort = () => {
-        console.error('[Voice Preview] Audio playback aborted.');
-        cleanup();
+        URL.revokeObjectURL(audioUrl);
+        if (audioRef.current === audio) audioRef.current = null;
+        setIsPlayingPreview(false);
       };
       await audio.play();
     } catch (err) {
-      console.error('[Voice Preview] Playback failed:', err);
+      console.error('Preview playback failed:', err);
       setIsPlayingPreview(false);
     }
   };
@@ -321,11 +319,12 @@ export function VoiceSelector() {
                 variant="outline"
                 size="sm"
                 onClick={handlePreviewVoice}
+                disabled={isPlayingPreview}
                 className="shrink-0"
               >
                 {isPlayingPreview ? (
                   <span className="flex items-center gap-1">
-                    <StopIcon className="h-4 w-4" />
+                    <span className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
                     {t('settings.voice.playing')}
                   </span>
                 ) : (
@@ -387,19 +386,6 @@ function PlayIcon({ className }: { className?: string }) {
       className={className}
     >
       <path d="M8 5.14v14l11-7-11-7z" />
-    </svg>
-  );
-}
-
-function StopIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      className={className}
-    >
-      <path d="M6 4h12v16H6V4z" />
     </svg>
   );
 }

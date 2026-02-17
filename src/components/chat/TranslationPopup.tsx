@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useSettingsStore } from '@/stores/settingsStore';
-import { ttsManager, createValidatedAudioElement } from '@/lib/tts/manager';
+import { ttsManager } from '@/lib/tts/manager';
 
 // CURSOR: TranslationPopup - Shows translation for selected text
 // Supports simple (DeepL) and rich (LLM) translation modes
@@ -82,20 +82,23 @@ export function TranslationPopup({
     setIsPlayingTTS(true);
     try {
       const audioData = await ttsManager.synthesize(text);
-      const { audio, audioUrl } = await createValidatedAudioElement(audioData);
+      const blob = new Blob([audioData], { type: 'audio/wav' });
+      const audioUrl = URL.createObjectURL(blob);
+      const audio = new Audio(audioUrl);
       audioRef.current = audio;
-      const cleanup = (logPrefix?: string) => {
-        if (logPrefix) console.error(logPrefix, audio.error?.message || '');
+      audio.onended = () => {
         URL.revokeObjectURL(audioUrl);
         if (audioRef.current === audio) audioRef.current = null;
         setIsPlayingTTS(false);
       };
-      audio.onended = () => cleanup();
-      audio.onerror = () => cleanup('[Translation TTS] Playback error:');
-      audio.onabort = () => cleanup('[Translation TTS] Playback aborted.');
+      audio.onerror = () => {
+        URL.revokeObjectURL(audioUrl);
+        if (audioRef.current === audio) audioRef.current = null;
+        setIsPlayingTTS(false);
+      };
       await audio.play();
     } catch (err) {
-      console.error('[Translation TTS] Playback failed:', err);
+      console.error('TTS playback failed:', err);
       setIsPlayingTTS(false);
     }
   };

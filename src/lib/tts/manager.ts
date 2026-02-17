@@ -3,55 +3,6 @@ import { getAllTTSProviders, getTTSProvider, getDefaultTTSProvider } from './pro
 
 // TTS Manager - Handles provider selection and audio synthesis
 
-// CURSOR: Validate audio metadata before playback to catch malformed WAV data.
-// If the WAV header is broken, audio.duration becomes Infinity/NaN and
-// the browser never fires onended, causing the UI to get stuck in "playing" state.
-export async function createValidatedAudioElement(
-  audioData: ArrayBuffer
-): Promise<{ audio: HTMLAudioElement; audioUrl: string }> {
-  const blob = new Blob([audioData], { type: 'audio/wav' });
-  const audioUrl = URL.createObjectURL(blob);
-  const audio = new Audio();
-
-  await new Promise<void>((resolve, reject) => {
-    audio.onloadedmetadata = () => {
-      if (!Number.isFinite(audio.duration) || audio.duration <= 0) {
-        URL.revokeObjectURL(audioUrl);
-        reject(
-          new Error(
-            `[TTS Audio] Invalid audio duration: ${audio.duration}. ` +
-              `The WAV data from TTS provider is malformed (onended would never fire).`
-          )
-        );
-        return;
-      }
-      resolve();
-    };
-
-    audio.onerror = () => {
-      URL.revokeObjectURL(audioUrl);
-      const mediaError = audio.error;
-      reject(
-        new Error(
-          `[TTS Audio] Failed to load audio: ` +
-            `${mediaError?.message || 'Unknown error'} (MediaError code: ${mediaError?.code ?? 'N/A'})`
-        )
-      );
-    };
-
-    // CURSOR: If loading is aborted, neither onloadedmetadata nor onerror fires,
-    // which would leave this promise hanging forever.
-    audio.onabort = () => {
-      URL.revokeObjectURL(audioUrl);
-      reject(new Error('[TTS Audio] Audio loading was aborted.'));
-    };
-
-    audio.src = audioUrl;
-  });
-
-  return { audio, audioUrl };
-}
-
 class TTSManager {
   private currentProvider: TTSProvider | null = null;
   private config: TTSProviderConfig = {
@@ -75,10 +26,6 @@ class TTSManager {
       const provider = getTTSProvider(providerId);
       if (provider) {
         await provider.initialize();
-        // CURSOR: Verify initialization succeeded before assigning
-        if (!provider.getStatus().initialized) {
-          throw new Error(`Failed to initialize TTS provider: ${providerId}`);
-        }
         this.currentProvider = provider;
         this.config.providerId = providerId;
         return;
@@ -88,9 +35,6 @@ class TTSManager {
     // Use default provider
     const defaultProvider = await getDefaultTTSProvider();
     await defaultProvider.initialize();
-    if (!defaultProvider.getStatus().initialized) {
-      throw new Error(`Failed to initialize default TTS provider: ${defaultProvider.id}`);
-    }
     this.currentProvider = defaultProvider;
     this.config.providerId = defaultProvider.id;
   }
@@ -187,14 +131,16 @@ class TTSManager {
     });
   }
 
-  // Create audio element from text (validates WAV before returning)
+  // Create audio element from text
   async createAudioElement(text: string, options?: Partial<TTSOptions>): Promise<HTMLAudioElement> {
     const audioData = await this.synthesize(text, options);
-    const { audio, audioUrl } = await createValidatedAudioElement(audioData);
-
-    audio.addEventListener('ended', () => URL.revokeObjectURL(audioUrl), { once: true });
-    audio.addEventListener('error', () => URL.revokeObjectURL(audioUrl), { once: true });
-
+    const blob = new Blob([audioData], { type: 'audio/wav' });
+    const url = URL.createObjectURL(blob);
+    const audio = new Audio(url);
+    
+    // Clean up URL when audio is no longer needed
+    audio.addEventListener('ended', () => URL.revokeObjectURL(url), { once: true });
+    
     return audio;
   }
 
