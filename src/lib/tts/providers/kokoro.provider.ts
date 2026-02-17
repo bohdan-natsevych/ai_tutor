@@ -126,25 +126,39 @@ export class KokoroProvider implements TTSProvider {
     this.status.loading = true;
     this.status.progress = 0;
 
-    const device = await this.detectDevice();
-    console.log(`[Kokoro TTS] Using device: ${device}`);
+    const preferredDevice = await this.detectDevice();
 
     try {
       const { KokoroTTS } = await import('kokoro-js');
-      
-      // CURSOR: Use fp32 for WebGPU (recommended by kokoro-js), q8 for WASM (smaller download)
-      const dtype = device === 'webgpu' ? 'fp32' : 'q8';
+      const progressCallback = (progress: unknown) => {
+        const p = progress as { progress?: number };
+        if (p.progress !== undefined) {
+          this.status.progress = Math.round(p.progress * 100);
+        }
+      };
 
-      this.kokoro = await KokoroTTS.from_pretrained('onnx-community/Kokoro-82M-v1.0-ONNX', {
-        dtype,
-        device,
-        progress_callback: (progress: unknown) => {
-          const p = progress as { progress?: number };
-          if (p.progress !== undefined) {
-            this.status.progress = Math.round(p.progress * 100);
-          }
-        },
-      });
+      // CURSOR: Try preferred device first, fall back to WASM if it fails
+      // Mirrors the pattern used by Whisper in wordTiming.ts
+      let device = preferredDevice;
+      try {
+        const dtype = device === 'webgpu' ? 'fp32' : 'q8';
+        console.log(`[Kokoro TTS] Initializing with device: ${device}`);
+        this.kokoro = await KokoroTTS.from_pretrained('onnx-community/Kokoro-82M-v1.0-ONNX', {
+          dtype,
+          device,
+          progress_callback: progressCallback,
+        });
+      } catch (primaryError) {
+        if (device === 'wasm') throw primaryError;
+        console.warn(`[Kokoro TTS] Failed with ${device}, falling back to WASM:`, primaryError);
+        device = 'wasm';
+        this.status.progress = 0;
+        this.kokoro = await KokoroTTS.from_pretrained('onnx-community/Kokoro-82M-v1.0-ONNX', {
+          dtype: 'q8',
+          device: 'wasm',
+          progress_callback: progressCallback,
+        });
+      }
 
       this.status = {
         initialized: true,

@@ -71,11 +71,36 @@ export function AudioPlayer({
 
   const handleLoadedMetadata = () => {
     if (audioRef.current) {
-      setDuration(audioRef.current.duration);
+      const dur = audioRef.current.duration;
+      if (!Number.isFinite(dur) || dur <= 0) {
+        console.error(
+          `[AudioPlayer] Invalid audio duration: ${dur}. ` +
+            `The WAV data is malformed (onended would never fire).`
+        );
+        setIsPlaying(false);
+        setProgress(0);
+        onPlayEnd?.();
+        return;
+      }
+      setDuration(dur);
     }
   };
 
   const handleEnded = () => {
+    setIsPlaying(false);
+    setProgress(0);
+    onPlayEnd?.();
+  };
+
+  const handleError = () => {
+    console.error('[AudioPlayer] Playback error:', audioRef.current?.error?.message || '');
+    setIsPlaying(false);
+    setProgress(0);
+    onPlayEnd?.();
+  };
+
+  const handleAbort = () => {
+    console.error('[AudioPlayer] Playback aborted.');
     setIsPlaying(false);
     setProgress(0);
     onPlayEnd?.();
@@ -106,6 +131,8 @@ export function AudioPlayer({
         onTimeUpdate={handleTimeUpdate}
         onLoadedMetadata={handleLoadedMetadata}
         onEnded={handleEnded}
+        onError={handleError}
+        onAbort={handleAbort}
       />
       
       {showControls && (

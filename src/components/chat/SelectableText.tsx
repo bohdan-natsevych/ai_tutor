@@ -59,19 +59,18 @@ export function SelectableText({ text, chatId, className = '', highlightedWordIn
       const audio = await ttsManager.createAudioElement(selectedText);
       audioRef.current = audio;
       
-      audio.onended = () => {
+      const cleanup = (logPrefix?: string) => {
+        if (logPrefix) console.error(logPrefix, audio.error?.message || '');
         setIsPlaying(false);
         audioRef.current = null;
       };
-      
-      audio.onerror = () => {
-        setIsPlaying(false);
-        audioRef.current = null;
-      };
-      
+      audio.onended = () => cleanup();
+      audio.onerror = () => cleanup('[Selection TTS] Playback error:');
+      audio.onabort = () => cleanup('[Selection TTS] Playback aborted.');
+
       await audio.play();
     } catch (err) {
-      console.error('TTS playback failed:', err);
+      console.error('[Selection TTS] Playback failed:', err);
       setIsPlaying(false);
     }
   };

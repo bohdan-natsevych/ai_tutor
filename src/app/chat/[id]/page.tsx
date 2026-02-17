@@ -11,7 +11,7 @@ import { AnalysisPanel } from '@/components/chat/AnalysisPanel';
 import { useChatStore, type ChatMessage as ChatMessageType, type WordTimestamp, type ReplySuggestion } from '@/stores/chatStore';
 import { getWordTimestamps } from '@/lib/whisper/wordTiming';
 import { useSettingsStore } from '@/stores/settingsStore';
-import { ttsManager } from '@/lib/tts/manager';
+import { ttsManager, createValidatedAudioElement } from '@/lib/tts/manager';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import { HeaderLanguageSelector } from '@/components/layout/HeaderLanguageSelector';
 import { getDisplayTitle } from '@/lib/chatUtils';
@@ -438,10 +438,8 @@ export default function ChatPage({ params }: ChatPageProps) {
       // CURSOR: Get audio data (ArrayBuffer) for Whisper analysis
       const audioData = await ttsManager.synthesize(content);
       
-      // CURSOR: Create audio element from data
-      const blob = new Blob([audioData], { type: 'audio/wav' });
-      const audioUrl = URL.createObjectURL(blob);
-      const audio = new Audio(audioUrl);
+      // CURSOR: Create validated audio element (throws if WAV is malformed)
+      const { audio, audioUrl } = await createValidatedAudioElement(audioData);
       
       // CURSOR: Store audio ref for pause/resume/stop control
       currentAudioRef.current = audio;
@@ -468,19 +466,8 @@ export default function ChatPage({ params }: ChatPageProps) {
         console.error('[Whisper] Failed to get timestamps:', err);
       });
 
-      audio.onended = () => {
-        updateMessage(messageId, { 
-          state: 'revealed',
-          audioPlayed: true,
-        });
-        currentAudioRef.current = null;
-        setCurrentlyPlaying(null);
-        setIsPaused(false);
-        URL.revokeObjectURL(audioUrl);
-      };
-
-      audio.onerror = () => {
-        console.error('Audio playback failed');
+      const cleanupAudio = (logPrefix?: string) => {
+        if (logPrefix) console.error(logPrefix, audio.error?.message || '');
         updateMessage(messageId, { state: 'revealed', audioPlayed: true });
         currentAudioRef.current = null;
         setCurrentlyPlaying(null);
@@ -488,9 +475,13 @@ export default function ChatPage({ params }: ChatPageProps) {
         URL.revokeObjectURL(audioUrl);
       };
 
+      audio.onended = () => cleanupAudio();
+      audio.onerror = () => cleanupAudio('[Audio] Playback error:');
+      audio.onabort = () => cleanupAudio('[Audio] Playback aborted.');
+
       await audio.play();
     } catch (err) {
-      console.error('TTS failed:', err);
+      console.error('[Audio] TTS failed:', err);
       updateMessage(messageId, { state: 'revealed', audioPlayed: true });
       currentAudioRef.current = null;
       setCurrentlyPlaying(null);
