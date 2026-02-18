@@ -172,7 +172,7 @@ Respond ONLY with valid JSON:
 };
 
 // CURSOR: The editable instruction portion shown to the user. Wrapped by hidden context in route.ts.
-export const DEFAULT_GENERAL_OPENING = "Surprise me with a interesting topic";
+export const DEFAULT_GENERAL_OPENING = "Let's have a casual chat.";
 
 // CURSOR: Builds the full system prompt by composing header, editable body, and hardcoded footer
 export function buildSystemPrompt(
