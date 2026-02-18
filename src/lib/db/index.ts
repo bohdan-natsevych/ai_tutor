@@ -35,11 +35,16 @@ function initializeDatabase() {
     // PostgreSQL setup for production (Vercel/Neon)
     const sql = neon(databaseUrl);
     _db = drizzlePostgres(sql, { schema: schemaPostgres });
-    console.log('📊 Using PostgreSQL database');
+
+    // CURSOR: Ensure new columns exist for existing Postgres databases
+    sql(`ALTER TABLE chats ADD COLUMN IF NOT EXISTS custom_prompt TEXT`).catch(() => {});
+    sql(`ALTER TABLE chats ADD COLUMN IF NOT EXISTS level TEXT DEFAULT 'intermediate'`).catch(() => {});
+
+    console.log('Using PostgreSQL database');
   } else {
     // SQLite setup for local development only (not during build)
     if (process.env.NEXT_PHASE === 'phase-production-build') {
-      console.log('⚠️ Skipping SQLite initialization during build');
+      console.log('Skipping SQLite initialization during build');
       return;
     }
 
@@ -64,6 +69,7 @@ function initializeDatabase() {
         topic_type TEXT DEFAULT 'general',
         topic_details TEXT,
         custom_prompt TEXT,
+        level TEXT DEFAULT 'intermediate',
         language TEXT DEFAULT 'en',
         dialect TEXT DEFAULT 'american',
         thread_id TEXT,
@@ -112,6 +118,9 @@ function initializeDatabase() {
     const chatColumnNames = new Set((chatColumns as Array<{ name: string }>).map((col) => col.name));
     if (!chatColumnNames.has('custom_prompt')) {
       sqlite.exec(`ALTER TABLE chats ADD COLUMN custom_prompt TEXT;`);
+    }
+    if (!chatColumnNames.has('level')) {
+      sqlite.exec(`ALTER TABLE chats ADD COLUMN level TEXT DEFAULT 'intermediate';`);
     }
 
     const messageColumns = sqlite.prepare(`PRAGMA table_info(messages);`).all();

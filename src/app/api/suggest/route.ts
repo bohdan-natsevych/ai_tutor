@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getChat, getChatMessages } from '@/lib/db/queries';
 import { aiManager } from '@/lib/ai/manager';
 import { contextManager } from '@/lib/ai/context';
-import { buildSystemPrompt, getSuggestionPrompt } from '@/lib/ai/prompts';
+import { buildSystemPrompt, getSuggestionPrompt, type ProficiencyLevel } from '@/lib/ai/prompts';
 
 // CURSOR: Track last initialized provider to reinitialize when changed
 let lastInitializedProvider: string | null = null;
@@ -39,6 +39,7 @@ export async function POST(request: NextRequest) {
     
     let topicType: string;
     let learningLanguage: string;
+    let chatLevel: ProficiencyLevel;
     let topicDetails: Record<string, unknown> = {};
     let conversationMessages: { role: string; content: string }[];
     
@@ -46,6 +47,7 @@ export async function POST(request: NextRequest) {
       // Chat exists in DB - use DB data
       topicType = chat.topicType || 'general';
       learningLanguage = chat.language || 'en';
+      chatLevel = (chat.level as ProficiencyLevel) || 'intermediate';
       try {
         topicDetails = chat.topicDetails ? JSON.parse(chat.topicDetails) : {};
       } catch {
@@ -60,6 +62,7 @@ export async function POST(request: NextRequest) {
       // Pending chat - use inline context from client
       topicType = chatContext.topicType || 'general';
       learningLanguage = chatContext.language || 'en';
+      chatLevel = (chatContext.level as ProficiencyLevel) || 'intermediate';
       try {
         topicDetails = chatContext.topicDetails ? JSON.parse(chatContext.topicDetails) : {};
       } catch {
@@ -74,7 +77,8 @@ export async function POST(request: NextRequest) {
       topicType as 'general' | 'roleplay' | 'topic',
       topicDetails.topicKey as string | undefined,
       undefined,
-      learningLanguage
+      learningLanguage,
+      chatLevel
     );
     
     // Build context - use DB context if available, otherwise build from inline messages
@@ -92,8 +96,7 @@ export async function POST(request: NextRequest) {
       };
     }
     
-    // CURSOR: Get suggestion prompt with learning language
-    const suggestionPrompt = getSuggestionPrompt(count, learningLanguage);
+    const suggestionPrompt = getSuggestionPrompt(count, learningLanguage, chatLevel);
     
     // CURSOR: Build recent messages string for the prompt
     const recentMessagesStr = conversationMessages.map(m => 

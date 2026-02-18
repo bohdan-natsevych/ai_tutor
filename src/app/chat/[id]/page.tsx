@@ -804,6 +804,7 @@ export default function ChatPage({ params }: ChatPageProps) {
           chatContext: {
             topicType: currentChat?.topicType || 'general',
             language: currentChat?.language || language.learning,
+            level: currentChat?.level,
             topicDetails: currentChat?.topicDetails,
           },
           recentMessages: messages.slice(-6).map(m => ({

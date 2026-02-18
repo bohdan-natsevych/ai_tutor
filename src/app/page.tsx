@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { getRoleplayScenarios, getTopics, DEFAULT_GENERAL_OPENING } from '@/lib/ai/prompts';
+import { getRoleplayScenarios, getTopics, DEFAULT_GENERAL_OPENING, type ProficiencyLevel } from '@/lib/ai/prompts';
 import { useSettingsStore } from '@/stores/settingsStore';
 import type { Chat } from '@/stores/chatStore';
 import { useTranslation } from '@/lib/i18n/useTranslation';
@@ -26,6 +26,7 @@ export default function HomePage() {
   const [openingPrompt, setOpeningPrompt] = useState(DEFAULT_GENERAL_OPENING);
   const [showNewChatDialog, setShowNewChatDialog] = useState(false);
   const [selectedTab, setSelectedTab] = useState<'general' | 'roleplay' | 'topic'>('general');
+  const [selectedLevel, setSelectedLevel] = useState<ProficiencyLevel>('intermediate');
   const { t, lang } = useTranslation();
 
   const ai = useSettingsStore((state) => state.ai);
@@ -57,6 +58,7 @@ export default function HomePage() {
           title: newChatTitle || getDefaultTitle(topicType, topicKey),
           topicType,
           topicKey,
+          level: selectedLevel,
           aiProvider: ai.provider,
           aiModel: ai.model,
           aiTextModel: ai.textModel,
@@ -82,6 +84,7 @@ export default function HomePage() {
       setShowNewChatDialog(false);
       setNewChatTitle('');
       setOpeningPrompt(DEFAULT_GENERAL_OPENING);
+      setSelectedLevel('intermediate');
     }
   };
 
@@ -258,7 +261,7 @@ export default function HomePage() {
 
         {/* Conversation setup / scenario picker dialog */}
         {showNewChatDialog && (
-          <Dialog open={showNewChatDialog} onOpenChange={(open) => { if (!open) { setNewChatTitle(''); setOpeningPrompt(DEFAULT_GENERAL_OPENING); } setShowNewChatDialog(open); }}>
+          <Dialog open={showNewChatDialog} onOpenChange={(open) => { if (!open) { setNewChatTitle(''); setOpeningPrompt(DEFAULT_GENERAL_OPENING); setSelectedLevel('intermediate'); } setShowNewChatDialog(open); }}>
             <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>
@@ -270,6 +273,32 @@ export default function HomePage() {
               </DialogHeader>
 
               <div className="space-y-4 py-2">
+                {/* CURSOR: Level picker -- shown for all conversation types */}
+                <div className="grid gap-2">
+                  <Label>{t('home.dialog.level')}</Label>
+                  <div className="grid grid-cols-4 gap-2">
+                    {(['novice', 'beginner', 'intermediate', 'advanced'] as const).map((level) => {
+                      const labelKey = `home.dialog.level${level.charAt(0).toUpperCase() + level.slice(1)}` as TranslationKey;
+                      const descKey = `home.dialog.level${level.charAt(0).toUpperCase() + level.slice(1)}Desc` as TranslationKey;
+                      return (
+                        <button
+                          key={level}
+                          type="button"
+                          onClick={() => setSelectedLevel(level)}
+                          className={`flex flex-col items-center gap-1 rounded-lg border p-2.5 text-center transition-colors ${
+                            selectedLevel === level
+                              ? 'border-primary bg-primary/5 ring-1 ring-primary'
+                              : 'border-border hover:border-primary/40'
+                          }`}
+                        >
+                          <span className="text-xs font-medium">{t(labelKey)}</span>
+                          <span className="text-[10px] text-muted-foreground leading-tight">{t(descKey)}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
                 {selectedTab === 'general' && (
                   <>
                     <div className="grid gap-2">
@@ -376,9 +405,16 @@ export default function HomePage() {
                         </div>
                         <h3 className="text-sm font-medium line-clamp-2 mb-2">{getDisplayTitle(chat, t)}</h3>
                         <div className="flex items-center justify-between">
-                          <span className="text-xs bg-muted px-2 py-0.5 rounded-full capitalize">
-                        {chat.topicType === 'general' ? t('home.typeGeneral') : chat.topicType === 'roleplay' ? t('home.typeRoleplay') : t('home.typeTopic')}
-                      </span>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-xs bg-muted px-2 py-0.5 rounded-full capitalize">
+                              {chat.topicType === 'general' ? t('home.typeGeneral') : chat.topicType === 'roleplay' ? t('home.typeRoleplay') : t('home.typeTopic')}
+                            </span>
+                            {chat.level && (
+                              <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+                                {t((`home.level.${chat.level}`) as TranslationKey)}
+                              </span>
+                            )}
+                          </div>
                           <span className="text-xs text-muted-foreground">
                             {formatDate(chat.updatedAt, t, lang)}
                           </span>

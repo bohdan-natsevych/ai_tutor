@@ -1,5 +1,76 @@
 // System prompts for the AI tutor
 
+export type ProficiencyLevel = 'novice' | 'beginner' | 'intermediate' | 'advanced';
+
+// CURSOR: Per-level instructions injected into the tutor system prompt to control language complexity
+export const LEVEL_INSTRUCTIONS: Record<ProficiencyLevel, string> = {
+  novice: `--- LEARNER LEVEL: NOVICE ---
+The learner is at a novice level. You MUST:
+- Use only the most basic, common everyday words
+- Keep sentences very short (3-6 words)
+- Avoid ALL idioms, slang, phrasal verbs, and figurative language
+- Avoid complex tenses
+- Repeat key vocabulary naturally in different sentences
+- If the learner doesn't understand, rephrase with even simpler words`,
+
+  beginner: `--- LEARNER LEVEL: BEGINNER ---
+The learner is at a beginner level. You MUST:
+- Use basic, common vocabulary
+- Keep sentences short and simple (5-10 words)
+- Avoid idioms and figurative language
+- Avoid complex tenses
+- Introduce new words gently, one at a time
+- Rephrase if the learner seems confused`,
+
+  intermediate: `--- LEARNER LEVEL: INTERMEDIATE ---
+The learner is at an intermediate level. You SHOULD:
+- Use natural, everyday vocabulary with some variety
+- Use normal sentence structures including compound sentences
+- Occasionally introduce common idioms or expressions, explaining if needed
+- Use all standard tenses naturally
+- Gently push their vocabulary by using slightly challenging words in context`,
+
+  advanced: `--- LEARNER LEVEL: ADVANCED ---
+The learner is at an advanced level. You SHOULD:
+- Use rich, varied vocabulary including nuanced word choices
+- Use idioms, phrasal verbs, collocations, and figurative language freely
+- Use complex sentence structures, subordinate clauses, and varied syntax
+- Employ register-appropriate language (formal/informal as context demands)
+- Challenge them with sophisticated expressions and less common vocabulary
+- Do NOT simplify your language; speak as you would to a fellow native speaker`,
+};
+
+// CURSOR: Per-level grading calibration injected into the unified analysis prompt
+export const LEVEL_GRADING_INSTRUCTIONS: Record<ProficiencyLevel, string> = {
+  novice: `--- GRADING CALIBRATION: NOVICE ---
+Adjust your scoring for a novice learner:
+- Grammar: Be very lenient. Simple tense errors and article mistakes are expected. Score 70+ if the core meaning is clear.
+- Vocabulary: Basic words are expected and sufficient. Do NOT penalize limited range. Only suggest the simplest alternatives.
+- Pronunciation: Be very lenient. Foreign accent is completely normal and expected.
+- Overall: Focus on encouragement. Highlight what they did well BEFORE mentioning any errors. Limit corrections to 1-2 most important ones.`,
+
+  beginner: `--- GRADING CALIBRATION: BEGINNER ---
+Adjust your scoring for a beginner learner:
+- Grammar: Be lenient. Common errors (articles, prepositions, basic conjugation) are expected. Score 60+ if meaning is understandable.
+- Vocabulary: Simple vocabulary is fine. Suggest slightly better alternatives but keep suggestions basic.
+- Pronunciation: Be lenient.
+- Overall: Balance encouragement with gentle corrections.`,
+
+  intermediate: `--- GRADING CALIBRATION: INTERMEDIATE ---
+Adjust your scoring for an intermediate learner:
+- Grammar: Apply moderate standards. Common errors should be noted. Score reflects actual grammatical accuracy.
+- Vocabulary: Expect reasonable variety. Suggest more natural or precise alternatives when appropriate.
+- Pronunciation: Apply moderate standards. Flag noticeable errors but remain tolerant of accent.
+- Overall: Provide balanced feedback with specific, actionable improvements.`,
+
+  advanced: `--- GRADING CALIBRATION: ADVANCED ---
+Adjust your scoring for an advanced learner:
+- Grammar: Apply strict standards. Even subtle errors (article usage, preposition choice, tense nuance) should be noted.
+- Vocabulary: Expect varied, precise word choice. Suggest more sophisticated or idiomatic alternatives. Note when a simpler word was used where a more precise one exists.
+- Pronunciation: Apply stricter standards. Note stress errors, intonation issues, and subtle mispronunciations.
+- Overall: Provide detailed, specific feedback aimed at near-native refinement. Be thorough in corrections.`,
+};
+
 export const SYSTEM_PROMPTS = {
   // Main tutor system prompt - uses {{LEARNING_LANGUAGE}} placeholder
   tutorHeader: `You are a language tutor helping someone learn {{LEARNING_LANGUAGE}}. Your role is to:`,
@@ -180,19 +251,20 @@ export function buildSystemPrompt(
   topicKey?: string,
   customPrompt?: string,
   learningLanguage?: string,
+  level?: ProficiencyLevel,
 ): string {
   const langName = learningLanguage ? (LANGUAGE_NAMES[learningLanguage] || learningLanguage) : 'English';
   
-  // Construct the base prompt from parts
   const header = SYSTEM_PROMPTS.tutorHeader.replace(/\{\{LEARNING_LANGUAGE\}\}/g, langName);
   const footer = SYSTEM_PROMPTS.tutorFooter.replace(/\{\{LEARNING_LANGUAGE\}\}/g, langName);
   
-  // Use custom prompt body if provided, otherwise default
   let body = customPrompt 
     ? customPrompt.replace(/\{\{LEARNING_LANGUAGE\}\}/g, langName)
     : SYSTEM_PROMPTS.tutorDefaultBody.replace(/\{\{LEARNING_LANGUAGE\}\}/g, langName);
 
-  let base = `${header}\n\n${body}\n${footer}`;
+  const levelBlock = LEVEL_INSTRUCTIONS[level || 'intermediate'];
+
+  let base = `${header}\n\n${body}\n${footer}\n${levelBlock}`;
 
   if (mode === 'roleplay' && topicKey) {
     const roleplayPrompt = SYSTEM_PROMPTS.roleplay[topicKey as keyof typeof SYSTEM_PROMPTS.roleplay];
@@ -232,21 +304,33 @@ const LANGUAGE_NAMES: Record<string, string> = {
 export function getUnifiedResponsePrompt(
   motherLanguage?: string,
   learningLanguage?: string,
+  level?: ProficiencyLevel,
 ): string {
   const motherLangName = motherLanguage ? (LANGUAGE_NAMES[motherLanguage] || motherLanguage) : 'English';
   const learningLangName = learningLanguage ? (LANGUAGE_NAMES[learningLanguage] || learningLanguage) : 'English';
+  const gradingBlock = LEVEL_GRADING_INSTRUCTIONS[level || 'intermediate'];
   return SYSTEM_PROMPTS.unifiedResponseAudio
     .replace(/\{\{MOTHER_LANGUAGE\}\}/g, motherLangName)
-    .replace(/\{\{LEARNING_LANGUAGE\}\}/g, learningLangName);
+    .replace(/\{\{LEARNING_LANGUAGE\}\}/g, learningLangName)
+    + '\n\n' + gradingBlock;
 }
 
 
-// CURSOR: Get suggestion prompt with count and language substituted
-export function getSuggestionPrompt(count: number = 3, learningLanguage?: string): string {
+// CURSOR: Get suggestion prompt with count, language, and level substituted
+export function getSuggestionPrompt(count: number = 3, learningLanguage?: string, level?: ProficiencyLevel): string {
   const langName = learningLanguage ? (LANGUAGE_NAMES[learningLanguage] || learningLanguage) : 'English';
+
+  const levelGuidance: Record<ProficiencyLevel, string> = {
+    novice: 'All suggestions must use only the most basic, simple words and very short sentences. No idioms or complex structures.',
+    beginner: 'Suggestions should use simple vocabulary and short sentences. Avoid idioms and complex grammar.',
+    intermediate: 'Include a mix of simple and moderately complex suggestions. An occasional common idiom is acceptable.',
+    advanced: 'Include sophisticated, natural-sounding suggestions. Use idioms, varied structures, and rich vocabulary.',
+  };
+
   return SYSTEM_PROMPTS.suggestion
     .replace('{{COUNT}}', count.toString())
-    .replace(/\{\{LEARNING_LANGUAGE\}\}/g, langName);
+    .replace(/\{\{LEARNING_LANGUAGE\}\}/g, langName)
+    + '\n\nLevel guidance: ' + levelGuidance[level || 'intermediate'];
 }
 
 // CURSOR: Get rich translation prompt with language substitution

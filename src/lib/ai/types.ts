@@ -88,6 +88,7 @@ export interface AIOptions {
   maxTokens?: number;
   motherLanguage?: string;
   learningLanguage?: string;
+  level?: 'novice' | 'beginner' | 'intermediate' | 'advanced';
   audioBase64?: string;
   audioFormat?: string;
   whisperTranscription?: string;

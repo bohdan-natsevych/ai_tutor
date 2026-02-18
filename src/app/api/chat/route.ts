@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createChat, getChat, getAllChats, updateChat, deleteChat, createMessage, updateMessage, getChatMessages } from '@/lib/db/queries';
 import { aiManager } from '@/lib/ai/manager';
 import { contextManager } from '@/lib/ai/context';
-import { buildSystemPrompt, DEFAULT_GENERAL_OPENING } from '@/lib/ai/prompts';
+import { buildSystemPrompt, DEFAULT_GENERAL_OPENING, type ProficiencyLevel } from '@/lib/ai/prompts';
 import { convertToWav } from '@/lib/audio/convert';
 
 // CURSOR: Track last initialized provider to reinitialize when changed
@@ -105,17 +105,19 @@ export async function POST(request: NextRequest) {
 
     if (action === 'create') {
       // Create new chat - DON'T save to DB yet, just generate the data
-      const { title, topicType, topicKey, language, dialect, aiMode, customPrompt, openingPrompt } = body as Record<string, string | undefined>;
+      const { title, topicType, topicKey, language, dialect, aiMode, customPrompt, openingPrompt, level } = body as Record<string, string | undefined>;
       const { v4: uuidv4 } = await import('uuid');
       const chatId = uuidv4();
       const messageId = uuidv4();
       const now = new Date();
+      const chatLevel = (level as ProficiencyLevel) || 'intermediate';
       
       const chat = {
         id: chatId,
         title: title || 'New Conversation',
         topicType: (topicType as 'general' | 'roleplay' | 'topic') || 'general',
         topicDetails: topicKey ? JSON.stringify({ topicKey }) : undefined,
+        level: chatLevel,
         language: language || 'en',
         dialect: dialect || 'american',
         aiProvider: aiProvider || 'openai-chat',
@@ -127,7 +129,7 @@ export async function POST(request: NextRequest) {
       };
 
       // Generate opening message from AI
-      const systemPrompt = buildSystemPrompt((topicType as 'general' | 'roleplay' | 'topic') || 'general', topicKey, customPrompt, language || 'en');
+      const systemPrompt = buildSystemPrompt((topicType as 'general' | 'roleplay' | 'topic') || 'general', topicKey, customPrompt, language || 'en', chatLevel);
       const context = await contextManager.buildContext(chatId, systemPrompt);
       
       const openingCore = topicType === 'roleplay'
@@ -192,6 +194,7 @@ export async function POST(request: NextRequest) {
           title: pendingChatRaw.title,
           topicType: pendingChatRaw.topicType,
           topicDetails: pendingChatRaw.topicDetails,
+          level: pendingChatRaw.level,
           language: pendingChatRaw.language,
           dialect: pendingChatRaw.dialect,
           aiProvider: pendingChatRaw.aiProvider,
@@ -229,11 +232,13 @@ export async function POST(request: NextRequest) {
       }
       
       const learningLanguage = chat.language || 'en';
+      const chatLevel = (chat.level as ProficiencyLevel) || 'intermediate';
       const systemPrompt = buildSystemPrompt(
         chat.topicType as 'general' | 'roleplay' | 'topic',
         topicDetails.topicKey as string | undefined,
         chat.customPrompt || undefined,
-        learningLanguage
+        learningLanguage,
+        chatLevel
       );
       const context = await contextManager.buildContext(chatId, systemPrompt, chat.threadId || undefined);
 
@@ -265,6 +270,7 @@ export async function POST(request: NextRequest) {
       const response = await aiManager.respond(context, whisperTranscription || content || '', {
         motherLanguage: motherLanguage || 'uk',
         learningLanguage,
+        level: chatLevel,
         audioBase64,
         audioFormat: audioFormatForAI,
         whisperTranscription,

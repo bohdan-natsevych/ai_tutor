@@ -57,6 +57,21 @@ const en = {
   'home.dialog.tabRoleplay': 'Roleplay',
   'home.dialog.tabTopics': 'Topics',
 
+  // ── Level picker ──
+  'home.dialog.level': 'Proficiency level',
+  'home.dialog.levelNovice': 'Novice',
+  'home.dialog.levelNoviceDesc': 'Just starting out, very basic words',
+  'home.dialog.levelBeginner': 'Beginner',
+  'home.dialog.levelBeginnerDesc': 'Simple sentences and basic vocabulary',
+  'home.dialog.levelIntermediate': 'Intermediate',
+  'home.dialog.levelIntermediateDesc': 'Natural conversation, some idioms',
+  'home.dialog.levelAdvanced': 'Advanced',
+  'home.dialog.levelAdvancedDesc': 'Rich vocabulary, idioms, complex structures',
+  'home.level.novice': 'Novice',
+  'home.level.beginner': 'Beginner',
+  'home.level.intermediate': 'Intermediate',
+  'home.level.advanced': 'Advanced',
+
   // ── Home date formatting ──
   'home.date.justNow': 'Just now',
   'home.date.mAgo': 'm ago',
@@ -292,6 +307,21 @@ const uk: Record<TranslationKey, string> = {
   'home.dialog.tabRoleplay': 'Рольові ігри',
   'home.dialog.tabTopics': 'Теми',
 
+  // ── Level picker ──
+  'home.dialog.level': 'Рівень володіння',
+  'home.dialog.levelNovice': 'Початківець',
+  'home.dialog.levelNoviceDesc': 'Тільки починаю, дуже прості слова',
+  'home.dialog.levelBeginner': 'Базовий',
+  'home.dialog.levelBeginnerDesc': 'Прості речення та базова лексика',
+  'home.dialog.levelIntermediate': 'Середній',
+  'home.dialog.levelIntermediateDesc': 'Природна розмова, деякі ідіоми',
+  'home.dialog.levelAdvanced': 'Просунутий',
+  'home.dialog.levelAdvancedDesc': 'Багата лексика, ідіоми, складні конструкції',
+  'home.level.novice': 'Початківець',
+  'home.level.beginner': 'Базовий',
+  'home.level.intermediate': 'Середній',
+  'home.level.advanced': 'Просунутий',
+
   // ── Home date formatting ──
   'home.date.justNow': 'Щойно',
   'home.date.mAgo': 'хв тому',
@@ -526,6 +556,21 @@ const de: Record<TranslationKey, string> = {
   'home.dialog.startingMessage': 'Startanweisungen',
   'home.dialog.tabRoleplay': 'Rollenspiel',
   'home.dialog.tabTopics': 'Themen',
+
+  // ── Level picker ──
+  'home.dialog.level': 'Sprachniveau',
+  'home.dialog.levelNovice': 'Anfaenger',
+  'home.dialog.levelNoviceDesc': 'Ganz am Anfang, sehr einfache Woerter',
+  'home.dialog.levelBeginner': 'Grundstufe',
+  'home.dialog.levelBeginnerDesc': 'Einfache Saetze und Grundwortschatz',
+  'home.dialog.levelIntermediate': 'Mittelstufe',
+  'home.dialog.levelIntermediateDesc': 'Natuerliche Gespraeche, einige Redewendungen',
+  'home.dialog.levelAdvanced': 'Fortgeschritten',
+  'home.dialog.levelAdvancedDesc': 'Reicher Wortschatz, Idiome, komplexe Strukturen',
+  'home.level.novice': 'Anfaenger',
+  'home.level.beginner': 'Grundstufe',
+  'home.level.intermediate': 'Mittelstufe',
+  'home.level.advanced': 'Fortgeschritten',
 
   // ── Home date formatting ──
   'home.date.justNow': 'Gerade eben',
@@ -763,6 +808,21 @@ const fr: Record<TranslationKey, string> = {
   'home.dialog.tabRoleplay': 'Jeu de rôle',
   'home.dialog.tabTopics': 'Sujets',
 
+  // ── Level picker ──
+  'home.dialog.level': 'Niveau de competence',
+  'home.dialog.levelNovice': 'Debutant absolu',
+  'home.dialog.levelNoviceDesc': 'Tout debut, mots tres simples',
+  'home.dialog.levelBeginner': 'Debutant',
+  'home.dialog.levelBeginnerDesc': 'Phrases simples et vocabulaire de base',
+  'home.dialog.levelIntermediate': 'Intermediaire',
+  'home.dialog.levelIntermediateDesc': 'Conversation naturelle, quelques expressions',
+  'home.dialog.levelAdvanced': 'Avance',
+  'home.dialog.levelAdvancedDesc': 'Vocabulaire riche, expressions idiomatiques, structures complexes',
+  'home.level.novice': 'Debutant absolu',
+  'home.level.beginner': 'Debutant',
+  'home.level.intermediate': 'Intermediaire',
+  'home.level.advanced': 'Avance',
+
   // ── Home date formatting ──
   'home.date.justNow': 'À l\'instant',
   'home.date.mAgo': 'il y a m min',
@@ -996,6 +1056,21 @@ const es: Record<TranslationKey, string> = {
   'home.dialog.customName': 'Nombre personalizado (opcional)',
   'home.dialog.tabRoleplay': 'Juego de roles',
   'home.dialog.tabTopics': 'Temas',
+
+  // ── Level picker ──
+  'home.dialog.level': 'Nivel de competencia',
+  'home.dialog.levelNovice': 'Principiante absoluto',
+  'home.dialog.levelNoviceDesc': 'Recien empezando, palabras muy basicas',
+  'home.dialog.levelBeginner': 'Principiante',
+  'home.dialog.levelBeginnerDesc': 'Frases simples y vocabulario basico',
+  'home.dialog.levelIntermediate': 'Intermedio',
+  'home.dialog.levelIntermediateDesc': 'Conversacion natural, algunas expresiones',
+  'home.dialog.levelAdvanced': 'Avanzado',
+  'home.dialog.levelAdvancedDesc': 'Vocabulario rico, modismos, estructuras complejas',
+  'home.level.novice': 'Principiante absoluto',
+  'home.level.beginner': 'Principiante',
+  'home.level.intermediate': 'Intermedio',
+  'home.level.advanced': 'Avanzado',
 
   // ── Home date formatting ──
   'home.date.justNow': 'Ahora mismo',
@@ -1231,6 +1306,21 @@ const it: Record<TranslationKey, string> = {
   'home.dialog.tabRoleplay': 'Gioco di ruolo',
   'home.dialog.tabTopics': 'Argomenti',
 
+  // ── Level picker ──
+  'home.dialog.level': 'Livello di competenza',
+  'home.dialog.levelNovice': 'Principiante assoluto',
+  'home.dialog.levelNoviceDesc': 'Appena iniziato, parole molto semplici',
+  'home.dialog.levelBeginner': 'Principiante',
+  'home.dialog.levelBeginnerDesc': 'Frasi semplici e vocabolario di base',
+  'home.dialog.levelIntermediate': 'Intermedio',
+  'home.dialog.levelIntermediateDesc': 'Conversazione naturale, qualche modo di dire',
+  'home.dialog.levelAdvanced': 'Avanzato',
+  'home.dialog.levelAdvancedDesc': 'Vocabolario ricco, modi di dire, strutture complesse',
+  'home.level.novice': 'Principiante assoluto',
+  'home.level.beginner': 'Principiante',
+  'home.level.intermediate': 'Intermedio',
+  'home.level.advanced': 'Avanzato',
+
   // ── Home date formatting ──
   'home.date.justNow': 'Proprio ora',
   'home.date.mAgo': 'm fa',
@@ -1463,6 +1553,21 @@ const pt: Record<TranslationKey, string> = {
   'home.dialog.customName': 'Nome personalizado (opcional)',
   'home.dialog.tabRoleplay': 'Roleplay',
   'home.dialog.tabTopics': 'Tópicos',
+
+  // ── Level picker ──
+  'home.dialog.level': 'Nivel de proficiencia',
+  'home.dialog.levelNovice': 'Iniciante absoluto',
+  'home.dialog.levelNoviceDesc': 'Comecando agora, palavras muito simples',
+  'home.dialog.levelBeginner': 'Iniciante',
+  'home.dialog.levelBeginnerDesc': 'Frases simples e vocabulario basico',
+  'home.dialog.levelIntermediate': 'Intermediario',
+  'home.dialog.levelIntermediateDesc': 'Conversa natural, algumas expressoes',
+  'home.dialog.levelAdvanced': 'Avancado',
+  'home.dialog.levelAdvancedDesc': 'Vocabulario rico, expressoes idiomaticas, estruturas complexas',
+  'home.level.novice': 'Iniciante absoluto',
+  'home.level.beginner': 'Iniciante',
+  'home.level.intermediate': 'Intermediario',
+  'home.level.advanced': 'Avancado',
 
   // ── Home date formatting ──
   'home.date.justNow': 'Agora mesmo',
@@ -1698,6 +1803,21 @@ const pl: Record<TranslationKey, string> = {
   'home.dialog.tabRoleplay': 'Odgrywanie ról',
   'home.dialog.tabTopics': 'Tematy',
 
+  // ── Level picker ──
+  'home.dialog.level': 'Poziom bieglosci',
+  'home.dialog.levelNovice': 'Poczatkujacy',
+  'home.dialog.levelNoviceDesc': 'Dopiero zaczynam, bardzo proste slowa',
+  'home.dialog.levelBeginner': 'Podstawowy',
+  'home.dialog.levelBeginnerDesc': 'Proste zdania i podstawowe slownictwo',
+  'home.dialog.levelIntermediate': 'Sredni',
+  'home.dialog.levelIntermediateDesc': 'Naturalna rozmowa, niektore idiomy',
+  'home.dialog.levelAdvanced': 'Zaawansowany',
+  'home.dialog.levelAdvancedDesc': 'Bogate slownictwo, idiomy, zlozone struktury',
+  'home.level.novice': 'Poczatkujacy',
+  'home.level.beginner': 'Podstawowy',
+  'home.level.intermediate': 'Sredni',
+  'home.level.advanced': 'Zaawansowany',
+
   // ── Home date formatting ──
   'home.date.justNow': 'Przed chwilą',
   'home.date.mAgo': 'm temu',
@@ -1932,6 +2052,21 @@ const ja: Record<TranslationKey, string> = {
   'home.dialog.tabRoleplay': 'ロールプレイ',
   'home.dialog.tabTopics': 'トピック',
 
+  // ── Level picker ──
+  'home.dialog.level': '習熟度レベル',
+  'home.dialog.levelNovice': '入門',
+  'home.dialog.levelNoviceDesc': '始めたばかり、とても簡単な単語',
+  'home.dialog.levelBeginner': '初級',
+  'home.dialog.levelBeginnerDesc': '簡単な文と基本的な語彙',
+  'home.dialog.levelIntermediate': '中級',
+  'home.dialog.levelIntermediateDesc': '自然な会話、いくつかの慣用句',
+  'home.dialog.levelAdvanced': '上級',
+  'home.dialog.levelAdvancedDesc': '豊富な語彙、慣用句、複雑な構文',
+  'home.level.novice': '入門',
+  'home.level.beginner': '初級',
+  'home.level.intermediate': '中級',
+  'home.level.advanced': '上級',
+
   // ── Home date formatting ──
   'home.date.justNow': 'たった今',
   'home.date.mAgo': 'm分前',
@@ -2165,6 +2300,21 @@ const zh: Record<TranslationKey, string> = {
   'home.dialog.tabRoleplay': '角色扮演',
   'home.dialog.tabTopics': '话题',
 
+  // ── Level picker ──
+  'home.dialog.level': '熟练程度',
+  'home.dialog.levelNovice': '零基础',
+  'home.dialog.levelNoviceDesc': '刚开始学习，非常简单的词汇',
+  'home.dialog.levelBeginner': '初学者',
+  'home.dialog.levelBeginnerDesc': '简单句子和基础词汇',
+  'home.dialog.levelIntermediate': '中级',
+  'home.dialog.levelIntermediateDesc': '自然对话，一些习语',
+  'home.dialog.levelAdvanced': '高级',
+  'home.dialog.levelAdvancedDesc': '丰富词汇、习语、复杂结构',
+  'home.level.novice': '零基础',
+  'home.level.beginner': '初学者',
+  'home.level.intermediate': '中级',
+  'home.level.advanced': '高级',
+
   // ── Home date formatting ──
   'home.date.justNow': '刚刚',
   'home.date.mAgo': 'm分钟前',
@@ -2397,6 +2547,21 @@ const ko: Record<TranslationKey, string> = {
   'home.dialog.customName': '사용자 지정 이름 (선택 사항)',
   'home.dialog.tabRoleplay': '롤플레이',
   'home.dialog.tabTopics': '주제',
+
+  // ── Level picker ──
+  'home.dialog.level': '숙련도',
+  'home.dialog.levelNovice': '입문',
+  'home.dialog.levelNoviceDesc': '이제 막 시작, 매우 기본적인 단어',
+  'home.dialog.levelBeginner': '초급',
+  'home.dialog.levelBeginnerDesc': '간단한 문장과 기본 어휘',
+  'home.dialog.levelIntermediate': '중급',
+  'home.dialog.levelIntermediateDesc': '자연스러운 대화, 일부 관용구',
+  'home.dialog.levelAdvanced': '고급',
+  'home.dialog.levelAdvancedDesc': '풍부한 어휘, 관용구, 복잡한 구조',
+  'home.level.novice': '입문',
+  'home.level.beginner': '초급',
+  'home.level.intermediate': '중급',
+  'home.level.advanced': '고급',
 
   // ── Home date formatting ──
   'home.date.justNow': '방금',
