@@ -293,11 +293,20 @@ export default function ChatPage({ params }: ChatPageProps) {
           const isNewChat = data.messages.length === 1 && 
                            data.messages[0].role === 'assistant';
           
+          // CURSOR: Parse analysis JSON string from DB into object for each message
+          const parseAnalysis = (msg: any) => {
+            if (typeof msg.analysis === 'string') {
+              try { return JSON.parse(msg.analysis); } catch { return undefined; }
+            }
+            return msg.analysis;
+          };
+          
           if (isNewChat) {
             // Mark first message as needing playback
             setMessages(data.messages.map((msg: ChatMessageType) => ({
               ...msg,
               createdAt: new Date(msg.createdAt),
+              analysis: parseAnalysis(msg),
               state: 'audio_loading',
               audioPlayed: false,
             })));
@@ -306,6 +315,7 @@ export default function ChatPage({ params }: ChatPageProps) {
             setMessages(data.messages.map((msg: ChatMessageType) => ({
               ...msg,
               createdAt: new Date(msg.createdAt),
+              analysis: parseAnalysis(msg),
               state: 'revealed',
               audioPlayed: true,
             })));
