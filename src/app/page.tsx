@@ -7,8 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { getRoleplayScenarios, getTopics } from '@/lib/ai/prompts';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { getRoleplayScenarios, getTopics, DEFAULT_GENERAL_OPENING, type ProficiencyLevel } from '@/lib/ai/prompts';
 import { useSettingsStore } from '@/stores/settingsStore';
 import type { Chat } from '@/stores/chatStore';
 import { useTranslation } from '@/lib/i18n/useTranslation';
@@ -22,11 +23,15 @@ export default function HomePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
   const [newChatTitle, setNewChatTitle] = useState('');
+  const [openingPrompt, setOpeningPrompt] = useState(DEFAULT_GENERAL_OPENING);
   const [showNewChatDialog, setShowNewChatDialog] = useState(false);
   const [selectedTab, setSelectedTab] = useState<'general' | 'roleplay' | 'topic'>('general');
+  const [selectedLevel, setSelectedLevel] = useState<ProficiencyLevel>('intermediate');
   const { t, lang } = useTranslation();
 
   const ai = useSettingsStore((state) => state.ai);
+  const languageSettings = useSettingsStore((state) => state.language);
+  const [createError, setCreateError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchChats();
@@ -46,6 +51,7 @@ export default function HomePage() {
 
   const createChat = async (topicType: 'general' | 'roleplay' | 'topic', topicKey?: string) => {
     setIsCreating(true);
+    setCreateError(null);
     try {
       const response = await fetch('/api/chat', {
         method: 'POST',
@@ -55,15 +61,22 @@ export default function HomePage() {
           title: newChatTitle || getDefaultTitle(topicType, topicKey),
           topicType,
           topicKey,
+          level: selectedLevel,
+          language: languageSettings.learning,
+          dialect: languageSettings.dialect,
           aiProvider: ai.provider,
           aiModel: ai.model,
           aiTextModel: ai.textModel,
+          openingPrompt: topicType === 'general' ? openingPrompt : undefined,
         }),
       });
 
       const data = await response.json();
+      if (!response.ok) {
+        setCreateError(data.error || 'Failed to create conversation');
+        return;
+      }
       if (data.chat) {
-        // Store pending chat data in sessionStorage for the chat page to pick up
         if (data.pending) {
           sessionStorage.setItem(`pendingChat:${data.chat.id}`, JSON.stringify({
             chat: data.chat,
@@ -74,10 +87,13 @@ export default function HomePage() {
       }
     } catch (error) {
       console.error('Failed to create chat:', error);
+      setCreateError('Network error. Please try again.');
     } finally {
       setIsCreating(false);
       setShowNewChatDialog(false);
       setNewChatTitle('');
+      setOpeningPrompt(DEFAULT_GENERAL_OPENING);
+      setSelectedLevel('intermediate');
     }
   };
 
@@ -108,7 +124,7 @@ export default function HomePage() {
       });
 
       if (response.ok) {
-        setChats(chats.filter(chat => chat.id !== chatId));
+        setChats(prev => prev.filter(chat => chat.id !== chatId));
       } else {
         console.error('Failed to delete chat');
       }
@@ -149,6 +165,13 @@ export default function HomePage() {
       </header>
 
       <main className="container mx-auto px-4 max-w-5xl">
+        {/* CURSOR: Error feedback for chat creation failures */}
+        {createError && (
+          <div className="mt-4 p-3 rounded-lg bg-destructive/10 border border-destructive/30 text-destructive text-sm flex items-center justify-between">
+            <span>{createError}</span>
+            <button onClick={() => setCreateError(null)} className="ml-2 font-bold hover:opacity-70">x</button>
+          </div>
+        )}
         {/* Hero banner */}
         <section className="relative py-12 sm:py-16 mb-10 overflow-hidden">
           <div className="absolute inset-0 -z-10 rounded-3xl bg-gradient-to-br from-primary/5 via-primary/[0.02] to-transparent" />
@@ -188,7 +211,7 @@ export default function HomePage() {
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Free Chat Card */}
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer border-primary/20" onClick={() => createChat('general')}>
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer border-primary/20" onClick={() => { setSelectedTab('general'); setShowNewChatDialog(true); }}>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <span>💬</span> {t('home.freeChat')}
@@ -252,75 +275,109 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Scenario/topic picker dialog */}
+        {/* Conversation setup / scenario picker dialog */}
         {showNewChatDialog && (
-          <Dialog open={showNewChatDialog} onOpenChange={setShowNewChatDialog}>
-            <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+          <Dialog open={showNewChatDialog} onOpenChange={(open) => { if (!open) { setNewChatTitle(''); setOpeningPrompt(DEFAULT_GENERAL_OPENING); setSelectedLevel('intermediate'); } setShowNewChatDialog(open); }}>
+            <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>{t('home.dialog.title')}</DialogTitle>
+                <DialogTitle>
+                  {selectedTab === 'general' ? t('home.freeChat') : selectedTab === 'roleplay' ? t('home.roleplay') : t('home.topics')}
+                </DialogTitle>
                 <DialogDescription>
-                  {t('home.dialog.description')}
+                  {selectedTab === 'general' ? t('home.freeChatDesc') : t('home.dialog.description')}
                 </DialogDescription>
               </DialogHeader>
-              
-              <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  {/* Optional Custom Topic/Title Input */}
-                  <Input
-                    placeholder={t('home.dialog.customName')}
-                    value={newChatTitle}
-                    onChange={(e) => setNewChatTitle(e.target.value)}
-                  />
+
+              <div className="space-y-4 py-2">
+                {/* CURSOR: Level picker -- shown for all conversation types */}
+                <div className="grid gap-2">
+                  <Label>{t('home.dialog.level')}</Label>
+                  <div className="grid grid-cols-4 gap-2">
+                    {(['novice', 'beginner', 'intermediate', 'advanced'] as const).map((level) => {
+                      const labelKey = `home.dialog.level${level.charAt(0).toUpperCase() + level.slice(1)}` as TranslationKey;
+                      const descKey = `home.dialog.level${level.charAt(0).toUpperCase() + level.slice(1)}Desc` as TranslationKey;
+                      return (
+                        <button
+                          key={level}
+                          type="button"
+                          onClick={() => setSelectedLevel(level)}
+                          className={`flex flex-col items-center gap-1 rounded-lg border p-2.5 text-center transition-colors ${
+                            selectedLevel === level
+                              ? 'border-primary bg-primary/5 ring-1 ring-primary'
+                              : 'border-border hover:border-primary/40'
+                          }`}
+                        >
+                          <span className="text-xs font-medium">{t(labelKey)}</span>
+                          <span className="text-[10px] text-muted-foreground leading-tight">{t(descKey)}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
 
-                <Tabs value={selectedTab} onValueChange={(v) => setSelectedTab(v as any)}>
-                  <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="roleplay">{t('home.dialog.tabRoleplay')}</TabsTrigger>
-                    <TabsTrigger value="topic">{t('home.dialog.tabTopics')}</TabsTrigger>
-                  </TabsList>
-                  
-                  <TabsContent value="roleplay" className="mt-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {getRoleplayScenarios().map((scenario) => (
-                        <Card 
-                          key={scenario.id} 
-                          className="cursor-pointer hover:border-primary transition-colors"
-                          onClick={() => createChat('roleplay', scenario.id)}
-                        >
-                          <CardHeader className="p-4">
-                            <CardTitle className="text-base flex items-center gap-2">
-                              {scenario.name}
-                            </CardTitle>
-                            <CardDescription className="text-xs">
-                              {scenario.description}
-                            </CardDescription>
-                          </CardHeader>
-                        </Card>
-                      ))}
+                {selectedTab === 'general' && (
+                  <>
+                    <div className="grid gap-2">
+                      <Label htmlFor="chat-name">{t('home.dialog.customName')}</Label>
+                      <Input
+                        id="chat-name"
+                        placeholder={t('home.dialog.customNamePlaceholder') || 'E.g., Morning Practice'}
+                        value={newChatTitle}
+                        onChange={(e) => setNewChatTitle(e.target.value)}
+                      />
                     </div>
-                  </TabsContent>
-                  
-                  <TabsContent value="topic" className="mt-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {getTopics().map((topic) => (
-                        <Card 
-                          key={topic.id} 
-                          className="cursor-pointer hover:border-primary transition-colors"
-                          onClick={() => createChat('topic', topic.id)}
-                        >
-                          <CardHeader className="p-4">
-                            <CardTitle className="text-base flex items-center gap-2">
-                              {topic.name}
-                            </CardTitle>
-                            <CardDescription className="text-xs">
-                              {topic.description}
-                            </CardDescription>
-                          </CardHeader>
-                        </Card>
-                      ))}
+
+                    <div className="grid gap-2">
+                      <Label htmlFor="chat-opening">{t('home.dialog.startingMessage') || 'Starting message'}</Label>
+                      <Textarea
+                        id="chat-opening"
+                        value={openingPrompt}
+                        onChange={(e) => setOpeningPrompt(e.target.value)}
+                        className="min-h-[80px] text-sm"
+                      />
                     </div>
-                  </TabsContent>
-                </Tabs>
+
+                    <div className="flex justify-end pt-2">
+                      <Button onClick={() => createChat('general')} disabled={isCreating}>
+                        {isCreating ? t('common.loading') : t('home.startConversation')}
+                      </Button>
+                    </div>
+                  </>
+                )}
+
+                {selectedTab === 'roleplay' && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {getRoleplayScenarios().map((scenario) => (
+                      <Card
+                        key={scenario.id}
+                        className={`transition-colors ${isCreating ? 'opacity-50 pointer-events-none' : 'cursor-pointer hover:border-primary'}`}
+                        onClick={() => !isCreating && createChat('roleplay', scenario.id)}
+                      >
+                        <CardHeader className="p-4">
+                          <CardTitle className="text-base">{scenario.name}</CardTitle>
+                          <CardDescription className="text-xs">{scenario.description}</CardDescription>
+                        </CardHeader>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+
+                {selectedTab === 'topic' && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {getTopics().map((topic) => (
+                      <Card
+                        key={topic.id}
+                        className={`transition-colors ${isCreating ? 'opacity-50 pointer-events-none' : 'cursor-pointer hover:border-primary'}`}
+                        onClick={() => !isCreating && createChat('topic', topic.id)}
+                      >
+                        <CardHeader className="p-4">
+                          <CardTitle className="text-base">{topic.name}</CardTitle>
+                          <CardDescription className="text-xs">{topic.description}</CardDescription>
+                        </CardHeader>
+                      </Card>
+                    ))}
+                  </div>
+                )}
               </div>
             </DialogContent>
           </Dialog>
@@ -364,9 +421,16 @@ export default function HomePage() {
                         </div>
                         <h3 className="text-sm font-medium line-clamp-2 mb-2">{getDisplayTitle(chat, t)}</h3>
                         <div className="flex items-center justify-between">
-                          <span className="text-xs bg-muted px-2 py-0.5 rounded-full capitalize">
-                        {chat.topicType === 'general' ? t('home.typeGeneral') : chat.topicType === 'roleplay' ? t('home.typeRoleplay') : t('home.typeTopic')}
-                      </span>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-xs bg-muted px-2 py-0.5 rounded-full capitalize">
+                              {chat.topicType === 'general' ? t('home.typeGeneral') : chat.topicType === 'roleplay' ? t('home.typeRoleplay') : t('home.typeTopic')}
+                            </span>
+                            {chat.level && (
+                              <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+                                {t((`home.level.${chat.level}`) as TranslationKey)}
+                              </span>
+                            )}
+                          </div>
                           <span className="text-xs text-muted-foreground">
                             {formatDate(chat.updatedAt, t, lang)}
                           </span>

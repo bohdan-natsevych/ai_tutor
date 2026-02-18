@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createChat, getChat, getAllChats, updateChat, deleteChat, createMessage, updateMessage, getChatMessages } from '@/lib/db/queries';
 import { aiManager } from '@/lib/ai/manager';
 import { contextManager } from '@/lib/ai/context';
-import { buildSystemPrompt } from '@/lib/ai/prompts';
+import { buildSystemPrompt, DEFAULT_GENERAL_OPENING, type ProficiencyLevel } from '@/lib/ai/prompts';
 import { convertToWav } from '@/lib/audio/convert';
 
 // CURSOR: Track last initialized provider to reinitialize when changed
@@ -105,17 +105,19 @@ export async function POST(request: NextRequest) {
 
     if (action === 'create') {
       // Create new chat - DON'T save to DB yet, just generate the data
-      const { title, topicType, topicKey, language, dialect, aiMode } = body as Record<string, string | undefined>;
+      const { title, topicType, topicKey, language, dialect, aiMode, customPrompt, openingPrompt, level } = body as Record<string, string | undefined>;
       const { v4: uuidv4 } = await import('uuid');
       const chatId = uuidv4();
       const messageId = uuidv4();
       const now = new Date();
+      const chatLevel = (level as ProficiencyLevel) || 'intermediate';
       
       const chat = {
         id: chatId,
         title: title || 'New Conversation',
         topicType: (topicType as 'general' | 'roleplay' | 'topic') || 'general',
         topicDetails: topicKey ? JSON.stringify({ topicKey }) : undefined,
+        level: chatLevel,
         language: language || 'en',
         dialect: dialect || 'american',
         aiProvider: aiProvider || 'openai-chat',
@@ -123,19 +125,28 @@ export async function POST(request: NextRequest) {
         createdAt: now,
         updatedAt: now,
         threadId: null,
+        customPrompt: customPrompt || null,
       };
 
       // Generate opening message from AI
-      const systemPrompt = buildSystemPrompt((topicType as 'general' | 'roleplay' | 'topic') || 'general', topicKey, undefined, language || 'en');
+      const systemPrompt = buildSystemPrompt((topicType as 'general' | 'roleplay' | 'topic') || 'general', topicKey, customPrompt, language || 'en', chatLevel);
       const context = await contextManager.buildContext(chatId, systemPrompt);
       
-      const openingPrompt = topicType === 'roleplay'
-        ? 'You are starting roleplay scenario with an appropriate opening. User didn\'t say anything yet, so just set the scene. Speak in the learning language.'
-        : topicType === 'topic'
-        ? 'You are starting this conversation about the given topic. User didn\'t say anything yet, so just set the scene. Speak in the learning language.'
-        : 'You are starting this conversation. The learner has not said anything yet. Greet them warmly and ask an ONE simple question to get them talking. Speak in the learning language.';
+      const openingCore = topicType === 'roleplay'
+        ? 'roleplay scenario with an appropriate opening'
+        : 'this conversation about the given topic';
+
+      const resolvedOpeningPrompt = topicType === 'roleplay' || topicType === 'topic'
+        ? `You are starting ${openingCore}. User didn't say anything yet, so just set the scene. Speak in the learning language.`
+        : `You are starting this conversation. The learner has not said anything yet. The user setup is ${openingPrompt || DEFAULT_GENERAL_OPENING}. 
+        If you are allowed to choose the topic, choose more casual, everyday topics.
+        Sound like a normal person having a casual chat. Simple, everyday language.
+        Talk the way regular people actually talk in everyday life. No dramatic setups, no creative framing, no over-the-top enthusiasm. Just normal conversation.
+        Ask ONE SIMPLE question to get them talking.
+        DO NOT ask more than one question at a time.
+        Speak in the learning language.`;
       
-      const response = await aiManager.generate(context, openingPrompt, { model: aiTextModel || aiModel });
+      const response = await aiManager.generate(context, resolvedOpeningPrompt, { model: aiTextModel || aiModel });
       
       // Create opening message object (DON'T save to DB yet)
       const aiMessage = {
@@ -177,23 +188,32 @@ export async function POST(request: NextRequest) {
         try { pendingOpeningMessageRaw = JSON.parse(pendingOpeningMessageRaw); } catch {}
       }
       
-      // If pending data exists, save the chat and opening message first
+      // CURSOR: If pending data exists, save chat and opening message (idempotent - safe for retries)
       if (pendingChatRaw && pendingOpeningMessageRaw) {
-        await createChat({
-          title: pendingChatRaw.title,
-          topicType: pendingChatRaw.topicType,
-          topicDetails: pendingChatRaw.topicDetails,
-          language: pendingChatRaw.language,
-          dialect: pendingChatRaw.dialect,
-          aiProvider: pendingChatRaw.aiProvider,
-          aiMode: pendingChatRaw.aiMode,
-        }, pendingChatRaw.id);
-        
-        await createMessage({
-          chatId: pendingChatRaw.id,
-          role: 'assistant',
-          content: pendingOpeningMessageRaw.content,
-        }, pendingOpeningMessageRaw.id);
+        const existingChat = await getChat(pendingChatRaw.id);
+        if (!existingChat) {
+          await createChat({
+            title: pendingChatRaw.title,
+            topicType: pendingChatRaw.topicType,
+            topicDetails: pendingChatRaw.topicDetails,
+            level: pendingChatRaw.level,
+            language: pendingChatRaw.language,
+            dialect: pendingChatRaw.dialect,
+            aiProvider: pendingChatRaw.aiProvider,
+            aiMode: pendingChatRaw.aiMode,
+            customPrompt: pendingChatRaw.customPrompt,
+          }, pendingChatRaw.id);
+        }
+
+        const existingMessages = await getChatMessages(pendingChatRaw.id);
+        const openingAlreadySaved = existingMessages.some(m => m.id === pendingOpeningMessageRaw.id);
+        if (!openingAlreadySaved) {
+          await createMessage({
+            chatId: pendingChatRaw.id,
+            role: 'assistant',
+            content: pendingOpeningMessageRaw.content,
+          }, pendingOpeningMessageRaw.id);
+        }
       }
       
       const chat = await getChat(chatId);
@@ -219,11 +239,13 @@ export async function POST(request: NextRequest) {
       }
       
       const learningLanguage = chat.language || 'en';
+      const chatLevel = (chat.level as ProficiencyLevel) || 'intermediate';
       const systemPrompt = buildSystemPrompt(
         chat.topicType as 'general' | 'roleplay' | 'topic',
         topicDetails.topicKey as string | undefined,
-        undefined,
-        learningLanguage
+        chat.customPrompt || undefined,
+        learningLanguage,
+        chatLevel
       );
       const context = await contextManager.buildContext(chatId, systemPrompt, chat.threadId || undefined);
 
@@ -255,6 +277,7 @@ export async function POST(request: NextRequest) {
       const response = await aiManager.respond(context, whisperTranscription || content || '', {
         motherLanguage: motherLanguage || 'uk',
         learningLanguage,
+        level: chatLevel,
         audioBase64,
         audioFormat: audioFormatForAI,
         whisperTranscription,

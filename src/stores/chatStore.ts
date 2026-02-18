@@ -72,6 +72,7 @@ export interface Chat {
   topicType: 'general' | 'roleplay' | 'topic';
   topicKey?: string;
   topicDetails?: Record<string, unknown>;
+  level?: 'novice' | 'beginner' | 'intermediate' | 'advanced';
   language: string;
   dialect: string;
   threadId?: string;

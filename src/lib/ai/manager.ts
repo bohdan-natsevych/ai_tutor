@@ -105,6 +105,7 @@ class AIManager {
       maxTokens: options?.maxTokens ?? 4000,
       motherLanguage: options?.motherLanguage,
       learningLanguage: options?.learningLanguage,
+      level: options?.level,
       audioBase64: options?.audioBase64,
       audioFormat: options?.audioFormat,
       whisperTranscription: options?.whisperTranscription,

@@ -15,6 +15,7 @@ const en = {
   'common.retry': 'Retry',
   'common.add': 'Add',
   'common.custom': 'Custom',
+  'common.loading': 'Loading...',
 
   // ── Home page ──
   'home.hero.title': 'Practice speaking with\u00a0AI',
@@ -52,8 +53,25 @@ const en = {
   'home.dialog.title': 'Pick a scenario',
   'home.dialog.description': 'Choose a scenario or topic, then start chatting',
   'home.dialog.customName': 'Custom name (optional)',
+  'home.dialog.customNamePlaceholder': 'E.g., Morning Practice',
+  'home.dialog.startingMessage': 'Starting Instructions',
   'home.dialog.tabRoleplay': 'Roleplay',
   'home.dialog.tabTopics': 'Topics',
+
+  // ── Level picker ──
+  'home.dialog.level': 'Proficiency level',
+  'home.dialog.levelNovice': 'Novice',
+  'home.dialog.levelNoviceDesc': 'Just starting out, very basic words',
+  'home.dialog.levelBeginner': 'Beginner',
+  'home.dialog.levelBeginnerDesc': 'Simple sentences and basic vocabulary',
+  'home.dialog.levelIntermediate': 'Intermediate',
+  'home.dialog.levelIntermediateDesc': 'Natural conversation, some idioms',
+  'home.dialog.levelAdvanced': 'Advanced',
+  'home.dialog.levelAdvancedDesc': 'Rich vocabulary, idioms, complex structures',
+  'home.level.novice': 'Novice',
+  'home.level.beginner': 'Beginner',
+  'home.level.intermediate': 'Intermediate',
+  'home.level.advanced': 'Advanced',
 
   // ── Home date formatting ──
   'home.date.justNow': 'Just now',
@@ -248,6 +266,7 @@ const uk: Record<TranslationKey, string> = {
   'common.retry': 'Повторити',
   'common.add': 'Додати',
   'common.custom': 'Змінено',
+  'common.loading': 'Завантаження...',
 
   // ── Home page ──
   'home.hero.title': 'Практикуйте мову з AI',
@@ -285,8 +304,25 @@ const uk: Record<TranslationKey, string> = {
   'home.dialog.title': 'Оберіть сценарій',
   'home.dialog.description': 'Виберіть сценарій або тему та починайте спілкуватися',
   'home.dialog.customName': 'Власна назва (необов\'язково)',
+  'home.dialog.customNamePlaceholder': 'Напр., Ранкова практика',
+  'home.dialog.startingMessage': 'Початкові інструкції',
   'home.dialog.tabRoleplay': 'Рольові ігри',
   'home.dialog.tabTopics': 'Теми',
+
+  // ── Level picker ──
+  'home.dialog.level': 'Рівень володіння',
+  'home.dialog.levelNovice': 'Початківець',
+  'home.dialog.levelNoviceDesc': 'Тільки починаю, дуже прості слова',
+  'home.dialog.levelBeginner': 'Базовий',
+  'home.dialog.levelBeginnerDesc': 'Прості речення та базова лексика',
+  'home.dialog.levelIntermediate': 'Середній',
+  'home.dialog.levelIntermediateDesc': 'Природна розмова, деякі ідіоми',
+  'home.dialog.levelAdvanced': 'Просунутий',
+  'home.dialog.levelAdvancedDesc': 'Багата лексика, ідіоми, складні конструкції',
+  'home.level.novice': 'Початківець',
+  'home.level.beginner': 'Базовий',
+  'home.level.intermediate': 'Середній',
+  'home.level.advanced': 'Просунутий',
 
   // ── Home date formatting ──
   'home.date.justNow': 'Щойно',
@@ -481,6 +517,7 @@ const de: Record<TranslationKey, string> = {
   'common.retry': 'Wiederholen',
   'common.add': 'Hinzufügen',
   'common.custom': 'Benutzerdefiniert',
+  'common.loading': 'Laden...',
 
   // ── Home page ──
   'home.hero.title': 'Sprich Englisch mit\u00a0AI',
@@ -518,8 +555,25 @@ const de: Record<TranslationKey, string> = {
   'home.dialog.title': 'Wähle ein Szenario',
   'home.dialog.description': 'Wähle ein Szenario oder Thema und beginne zu chatten',
   'home.dialog.customName': 'Eigener Name (optional)',
+  'home.dialog.customNamePlaceholder': 'z.B. Morgenübung',
+  'home.dialog.startingMessage': 'Startanweisungen',
   'home.dialog.tabRoleplay': 'Rollenspiel',
   'home.dialog.tabTopics': 'Themen',
+
+  // ── Level picker ──
+  'home.dialog.level': 'Sprachniveau',
+  'home.dialog.levelNovice': 'Anfaenger',
+  'home.dialog.levelNoviceDesc': 'Ganz am Anfang, sehr einfache Woerter',
+  'home.dialog.levelBeginner': 'Grundstufe',
+  'home.dialog.levelBeginnerDesc': 'Einfache Saetze und Grundwortschatz',
+  'home.dialog.levelIntermediate': 'Mittelstufe',
+  'home.dialog.levelIntermediateDesc': 'Natuerliche Gespraeche, einige Redewendungen',
+  'home.dialog.levelAdvanced': 'Fortgeschritten',
+  'home.dialog.levelAdvancedDesc': 'Reicher Wortschatz, Idiome, komplexe Strukturen',
+  'home.level.novice': 'Anfaenger',
+  'home.level.beginner': 'Grundstufe',
+  'home.level.intermediate': 'Mittelstufe',
+  'home.level.advanced': 'Fortgeschritten',
 
   // ── Home date formatting ──
   'home.date.justNow': 'Gerade eben',
@@ -715,6 +769,7 @@ const fr: Record<TranslationKey, string> = {
   'common.retry': 'Réessayer',
   'common.add': 'Ajouter',
   'common.custom': 'Personnalisé',
+  'common.loading': 'Chargement...',
 
   // ── Home page ──
   'home.hero.title': 'Pratiquez l\'anglais avec l\'\u00a0IA',
@@ -752,8 +807,25 @@ const fr: Record<TranslationKey, string> = {
   'home.dialog.title': 'Choisissez un scénario',
   'home.dialog.description': 'Choisissez un scénario ou un sujet, puis commencez à discuter',
   'home.dialog.customName': 'Nom personnalisé (optionnel)',
+  'home.dialog.customNamePlaceholder': 'Ex: Exercice du matin',
+  'home.dialog.startingMessage': 'Instructions de départ',
   'home.dialog.tabRoleplay': 'Jeu de rôle',
   'home.dialog.tabTopics': 'Sujets',
+
+  // ── Level picker ──
+  'home.dialog.level': 'Niveau de competence',
+  'home.dialog.levelNovice': 'Debutant absolu',
+  'home.dialog.levelNoviceDesc': 'Tout debut, mots tres simples',
+  'home.dialog.levelBeginner': 'Debutant',
+  'home.dialog.levelBeginnerDesc': 'Phrases simples et vocabulaire de base',
+  'home.dialog.levelIntermediate': 'Intermediaire',
+  'home.dialog.levelIntermediateDesc': 'Conversation naturelle, quelques expressions',
+  'home.dialog.levelAdvanced': 'Avance',
+  'home.dialog.levelAdvancedDesc': 'Vocabulaire riche, expressions idiomatiques, structures complexes',
+  'home.level.novice': 'Debutant absolu',
+  'home.level.beginner': 'Debutant',
+  'home.level.intermediate': 'Intermediaire',
+  'home.level.advanced': 'Avance',
 
   // ── Home date formatting ──
   'home.date.justNow': 'À l\'instant',
@@ -949,6 +1021,7 @@ const es: Record<TranslationKey, string> = {
   'common.retry': 'Reintentar',
   'common.add': 'Añadir',
   'common.custom': 'Personalizado',
+  'common.loading': 'Cargando...',
 
   // ── Home page ──
   'home.hero.title': 'Practica inglés con\u00a0IA',
@@ -986,8 +1059,25 @@ const es: Record<TranslationKey, string> = {
   'home.dialog.title': 'Elige un escenario',
   'home.dialog.description': 'Elige un escenario o tema, luego comienza a chatear',
   'home.dialog.customName': 'Nombre personalizado (opcional)',
+  'home.dialog.customNamePlaceholder': 'Ej., Practica matutina',
+  'home.dialog.startingMessage': 'Instrucciones iniciales',
   'home.dialog.tabRoleplay': 'Juego de roles',
   'home.dialog.tabTopics': 'Temas',
+
+  // ── Level picker ──
+  'home.dialog.level': 'Nivel de competencia',
+  'home.dialog.levelNovice': 'Principiante absoluto',
+  'home.dialog.levelNoviceDesc': 'Recien empezando, palabras muy basicas',
+  'home.dialog.levelBeginner': 'Principiante',
+  'home.dialog.levelBeginnerDesc': 'Frases simples y vocabulario basico',
+  'home.dialog.levelIntermediate': 'Intermedio',
+  'home.dialog.levelIntermediateDesc': 'Conversacion natural, algunas expresiones',
+  'home.dialog.levelAdvanced': 'Avanzado',
+  'home.dialog.levelAdvancedDesc': 'Vocabulario rico, modismos, estructuras complejas',
+  'home.level.novice': 'Principiante absoluto',
+  'home.level.beginner': 'Principiante',
+  'home.level.intermediate': 'Intermedio',
+  'home.level.advanced': 'Avanzado',
 
   // ── Home date formatting ──
   'home.date.justNow': 'Ahora mismo',
@@ -1183,6 +1273,7 @@ const it: Record<TranslationKey, string> = {
   'common.retry': 'Riprova',
   'common.add': 'Aggiungi',
   'common.custom': 'Personalizzato',
+  'common.loading': 'Caricamento...',
 
   // ── Home page ──
   'home.hero.title': 'Pratica l\'inglese con l\'\u00a0IA',
@@ -1220,8 +1311,25 @@ const it: Record<TranslationKey, string> = {
   'home.dialog.title': 'Scegli uno scenario',
   'home.dialog.description': 'Scegli uno scenario o argomento, poi inizia a chattare',
   'home.dialog.customName': 'Nome personalizzato (opzionale)',
+  'home.dialog.customNamePlaceholder': 'Es., Pratica mattutina',
+  'home.dialog.startingMessage': 'Istruzioni iniziali',
   'home.dialog.tabRoleplay': 'Gioco di ruolo',
   'home.dialog.tabTopics': 'Argomenti',
+
+  // ── Level picker ──
+  'home.dialog.level': 'Livello di competenza',
+  'home.dialog.levelNovice': 'Principiante assoluto',
+  'home.dialog.levelNoviceDesc': 'Appena iniziato, parole molto semplici',
+  'home.dialog.levelBeginner': 'Principiante',
+  'home.dialog.levelBeginnerDesc': 'Frasi semplici e vocabolario di base',
+  'home.dialog.levelIntermediate': 'Intermedio',
+  'home.dialog.levelIntermediateDesc': 'Conversazione naturale, qualche modo di dire',
+  'home.dialog.levelAdvanced': 'Avanzato',
+  'home.dialog.levelAdvancedDesc': 'Vocabolario ricco, modi di dire, strutture complesse',
+  'home.level.novice': 'Principiante assoluto',
+  'home.level.beginner': 'Principiante',
+  'home.level.intermediate': 'Intermedio',
+  'home.level.advanced': 'Avanzato',
 
   // ── Home date formatting ──
   'home.date.justNow': 'Proprio ora',
@@ -1416,6 +1524,7 @@ const pt: Record<TranslationKey, string> = {
   'common.retry': 'Tentar novamente',
   'common.add': 'Adicionar',
   'common.custom': 'Personalizado',
+  'common.loading': 'Carregando...',
 
   // ── Home page ──
   'home.hero.title': 'Pratique inglês com\u00a0IA',
@@ -1453,8 +1562,25 @@ const pt: Record<TranslationKey, string> = {
   'home.dialog.title': 'Escolha um cenário',
   'home.dialog.description': 'Escolha um cenário ou tópico, depois comece a conversar',
   'home.dialog.customName': 'Nome personalizado (opcional)',
+  'home.dialog.customNamePlaceholder': 'Ex., Pratica matinal',
+  'home.dialog.startingMessage': 'Instrucoes iniciais',
   'home.dialog.tabRoleplay': 'Roleplay',
   'home.dialog.tabTopics': 'Tópicos',
+
+  // ── Level picker ──
+  'home.dialog.level': 'Nivel de proficiencia',
+  'home.dialog.levelNovice': 'Iniciante absoluto',
+  'home.dialog.levelNoviceDesc': 'Comecando agora, palavras muito simples',
+  'home.dialog.levelBeginner': 'Iniciante',
+  'home.dialog.levelBeginnerDesc': 'Frases simples e vocabulario basico',
+  'home.dialog.levelIntermediate': 'Intermediario',
+  'home.dialog.levelIntermediateDesc': 'Conversa natural, algumas expressoes',
+  'home.dialog.levelAdvanced': 'Avancado',
+  'home.dialog.levelAdvancedDesc': 'Vocabulario rico, expressoes idiomaticas, estruturas complexas',
+  'home.level.novice': 'Iniciante absoluto',
+  'home.level.beginner': 'Iniciante',
+  'home.level.intermediate': 'Intermediario',
+  'home.level.advanced': 'Avancado',
 
   // ── Home date formatting ──
   'home.date.justNow': 'Agora mesmo',
@@ -1650,6 +1776,7 @@ const pl: Record<TranslationKey, string> = {
   'common.retry': 'Ponów',
   'common.add': 'Dodaj',
   'common.custom': 'Niestandardowe',
+  'common.loading': 'Wczytywanie...',
 
   // ── Home page ──
   'home.hero.title': 'Ćwicz angielski z\u00a0AI',
@@ -1687,8 +1814,25 @@ const pl: Record<TranslationKey, string> = {
   'home.dialog.title': 'Wybierz scenariusz',
   'home.dialog.description': 'Wybierz scenariusz lub temat, a następnie zacznij czatować',
   'home.dialog.customName': 'Własna nazwa (opcjonalnie)',
+  'home.dialog.customNamePlaceholder': 'Np. Poranny trening',
+  'home.dialog.startingMessage': 'Instrukcje startowe',
   'home.dialog.tabRoleplay': 'Odgrywanie ról',
   'home.dialog.tabTopics': 'Tematy',
+
+  // ── Level picker ──
+  'home.dialog.level': 'Poziom bieglosci',
+  'home.dialog.levelNovice': 'Poczatkujacy',
+  'home.dialog.levelNoviceDesc': 'Dopiero zaczynam, bardzo proste slowa',
+  'home.dialog.levelBeginner': 'Podstawowy',
+  'home.dialog.levelBeginnerDesc': 'Proste zdania i podstawowe slownictwo',
+  'home.dialog.levelIntermediate': 'Sredni',
+  'home.dialog.levelIntermediateDesc': 'Naturalna rozmowa, niektore idiomy',
+  'home.dialog.levelAdvanced': 'Zaawansowany',
+  'home.dialog.levelAdvancedDesc': 'Bogate slownictwo, idiomy, zlozone struktury',
+  'home.level.novice': 'Poczatkujacy',
+  'home.level.beginner': 'Podstawowy',
+  'home.level.intermediate': 'Sredni',
+  'home.level.advanced': 'Zaawansowany',
 
   // ── Home date formatting ──
   'home.date.justNow': 'Przed chwilą',
@@ -1884,6 +2028,7 @@ const ja: Record<TranslationKey, string> = {
   'common.retry': '再試行',
   'common.add': '追加',
   'common.custom': 'カスタム',
+  'common.loading': '読み込み中...',
 
   // ── Home page ──
   'home.hero.title': 'AIで英語を練習しよう',
@@ -1921,8 +2066,25 @@ const ja: Record<TranslationKey, string> = {
   'home.dialog.title': 'シナリオを選択',
   'home.dialog.description': 'シナリオまたはトピックを選択して、チャットを開始してください',
   'home.dialog.customName': 'カスタム名（オプション）',
+  'home.dialog.customNamePlaceholder': '例：朝の練習',
+  'home.dialog.startingMessage': '開始指示',
   'home.dialog.tabRoleplay': 'ロールプレイ',
   'home.dialog.tabTopics': 'トピック',
+
+  // ── Level picker ──
+  'home.dialog.level': '習熟度レベル',
+  'home.dialog.levelNovice': '入門',
+  'home.dialog.levelNoviceDesc': '始めたばかり、とても簡単な単語',
+  'home.dialog.levelBeginner': '初級',
+  'home.dialog.levelBeginnerDesc': '簡単な文と基本的な語彙',
+  'home.dialog.levelIntermediate': '中級',
+  'home.dialog.levelIntermediateDesc': '自然な会話、いくつかの慣用句',
+  'home.dialog.levelAdvanced': '上級',
+  'home.dialog.levelAdvancedDesc': '豊富な語彙、慣用句、複雑な構文',
+  'home.level.novice': '入門',
+  'home.level.beginner': '初級',
+  'home.level.intermediate': '中級',
+  'home.level.advanced': '上級',
 
   // ── Home date formatting ──
   'home.date.justNow': 'たった今',
@@ -2117,6 +2279,7 @@ const zh: Record<TranslationKey, string> = {
   'common.retry': '重试',
   'common.add': '添加',
   'common.custom': '自定义',
+  'common.loading': '加载中...',
 
   // ── Home page ──
   'home.hero.title': '用 AI 练习英语',
@@ -2154,8 +2317,25 @@ const zh: Record<TranslationKey, string> = {
   'home.dialog.title': '选择场景',
   'home.dialog.description': '选择场景或话题，然后开始聊天',
   'home.dialog.customName': '自定义名称（可选）',
+  'home.dialog.customNamePlaceholder': '例如：晨练',
+  'home.dialog.startingMessage': '起始说明',
   'home.dialog.tabRoleplay': '角色扮演',
   'home.dialog.tabTopics': '话题',
+
+  // ── Level picker ──
+  'home.dialog.level': '熟练程度',
+  'home.dialog.levelNovice': '零基础',
+  'home.dialog.levelNoviceDesc': '刚开始学习，非常简单的词汇',
+  'home.dialog.levelBeginner': '初学者',
+  'home.dialog.levelBeginnerDesc': '简单句子和基础词汇',
+  'home.dialog.levelIntermediate': '中级',
+  'home.dialog.levelIntermediateDesc': '自然对话，一些习语',
+  'home.dialog.levelAdvanced': '高级',
+  'home.dialog.levelAdvancedDesc': '丰富词汇、习语、复杂结构',
+  'home.level.novice': '零基础',
+  'home.level.beginner': '初学者',
+  'home.level.intermediate': '中级',
+  'home.level.advanced': '高级',
 
   // ── Home date formatting ──
   'home.date.justNow': '刚刚',
@@ -2350,6 +2530,7 @@ const ko: Record<TranslationKey, string> = {
   'common.retry': '재시도',
   'common.add': '추가',
   'common.custom': '사용자 지정',
+  'common.loading': '로딩 중...',
 
   // ── Home page ──
   'home.hero.title': 'AI와 함께 영어 연습',
@@ -2387,8 +2568,25 @@ const ko: Record<TranslationKey, string> = {
   'home.dialog.title': '시나리오 선택',
   'home.dialog.description': '시나리오 또는 주제를 선택한 후 채팅을 시작하세요',
   'home.dialog.customName': '사용자 지정 이름 (선택 사항)',
+  'home.dialog.customNamePlaceholder': '예: 아침 연습',
+  'home.dialog.startingMessage': '시작 지침',
   'home.dialog.tabRoleplay': '롤플레이',
   'home.dialog.tabTopics': '주제',
+
+  // ── Level picker ──
+  'home.dialog.level': '숙련도',
+  'home.dialog.levelNovice': '입문',
+  'home.dialog.levelNoviceDesc': '이제 막 시작, 매우 기본적인 단어',
+  'home.dialog.levelBeginner': '초급',
+  'home.dialog.levelBeginnerDesc': '간단한 문장과 기본 어휘',
+  'home.dialog.levelIntermediate': '중급',
+  'home.dialog.levelIntermediateDesc': '자연스러운 대화, 일부 관용구',
+  'home.dialog.levelAdvanced': '고급',
+  'home.dialog.levelAdvancedDesc': '풍부한 어휘, 관용구, 복잡한 구조',
+  'home.level.novice': '입문',
+  'home.level.beginner': '초급',
+  'home.level.intermediate': '중급',
+  'home.level.advanced': '고급',
 
   // ── Home date formatting ──
   'home.date.justNow': '방금',

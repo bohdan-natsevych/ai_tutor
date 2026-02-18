@@ -6,6 +6,8 @@ export const chats = sqliteTable('chats', {
   title: text('title'),
   topicType: text('topic_type').$type<'general' | 'roleplay' | 'topic'>().default('general'),
   topicDetails: text('topic_details'), // JSON string
+  customPrompt: text('custom_prompt'), // Optional custom system prompt body
+  level: text('level').$type<'novice' | 'beginner' | 'intermediate' | 'advanced'>().default('intermediate'),
   language: text('language').default('en'),
   dialect: text('dialect').default('american'),
   threadId: text('thread_id'), // OpenAI Assistants API thread ID

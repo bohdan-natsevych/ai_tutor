@@ -86,7 +86,7 @@ export function PromptEditor() {
                 {t('settings.prompts.resetToDefault')}
               </Button>
               <Button
-                onClick={() => setEditedPrompts(prev => ({ ...prev, system: SYSTEM_PROMPTS.tutor }))}
+                onClick={() => setEditedPrompts(prev => ({ ...prev, system: `${SYSTEM_PROMPTS.tutorHeader}\n${SYSTEM_PROMPTS.tutorDefaultBody}\n${SYSTEM_PROMPTS.tutorFooter}` }))}
                 size="sm"
                 variant="ghost"
               >
@@ -100,7 +100,7 @@ export function PromptEditor() {
                 {t('settings.prompts.showDefaultSystem')}
               </summary>
               <pre className="mt-2 p-3 bg-muted rounded-lg text-xs overflow-auto whitespace-pre-wrap">
-                {SYSTEM_PROMPTS.tutor}
+                {`${SYSTEM_PROMPTS.tutorHeader}\n${SYSTEM_PROMPTS.tutorDefaultBody}\n${SYSTEM_PROMPTS.tutorFooter}`}
               </pre>
             </details>
           </TabsContent>
