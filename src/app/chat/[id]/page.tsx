@@ -1085,7 +1085,7 @@ export default function ChatPage({ params }: ChatPageProps) {
             <div className="text-center py-8">
               <p className="text-destructive font-medium mb-2">{chatError}</p>
               <Link href="/">
-                <Button variant="outline" size="sm">{t('common.back') || 'Back to Home'}</Button>
+                <Button variant="outline" size="sm">Back to Home</Button>
               </Link>
             </div>
           ) : messages.length === 0 ? (
