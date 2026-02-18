@@ -15,6 +15,7 @@ const en = {
   'common.retry': 'Retry',
   'common.add': 'Add',
   'common.custom': 'Custom',
+  'common.loading': 'Loading...',
 
   // ── Home page ──
   'home.hero.title': 'Practice speaking with\u00a0AI',
@@ -265,6 +266,7 @@ const uk: Record<TranslationKey, string> = {
   'common.retry': 'Повторити',
   'common.add': 'Додати',
   'common.custom': 'Змінено',
+  'common.loading': 'Завантаження...',
 
   // ── Home page ──
   'home.hero.title': 'Практикуйте мову з AI',
@@ -515,6 +517,7 @@ const de: Record<TranslationKey, string> = {
   'common.retry': 'Wiederholen',
   'common.add': 'Hinzufügen',
   'common.custom': 'Benutzerdefiniert',
+  'common.loading': 'Laden...',
 
   // ── Home page ──
   'home.hero.title': 'Sprich Englisch mit\u00a0AI',
@@ -766,6 +769,7 @@ const fr: Record<TranslationKey, string> = {
   'common.retry': 'Réessayer',
   'common.add': 'Ajouter',
   'common.custom': 'Personnalisé',
+  'common.loading': 'Chargement...',
 
   // ── Home page ──
   'home.hero.title': 'Pratiquez l\'anglais avec l\'\u00a0IA',
@@ -1017,6 +1021,7 @@ const es: Record<TranslationKey, string> = {
   'common.retry': 'Reintentar',
   'common.add': 'Añadir',
   'common.custom': 'Personalizado',
+  'common.loading': 'Cargando...',
 
   // ── Home page ──
   'home.hero.title': 'Practica inglés con\u00a0IA',
@@ -1054,6 +1059,8 @@ const es: Record<TranslationKey, string> = {
   'home.dialog.title': 'Elige un escenario',
   'home.dialog.description': 'Elige un escenario o tema, luego comienza a chatear',
   'home.dialog.customName': 'Nombre personalizado (opcional)',
+  'home.dialog.customNamePlaceholder': 'Ej., Practica matutina',
+  'home.dialog.startingMessage': 'Instrucciones iniciales',
   'home.dialog.tabRoleplay': 'Juego de roles',
   'home.dialog.tabTopics': 'Temas',
 
@@ -1266,6 +1273,7 @@ const it: Record<TranslationKey, string> = {
   'common.retry': 'Riprova',
   'common.add': 'Aggiungi',
   'common.custom': 'Personalizzato',
+  'common.loading': 'Caricamento...',
 
   // ── Home page ──
   'home.hero.title': 'Pratica l\'inglese con l\'\u00a0IA',
@@ -1303,6 +1311,8 @@ const it: Record<TranslationKey, string> = {
   'home.dialog.title': 'Scegli uno scenario',
   'home.dialog.description': 'Scegli uno scenario o argomento, poi inizia a chattare',
   'home.dialog.customName': 'Nome personalizzato (opzionale)',
+  'home.dialog.customNamePlaceholder': 'Es., Pratica mattutina',
+  'home.dialog.startingMessage': 'Istruzioni iniziali',
   'home.dialog.tabRoleplay': 'Gioco di ruolo',
   'home.dialog.tabTopics': 'Argomenti',
 
@@ -1514,6 +1524,7 @@ const pt: Record<TranslationKey, string> = {
   'common.retry': 'Tentar novamente',
   'common.add': 'Adicionar',
   'common.custom': 'Personalizado',
+  'common.loading': 'Carregando...',
 
   // ── Home page ──
   'home.hero.title': 'Pratique inglês com\u00a0IA',
@@ -1551,6 +1562,8 @@ const pt: Record<TranslationKey, string> = {
   'home.dialog.title': 'Escolha um cenário',
   'home.dialog.description': 'Escolha um cenário ou tópico, depois comece a conversar',
   'home.dialog.customName': 'Nome personalizado (opcional)',
+  'home.dialog.customNamePlaceholder': 'Ex., Pratica matinal',
+  'home.dialog.startingMessage': 'Instrucoes iniciais',
   'home.dialog.tabRoleplay': 'Roleplay',
   'home.dialog.tabTopics': 'Tópicos',
 
@@ -1763,6 +1776,7 @@ const pl: Record<TranslationKey, string> = {
   'common.retry': 'Ponów',
   'common.add': 'Dodaj',
   'common.custom': 'Niestandardowe',
+  'common.loading': 'Wczytywanie...',
 
   // ── Home page ──
   'home.hero.title': 'Ćwicz angielski z\u00a0AI',
@@ -1800,6 +1814,8 @@ const pl: Record<TranslationKey, string> = {
   'home.dialog.title': 'Wybierz scenariusz',
   'home.dialog.description': 'Wybierz scenariusz lub temat, a następnie zacznij czatować',
   'home.dialog.customName': 'Własna nazwa (opcjonalnie)',
+  'home.dialog.customNamePlaceholder': 'Np. Poranny trening',
+  'home.dialog.startingMessage': 'Instrukcje startowe',
   'home.dialog.tabRoleplay': 'Odgrywanie ról',
   'home.dialog.tabTopics': 'Tematy',
 
@@ -2012,6 +2028,7 @@ const ja: Record<TranslationKey, string> = {
   'common.retry': '再試行',
   'common.add': '追加',
   'common.custom': 'カスタム',
+  'common.loading': '読み込み中...',
 
   // ── Home page ──
   'home.hero.title': 'AIで英語を練習しよう',
@@ -2049,6 +2066,8 @@ const ja: Record<TranslationKey, string> = {
   'home.dialog.title': 'シナリオを選択',
   'home.dialog.description': 'シナリオまたはトピックを選択して、チャットを開始してください',
   'home.dialog.customName': 'カスタム名（オプション）',
+  'home.dialog.customNamePlaceholder': '例：朝の練習',
+  'home.dialog.startingMessage': '開始指示',
   'home.dialog.tabRoleplay': 'ロールプレイ',
   'home.dialog.tabTopics': 'トピック',
 
@@ -2260,6 +2279,7 @@ const zh: Record<TranslationKey, string> = {
   'common.retry': '重试',
   'common.add': '添加',
   'common.custom': '自定义',
+  'common.loading': '加载中...',
 
   // ── Home page ──
   'home.hero.title': '用 AI 练习英语',
@@ -2297,6 +2317,8 @@ const zh: Record<TranslationKey, string> = {
   'home.dialog.title': '选择场景',
   'home.dialog.description': '选择场景或话题，然后开始聊天',
   'home.dialog.customName': '自定义名称（可选）',
+  'home.dialog.customNamePlaceholder': '例如：晨练',
+  'home.dialog.startingMessage': '起始说明',
   'home.dialog.tabRoleplay': '角色扮演',
   'home.dialog.tabTopics': '话题',
 
@@ -2508,6 +2530,7 @@ const ko: Record<TranslationKey, string> = {
   'common.retry': '재시도',
   'common.add': '추가',
   'common.custom': '사용자 지정',
+  'common.loading': '로딩 중...',
 
   // ── Home page ──
   'home.hero.title': 'AI와 함께 영어 연습',
@@ -2545,6 +2568,8 @@ const ko: Record<TranslationKey, string> = {
   'home.dialog.title': '시나리오 선택',
   'home.dialog.description': '시나리오 또는 주제를 선택한 후 채팅을 시작하세요',
   'home.dialog.customName': '사용자 지정 이름 (선택 사항)',
+  'home.dialog.customNamePlaceholder': '예: 아침 연습',
+  'home.dialog.startingMessage': '시작 지침',
   'home.dialog.tabRoleplay': '롤플레이',
   'home.dialog.tabTopics': '주제',
 
