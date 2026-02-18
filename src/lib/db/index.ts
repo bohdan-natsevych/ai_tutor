@@ -63,6 +63,7 @@ function initializeDatabase() {
         title TEXT,
         topic_type TEXT DEFAULT 'general',
         topic_details TEXT,
+        custom_prompt TEXT,
         language TEXT DEFAULT 'en',
         dialect TEXT DEFAULT 'american',
         thread_id TEXT,
@@ -107,6 +108,12 @@ function initializeDatabase() {
     `);
 
     // Ensure new columns exist for existing databases
+    const chatColumns = sqlite.prepare(`PRAGMA table_info(chats);`).all();
+    const chatColumnNames = new Set((chatColumns as Array<{ name: string }>).map((col) => col.name));
+    if (!chatColumnNames.has('custom_prompt')) {
+      sqlite.exec(`ALTER TABLE chats ADD COLUMN custom_prompt TEXT;`);
+    }
+
     const messageColumns = sqlite.prepare(`PRAGMA table_info(messages);`).all();
     const messageColumnNames = new Set((messageColumns as Array<{ name: string }>).map((col) => col.name));
     if (!messageColumnNames.has('audio_blob')) {

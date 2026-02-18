@@ -7,8 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { getRoleplayScenarios, getTopics } from '@/lib/ai/prompts';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { getRoleplayScenarios, getTopics, DEFAULT_GENERAL_OPENING } from '@/lib/ai/prompts';
 import { useSettingsStore } from '@/stores/settingsStore';
 import type { Chat } from '@/stores/chatStore';
 import { useTranslation } from '@/lib/i18n/useTranslation';
@@ -22,6 +23,7 @@ export default function HomePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
   const [newChatTitle, setNewChatTitle] = useState('');
+  const [openingPrompt, setOpeningPrompt] = useState(DEFAULT_GENERAL_OPENING);
   const [showNewChatDialog, setShowNewChatDialog] = useState(false);
   const [selectedTab, setSelectedTab] = useState<'general' | 'roleplay' | 'topic'>('general');
   const { t, lang } = useTranslation();
@@ -58,6 +60,7 @@ export default function HomePage() {
           aiProvider: ai.provider,
           aiModel: ai.model,
           aiTextModel: ai.textModel,
+          openingPrompt: topicType === 'general' ? openingPrompt : undefined,
         }),
       });
 
@@ -78,6 +81,7 @@ export default function HomePage() {
       setIsCreating(false);
       setShowNewChatDialog(false);
       setNewChatTitle('');
+      setOpeningPrompt(DEFAULT_GENERAL_OPENING);
     }
   };
 
@@ -188,7 +192,7 @@ export default function HomePage() {
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Free Chat Card */}
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer border-primary/20" onClick={() => createChat('general')}>
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer border-primary/20" onClick={() => { setSelectedTab('general'); setShowNewChatDialog(true); }}>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <span>💬</span> {t('home.freeChat')}
@@ -252,75 +256,83 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Scenario/topic picker dialog */}
+        {/* Conversation setup / scenario picker dialog */}
         {showNewChatDialog && (
-          <Dialog open={showNewChatDialog} onOpenChange={setShowNewChatDialog}>
-            <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+          <Dialog open={showNewChatDialog} onOpenChange={(open) => { if (!open) { setNewChatTitle(''); setOpeningPrompt(DEFAULT_GENERAL_OPENING); } setShowNewChatDialog(open); }}>
+            <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>{t('home.dialog.title')}</DialogTitle>
+                <DialogTitle>
+                  {selectedTab === 'general' ? t('home.freeChat') : selectedTab === 'roleplay' ? t('home.roleplay') : t('home.topics')}
+                </DialogTitle>
                 <DialogDescription>
-                  {t('home.dialog.description')}
+                  {selectedTab === 'general' ? t('home.freeChatDesc') : t('home.dialog.description')}
                 </DialogDescription>
               </DialogHeader>
-              
-              <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  {/* Optional Custom Topic/Title Input */}
-                  <Input
-                    placeholder={t('home.dialog.customName')}
-                    value={newChatTitle}
-                    onChange={(e) => setNewChatTitle(e.target.value)}
-                  />
-                </div>
 
-                <Tabs value={selectedTab} onValueChange={(v) => setSelectedTab(v as any)}>
-                  <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="roleplay">{t('home.dialog.tabRoleplay')}</TabsTrigger>
-                    <TabsTrigger value="topic">{t('home.dialog.tabTopics')}</TabsTrigger>
-                  </TabsList>
-                  
-                  <TabsContent value="roleplay" className="mt-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {getRoleplayScenarios().map((scenario) => (
-                        <Card 
-                          key={scenario.id} 
-                          className="cursor-pointer hover:border-primary transition-colors"
-                          onClick={() => createChat('roleplay', scenario.id)}
-                        >
-                          <CardHeader className="p-4">
-                            <CardTitle className="text-base flex items-center gap-2">
-                              {scenario.name}
-                            </CardTitle>
-                            <CardDescription className="text-xs">
-                              {scenario.description}
-                            </CardDescription>
-                          </CardHeader>
-                        </Card>
-                      ))}
+              <div className="space-y-4 py-2">
+                {selectedTab === 'general' && (
+                  <>
+                    <div className="grid gap-2">
+                      <Label htmlFor="chat-name">{t('home.dialog.customName')}</Label>
+                      <Input
+                        id="chat-name"
+                        placeholder={t('home.dialog.customNamePlaceholder') || 'E.g., Morning Practice'}
+                        value={newChatTitle}
+                        onChange={(e) => setNewChatTitle(e.target.value)}
+                      />
                     </div>
-                  </TabsContent>
-                  
-                  <TabsContent value="topic" className="mt-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {getTopics().map((topic) => (
-                        <Card 
-                          key={topic.id} 
-                          className="cursor-pointer hover:border-primary transition-colors"
-                          onClick={() => createChat('topic', topic.id)}
-                        >
-                          <CardHeader className="p-4">
-                            <CardTitle className="text-base flex items-center gap-2">
-                              {topic.name}
-                            </CardTitle>
-                            <CardDescription className="text-xs">
-                              {topic.description}
-                            </CardDescription>
-                          </CardHeader>
-                        </Card>
-                      ))}
+
+                    <div className="grid gap-2">
+                      <Label htmlFor="chat-opening">{t('home.dialog.startingMessage') || 'Starting message'}</Label>
+                      <Textarea
+                        id="chat-opening"
+                        value={openingPrompt}
+                        onChange={(e) => setOpeningPrompt(e.target.value)}
+                        className="min-h-[80px] text-sm"
+                      />
                     </div>
-                  </TabsContent>
-                </Tabs>
+
+                    <div className="flex justify-end pt-2">
+                      <Button onClick={() => createChat('general')} disabled={isCreating}>
+                        {isCreating ? t('common.loading') : t('home.startConversation')}
+                      </Button>
+                    </div>
+                  </>
+                )}
+
+                {selectedTab === 'roleplay' && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {getRoleplayScenarios().map((scenario) => (
+                      <Card
+                        key={scenario.id}
+                        className="cursor-pointer hover:border-primary transition-colors"
+                        onClick={() => createChat('roleplay', scenario.id)}
+                      >
+                        <CardHeader className="p-4">
+                          <CardTitle className="text-base">{scenario.name}</CardTitle>
+                          <CardDescription className="text-xs">{scenario.description}</CardDescription>
+                        </CardHeader>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+
+                {selectedTab === 'topic' && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {getTopics().map((topic) => (
+                      <Card
+                        key={topic.id}
+                        className="cursor-pointer hover:border-primary transition-colors"
+                        onClick={() => createChat('topic', topic.id)}
+                      >
+                        <CardHeader className="p-4">
+                          <CardTitle className="text-base">{topic.name}</CardTitle>
+                          <CardDescription className="text-xs">{topic.description}</CardDescription>
+                        </CardHeader>
+                      </Card>
+                    ))}
+                  </div>
+                )}
               </div>
             </DialogContent>
           </Dialog>

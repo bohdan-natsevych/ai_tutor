@@ -1,14 +1,14 @@
-﻿// System prompts for the AI tutor
+// System prompts for the AI tutor
 
 export const SYSTEM_PROMPTS = {
   // Main tutor system prompt - uses {{LEARNING_LANGUAGE}} placeholder
-  tutor: `You are a language tutor helping someone learn {{LEARNING_LANGUAGE}}. Your role is to:
-
-1. Have natural, engaging conversations in {{LEARNING_LANGUAGE}}
+  tutorHeader: `You are a language tutor helping someone learn {{LEARNING_LANGUAGE}}. Your role is to:`,
+  
+  tutorDefaultBody: `1. Have natural, engaging conversations in {{LEARNING_LANGUAGE}}
 2. Adapt your language complexity to the learner's level
-3. Use varied vocabulary and expressions to help expand their language skills
+3. Use varied vocabulary and expressions to help expand their language skills`,
 
-
+  tutorFooter: `
 Guidelines:
 - Keep responses concise (2-3 sentences usually)
 - Use conversational {{LEARNING_LANGUAGE}} appropriate for speaking practice
@@ -171,20 +171,28 @@ Respond ONLY with valid JSON:
 }`,
 };
 
-// Build a complete system prompt based on mode and topic
+// CURSOR: The editable instruction portion shown to the user. Wrapped by hidden context in route.ts.
+export const DEFAULT_GENERAL_OPENING = "Surprise me with a interesting topic";
+
+// CURSOR: Builds the full system prompt by composing header, editable body, and hardcoded footer
 export function buildSystemPrompt(
-  mode: 'general' | 'roleplay' | 'topic',
+  mode?: 'general' | 'roleplay' | 'topic',
   topicKey?: string,
   customPrompt?: string,
-  learningLanguage?: string
+  learningLanguage?: string,
 ): string {
   const langName = learningLanguage ? (LANGUAGE_NAMES[learningLanguage] || learningLanguage) : 'English';
   
-  if (customPrompt) {
-    return customPrompt.replace(/\{\{LEARNING_LANGUAGE\}\}/g, langName);
-  }
+  // Construct the base prompt from parts
+  const header = SYSTEM_PROMPTS.tutorHeader.replace(/\{\{LEARNING_LANGUAGE\}\}/g, langName);
+  const footer = SYSTEM_PROMPTS.tutorFooter.replace(/\{\{LEARNING_LANGUAGE\}\}/g, langName);
+  
+  // Use custom prompt body if provided, otherwise default
+  let body = customPrompt 
+    ? customPrompt.replace(/\{\{LEARNING_LANGUAGE\}\}/g, langName)
+    : SYSTEM_PROMPTS.tutorDefaultBody.replace(/\{\{LEARNING_LANGUAGE\}\}/g, langName);
 
-  let base = SYSTEM_PROMPTS.tutor.replace(/\{\{LEARNING_LANGUAGE\}\}/g, langName);
+  let base = `${header}\n\n${body}\n${footer}`;
 
   if (mode === 'roleplay' && topicKey) {
     const roleplayPrompt = SYSTEM_PROMPTS.roleplay[topicKey as keyof typeof SYSTEM_PROMPTS.roleplay];

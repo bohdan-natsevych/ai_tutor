@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createChat, getChat, getAllChats, updateChat, deleteChat, createMessage, updateMessage, getChatMessages } from '@/lib/db/queries';
 import { aiManager } from '@/lib/ai/manager';
 import { contextManager } from '@/lib/ai/context';
-import { buildSystemPrompt } from '@/lib/ai/prompts';
+import { buildSystemPrompt, DEFAULT_GENERAL_OPENING } from '@/lib/ai/prompts';
 import { convertToWav } from '@/lib/audio/convert';
 
 // CURSOR: Track last initialized provider to reinitialize when changed
@@ -105,7 +105,7 @@ export async function POST(request: NextRequest) {
 
     if (action === 'create') {
       // Create new chat - DON'T save to DB yet, just generate the data
-      const { title, topicType, topicKey, language, dialect, aiMode } = body as Record<string, string | undefined>;
+      const { title, topicType, topicKey, language, dialect, aiMode, customPrompt, openingPrompt } = body as Record<string, string | undefined>;
       const { v4: uuidv4 } = await import('uuid');
       const chatId = uuidv4();
       const messageId = uuidv4();
@@ -123,19 +123,28 @@ export async function POST(request: NextRequest) {
         createdAt: now,
         updatedAt: now,
         threadId: null,
+        customPrompt: customPrompt || null,
       };
 
       // Generate opening message from AI
-      const systemPrompt = buildSystemPrompt((topicType as 'general' | 'roleplay' | 'topic') || 'general', topicKey, undefined, language || 'en');
+      const systemPrompt = buildSystemPrompt((topicType as 'general' | 'roleplay' | 'topic') || 'general', topicKey, customPrompt, language || 'en');
       const context = await contextManager.buildContext(chatId, systemPrompt);
       
-      const openingPrompt = topicType === 'roleplay'
-        ? 'You are starting roleplay scenario with an appropriate opening. User didn\'t say anything yet, so just set the scene. Speak in the learning language.'
-        : topicType === 'topic'
-        ? 'You are starting this conversation about the given topic. User didn\'t say anything yet, so just set the scene. Speak in the learning language.'
-        : 'You are starting this conversation. The learner has not said anything yet. Greet them warmly and ask an ONE simple question to get them talking. Speak in the learning language.';
+      const openingCore = topicType === 'roleplay'
+        ? 'roleplay scenario with an appropriate opening'
+        : 'this conversation about the given topic';
+
+      const resolvedOpeningPrompt = topicType === 'roleplay' || topicType === 'topic'
+        ? `You are starting ${openingCore}. User didn't say anything yet, so just set the scene. Speak in the learning language.`
+        : `You are starting this conversation. The learner has not said anything yet. The user setup is ${openingPrompt || DEFAULT_GENERAL_OPENING}. 
+        If you are allowed to choose the topic, choose more casual, everyday topics.
+        Sound like a normal person having a casual chat. Simple, everyday language.
+        Talk the way regular people actually talk in everyday life. No dramatic setups, no creative framing, no over-the-top enthusiasm. Just normal conversation.
+        Ask ONE SIMPLE question to get them talking.
+        DO NOT ask more than one question at a time.
+        Speak in the learning language.`;
       
-      const response = await aiManager.generate(context, openingPrompt, { model: aiTextModel || aiModel });
+      const response = await aiManager.generate(context, resolvedOpeningPrompt, { model: aiTextModel || aiModel });
       
       // Create opening message object (DON'T save to DB yet)
       const aiMessage = {
@@ -187,6 +196,7 @@ export async function POST(request: NextRequest) {
           dialect: pendingChatRaw.dialect,
           aiProvider: pendingChatRaw.aiProvider,
           aiMode: pendingChatRaw.aiMode,
+          customPrompt: pendingChatRaw.customPrompt,
         }, pendingChatRaw.id);
         
         await createMessage({
@@ -222,7 +232,7 @@ export async function POST(request: NextRequest) {
       const systemPrompt = buildSystemPrompt(
         chat.topicType as 'general' | 'roleplay' | 'topic',
         topicDetails.topicKey as string | undefined,
-        undefined,
+        chat.customPrompt || undefined,
         learningLanguage
       );
       const context = await contextManager.buildContext(chatId, systemPrompt, chat.threadId || undefined);

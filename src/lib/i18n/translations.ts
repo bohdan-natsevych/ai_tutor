@@ -52,6 +52,8 @@ const en = {
   'home.dialog.title': 'Pick a scenario',
   'home.dialog.description': 'Choose a scenario or topic, then start chatting',
   'home.dialog.customName': 'Custom name (optional)',
+  'home.dialog.customNamePlaceholder': 'E.g., Morning Practice',
+  'home.dialog.startingMessage': 'Starting Instructions',
   'home.dialog.tabRoleplay': 'Roleplay',
   'home.dialog.tabTopics': 'Topics',
 
@@ -285,6 +287,8 @@ const uk: Record<TranslationKey, string> = {
   'home.dialog.title': 'Оберіть сценарій',
   'home.dialog.description': 'Виберіть сценарій або тему та починайте спілкуватися',
   'home.dialog.customName': 'Власна назва (необов\'язково)',
+  'home.dialog.customNamePlaceholder': 'Напр., Ранкова практика',
+  'home.dialog.startingMessage': 'Початкові інструкції',
   'home.dialog.tabRoleplay': 'Рольові ігри',
   'home.dialog.tabTopics': 'Теми',
 
@@ -518,6 +522,8 @@ const de: Record<TranslationKey, string> = {
   'home.dialog.title': 'Wähle ein Szenario',
   'home.dialog.description': 'Wähle ein Szenario oder Thema und beginne zu chatten',
   'home.dialog.customName': 'Eigener Name (optional)',
+  'home.dialog.customNamePlaceholder': 'z.B. Morgenübung',
+  'home.dialog.startingMessage': 'Startanweisungen',
   'home.dialog.tabRoleplay': 'Rollenspiel',
   'home.dialog.tabTopics': 'Themen',
 
@@ -752,6 +758,8 @@ const fr: Record<TranslationKey, string> = {
   'home.dialog.title': 'Choisissez un scénario',
   'home.dialog.description': 'Choisissez un scénario ou un sujet, puis commencez à discuter',
   'home.dialog.customName': 'Nom personnalisé (optionnel)',
+  'home.dialog.customNamePlaceholder': 'Ex: Exercice du matin',
+  'home.dialog.startingMessage': 'Instructions de départ',
   'home.dialog.tabRoleplay': 'Jeu de rôle',
   'home.dialog.tabTopics': 'Sujets',
 
