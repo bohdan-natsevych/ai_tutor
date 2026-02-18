@@ -285,7 +285,7 @@ export function buildSystemPrompt(
 }
 
 // CURSOR: Language name mapping for analysis prompt
-const LANGUAGE_NAMES: Record<string, string> = {
+export const LANGUAGE_NAMES: Record<string, string> = {
   en: 'English',
   uk: 'Ukrainian',
   de: 'German',

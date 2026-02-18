@@ -188,25 +188,32 @@ export async function POST(request: NextRequest) {
         try { pendingOpeningMessageRaw = JSON.parse(pendingOpeningMessageRaw); } catch {}
       }
       
-      // If pending data exists, save the chat and opening message first
+      // CURSOR: If pending data exists, save chat and opening message (idempotent - safe for retries)
       if (pendingChatRaw && pendingOpeningMessageRaw) {
-        await createChat({
-          title: pendingChatRaw.title,
-          topicType: pendingChatRaw.topicType,
-          topicDetails: pendingChatRaw.topicDetails,
-          level: pendingChatRaw.level,
-          language: pendingChatRaw.language,
-          dialect: pendingChatRaw.dialect,
-          aiProvider: pendingChatRaw.aiProvider,
-          aiMode: pendingChatRaw.aiMode,
-          customPrompt: pendingChatRaw.customPrompt,
-        }, pendingChatRaw.id);
-        
-        await createMessage({
-          chatId: pendingChatRaw.id,
-          role: 'assistant',
-          content: pendingOpeningMessageRaw.content,
-        }, pendingOpeningMessageRaw.id);
+        const existingChat = await getChat(pendingChatRaw.id);
+        if (!existingChat) {
+          await createChat({
+            title: pendingChatRaw.title,
+            topicType: pendingChatRaw.topicType,
+            topicDetails: pendingChatRaw.topicDetails,
+            level: pendingChatRaw.level,
+            language: pendingChatRaw.language,
+            dialect: pendingChatRaw.dialect,
+            aiProvider: pendingChatRaw.aiProvider,
+            aiMode: pendingChatRaw.aiMode,
+            customPrompt: pendingChatRaw.customPrompt,
+          }, pendingChatRaw.id);
+        }
+
+        const existingMessages = await getChatMessages(pendingChatRaw.id);
+        const openingAlreadySaved = existingMessages.some(m => m.id === pendingOpeningMessageRaw.id);
+        if (!openingAlreadySaved) {
+          await createMessage({
+            chatId: pendingChatRaw.id,
+            role: 'assistant',
+            content: pendingOpeningMessageRaw.content,
+          }, pendingOpeningMessageRaw.id);
+        }
       }
       
       const chat = await getChat(chatId);

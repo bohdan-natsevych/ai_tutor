@@ -47,7 +47,7 @@ export default function VocabularyPage() {
       });
       
       if (response.ok) {
-        setVocabulary(vocabulary.filter(v => v.id !== id));
+        setVocabulary(prev => prev.filter(v => v.id !== id));
       }
     } catch (error) {
       console.error('Failed to delete word:', error);

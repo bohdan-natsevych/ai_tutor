@@ -30,6 +30,8 @@ export default function HomePage() {
   const { t, lang } = useTranslation();
 
   const ai = useSettingsStore((state) => state.ai);
+  const languageSettings = useSettingsStore((state) => state.language);
+  const [createError, setCreateError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchChats();
@@ -49,6 +51,7 @@ export default function HomePage() {
 
   const createChat = async (topicType: 'general' | 'roleplay' | 'topic', topicKey?: string) => {
     setIsCreating(true);
+    setCreateError(null);
     try {
       const response = await fetch('/api/chat', {
         method: 'POST',
@@ -59,6 +62,8 @@ export default function HomePage() {
           topicType,
           topicKey,
           level: selectedLevel,
+          language: languageSettings.learning,
+          dialect: languageSettings.dialect,
           aiProvider: ai.provider,
           aiModel: ai.model,
           aiTextModel: ai.textModel,
@@ -67,8 +72,11 @@ export default function HomePage() {
       });
 
       const data = await response.json();
+      if (!response.ok) {
+        setCreateError(data.error || 'Failed to create conversation');
+        return;
+      }
       if (data.chat) {
-        // Store pending chat data in sessionStorage for the chat page to pick up
         if (data.pending) {
           sessionStorage.setItem(`pendingChat:${data.chat.id}`, JSON.stringify({
             chat: data.chat,
@@ -79,6 +87,7 @@ export default function HomePage() {
       }
     } catch (error) {
       console.error('Failed to create chat:', error);
+      setCreateError('Network error. Please try again.');
     } finally {
       setIsCreating(false);
       setShowNewChatDialog(false);
@@ -115,7 +124,7 @@ export default function HomePage() {
       });
 
       if (response.ok) {
-        setChats(chats.filter(chat => chat.id !== chatId));
+        setChats(prev => prev.filter(chat => chat.id !== chatId));
       } else {
         console.error('Failed to delete chat');
       }
@@ -156,6 +165,13 @@ export default function HomePage() {
       </header>
 
       <main className="container mx-auto px-4 max-w-5xl">
+        {/* CURSOR: Error feedback for chat creation failures */}
+        {createError && (
+          <div className="mt-4 p-3 rounded-lg bg-destructive/10 border border-destructive/30 text-destructive text-sm flex items-center justify-between">
+            <span>{createError}</span>
+            <button onClick={() => setCreateError(null)} className="ml-2 font-bold hover:opacity-70">x</button>
+          </div>
+        )}
         {/* Hero banner */}
         <section className="relative py-12 sm:py-16 mb-10 overflow-hidden">
           <div className="absolute inset-0 -z-10 rounded-3xl bg-gradient-to-br from-primary/5 via-primary/[0.02] to-transparent" />
@@ -334,8 +350,8 @@ export default function HomePage() {
                     {getRoleplayScenarios().map((scenario) => (
                       <Card
                         key={scenario.id}
-                        className="cursor-pointer hover:border-primary transition-colors"
-                        onClick={() => createChat('roleplay', scenario.id)}
+                        className={`transition-colors ${isCreating ? 'opacity-50 pointer-events-none' : 'cursor-pointer hover:border-primary'}`}
+                        onClick={() => !isCreating && createChat('roleplay', scenario.id)}
                       >
                         <CardHeader className="p-4">
                           <CardTitle className="text-base">{scenario.name}</CardTitle>
@@ -351,8 +367,8 @@ export default function HomePage() {
                     {getTopics().map((topic) => (
                       <Card
                         key={topic.id}
-                        className="cursor-pointer hover:border-primary transition-colors"
-                        onClick={() => createChat('topic', topic.id)}
+                        className={`transition-colors ${isCreating ? 'opacity-50 pointer-events-none' : 'cursor-pointer hover:border-primary'}`}
+                        onClick={() => !isCreating && createChat('topic', topic.id)}
                       >
                         <CardHeader className="p-4">
                           <CardTitle className="text-base">{topic.name}</CardTitle>

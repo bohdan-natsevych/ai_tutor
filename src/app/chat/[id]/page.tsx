@@ -15,6 +15,7 @@ import { ttsManager } from '@/lib/tts/manager';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import { HeaderLanguageSelector } from '@/components/layout/HeaderLanguageSelector';
 import { getDisplayTitle } from '@/lib/chatUtils';
+import { LANGUAGE_NAMES } from '@/lib/ai/prompts';
 
 interface ChatPageProps {
   params: Promise<{ id: string }>;
@@ -27,6 +28,7 @@ export default function ChatPage({ params }: ChatPageProps) {
   const [isSending, setIsSending] = useState(false);
   const [ttsInitialized, setTtsInitialized] = useState(false);
   const [ttsError, setTtsError] = useState<string | null>(null);
+  const [chatError, setChatError] = useState<string | null>(null);
   // CURSOR: Store TTS init promise to await it when needed for first message
   const ttsInitPromiseRef = useRef<Promise<boolean> | null>(null);
   // CURSOR: Store current audio element for pause/resume/stop control
@@ -73,6 +75,7 @@ export default function ChatPage({ params }: ChatPageProps) {
   const ui = useSettingsStore((state) => state.ui);
   const ai = useSettingsStore((state) => state.ai);
   const language = useSettingsStore((state) => state.language);
+  const contextSettings = useSettingsStore((state) => state.context);
   const { t } = useTranslation();
   
   // CURSOR: Default playback speed from settings, used for first playback
@@ -226,24 +229,7 @@ export default function ChatPage({ params }: ChatPageProps) {
   // CURSOR: Hints panel visibility toggle
   const [hintsVisible, setHintsVisible] = useState(false);
   
-  // CURSOR: Language name mapping for hint placeholder
-  const languageNames: Record<string, string> = {
-    en: 'English',
-    uk: 'Ukrainian',
-    de: 'German',
-    fr: 'French',
-    es: 'Spanish',
-    it: 'Italian',
-    pt: 'Portuguese',
-    pl: 'Polish',
-    ru: 'Russian',
-    ja: 'Japanese',
-    zh: 'Chinese',
-    ko: 'Korean',
-  };
-  
-  // CURSOR: Build hint placeholder from language settings
-  const hintPlaceholder = `Type in ${languageNames[language.mother] || 'Ukrainian'} to add ${languageNames[language.learning] || 'English'} hint...`;
+  const hintPlaceholder = `Type in ${LANGUAGE_NAMES[language.mother] || 'Ukrainian'} to add ${LANGUAGE_NAMES[language.learning] || 'English'} hint...`;
 
   // CURSOR: Track pending chat data (not yet saved to DB) for first message send
   const pendingChatRef = useRef<{ chat: any; openingMessage: any } | null>(null);
@@ -280,6 +266,11 @@ export default function ChatPage({ params }: ChatPageProps) {
 
         const response = await fetch(`/api/chat?id=${chatId}`);
         const data = await response.json();
+
+        if (!response.ok) {
+          setChatError(data.error || 'Chat not found');
+          return;
+        }
         
         if (data.chat) {
           // CURSOR: Convert date strings to Date objects from API response
@@ -548,20 +539,20 @@ export default function ChatPage({ params }: ChatPageProps) {
 
     try {
       let response: Response;
+      const contextSettingsPayload = JSON.stringify(contextSettings);
+
       if (audio?.blob) {
         const formData = new FormData();
         formData.append('action', 'message');
         formData.append('chatId', chatId);
         if (text) formData.append('content', text);
-        // CURSOR: Send Web Speech API transcript as ground truth for transcription
-        // gpt-4o-audio-preview hallucinates transcriptions from conversation context
         if (audio.sttTranscript) formData.append('whisperTranscription', audio.sttTranscript);
         formData.append('aiProvider', ai.provider);
         formData.append('aiModel', ai.model);
         formData.append('aiTextModel', ai.textModel);
         formData.append('audioFormat', audio.format);
         formData.append('motherLanguage', language.mother);
-        // Include pending chat data if this is the first message
+        formData.append('contextSettings', contextSettingsPayload);
         if (pendingChatRef.current) {
           formData.append('pendingChat', JSON.stringify(pendingChatRef.current.chat));
           formData.append('pendingOpeningMessage', JSON.stringify(pendingChatRef.current.openingMessage));
@@ -580,8 +571,8 @@ export default function ChatPage({ params }: ChatPageProps) {
           aiProvider: ai.provider,
           aiModel: ai.model,
           aiTextModel: ai.textModel,
+          contextSettings: contextSettingsPayload,
         };
-        // Include pending chat data if this is the first message
         if (pendingChatRef.current) {
           messageBody.pendingChat = pendingChatRef.current.chat;
           messageBody.pendingOpeningMessage = pendingChatRef.current.openingMessage;
@@ -595,6 +586,18 @@ export default function ChatPage({ params }: ChatPageProps) {
 
       const data = await response.json();
 
+      // CURSOR: Handle HTTP error responses - update both placeholders instead of leaving them stuck
+      if (!response.ok) {
+        const errorText = data.error || 'Server error. Please try again.';
+        updateMessage(tempUserMessageId, { state: 'revealed' });
+        updateMessage(tempAiMessageId, {
+          content: errorText,
+          state: 'revealed',
+          audioPlayed: true,
+        });
+        return;
+      }
+
       // Clear pending state after successful first message
       if (pendingChatRef.current) {
         sessionStorage.removeItem(`pendingChat:${chatId}`);
@@ -604,7 +607,6 @@ export default function ChatPage({ params }: ChatPageProps) {
       if (data.aiMessage) {
         const realAiMessageId = data.aiMessage.id;
         
-        // Update user message with real ID, content (AI transcription), and analysis
         if (data.userMessage) {
           let parsedAnalysis;
           if (data.userMessage.analysis) {
@@ -624,7 +626,6 @@ export default function ChatPage({ params }: ChatPageProps) {
               };
             }
           } else {
-            // Analysis not available
             parsedAnalysis = {
               grammarScore: 0,
               grammarErrors: [],
@@ -641,27 +642,20 @@ export default function ChatPage({ params }: ChatPageProps) {
             content: data.userMessage.content,
             analysis: parsedAnalysis,
           });
-          // Auto-show analysis panel for the latest user message
           if (parsedAnalysis) {
             showAnalysisForMessage(data.userMessage.id);
           }
         }
 
-        // CURSOR: Update AI message with real ID and content BEFORE audio playback
-        // to avoid race condition where onended callback references old temp ID
         updateMessage(tempAiMessageId, {
           id: realAiMessageId,
           content: data.aiMessage.content,
           createdAt: new Date(data.aiMessage.createdAt),
         });
 
-        // Play audio if listen-first mode is enabled
         if (ui.listenFirstMode) {
-          // CURSOR: Show audio loading state while waiting for TTS init
           updateMessage(realAiMessageId, { state: 'audio_loading' });
           
-          // CURSOR: Wait for TTS initialization to complete before deciding
-          // This ensures first message also plays audio once TTS is ready
           const ttsReady = ttsInitPromiseRef.current 
             ? await ttsInitPromiseRef.current 
             : false;
@@ -669,14 +663,12 @@ export default function ChatPage({ params }: ChatPageProps) {
           if (ttsReady) {
             await playMessageAudio(realAiMessageId, data.aiMessage.content, true);
           } else {
-            // TTS failed to initialize, reveal the message
             updateMessage(realAiMessageId, { 
               state: 'revealed', 
               audioPlayed: true 
             });
           }
         } else {
-          // Listen-first mode disabled, just reveal the message
           updateMessage(realAiMessageId, { 
             state: 'revealed', 
             audioPlayed: true 
@@ -685,19 +677,25 @@ export default function ChatPage({ params }: ChatPageProps) {
       }
     } catch (error) {
       console.error('Failed to send message:', error);
+      // CURSOR: Clean up both temp messages so the UI isn't left in a broken state
+      updateMessage(tempUserMessageId, { state: 'revealed' });
       updateMessage(tempAiMessageId, {
         content: 'Sorry, there was an error. Please try again.',
         state: 'revealed',
+        audioPlayed: true,
       });
     } finally {
       setIsSending(false);
     }
   };
 
-  // Handle voice recording - called when recording stops with transcript + audio blob
+  // CURSOR: Ref to always hold the latest sendMessage, avoiding stale closures in callbacks
+  const sendMessageRef = useRef(sendMessage);
+  sendMessageRef.current = sendMessage;
+
   const handleVoiceSend = useCallback((transcript: string, audioBlob?: Blob, audioFormat?: string) => {
     if (!isSending && audioBlob && audioFormat) {
-      sendMessage(undefined, { blob: audioBlob, format: audioFormat, sttTranscript: transcript });
+      sendMessageRef.current(undefined, { blob: audioBlob, format: audioFormat, sttTranscript: transcript });
     }
   }, [isSending]);
 
@@ -1082,6 +1080,13 @@ export default function ChatPage({ params }: ChatPageProps) {
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
               <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full" />
+            </div>
+          ) : chatError ? (
+            <div className="text-center py-8">
+              <p className="text-destructive font-medium mb-2">{chatError}</p>
+              <Link href="/">
+                <Button variant="outline" size="sm">{t('common.back') || 'Back to Home'}</Button>
+              </Link>
             </div>
           ) : messages.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
