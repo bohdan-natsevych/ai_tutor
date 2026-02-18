@@ -18,6 +18,22 @@ let whisperPipeline: any = null;
 let isInitializing = false;
 let initPromise: Promise<void> | null = null;
 
+// CURSOR: Probe GPU adapter availability before deciding backend.
+// Calling pipeline() with device:'webgpu' when no adapter exists
+// corrupts onnxruntime's internal state, breaking subsequent WASM attempts.
+async function resolveWhisperDevice(): Promise<'webgpu' | 'wasm'> {
+  try {
+    const gpu = (navigator as Navigator & { gpu?: { requestAdapter: () => Promise<unknown | null> } }).gpu;
+    if (gpu) {
+      const adapter = await gpu.requestAdapter();
+      if (adapter) return 'webgpu';
+    }
+  } catch {
+    // GPU probe failed
+  }
+  return 'wasm';
+}
+
 // CURSOR: Initialize Whisper pipeline (lazy load)
 async function getWhisperPipeline() {
   if (whisperPipeline) {
@@ -31,29 +47,21 @@ async function getWhisperPipeline() {
 
   isInitializing = true;
   initPromise = (async () => {
-    try {
-      // CURSOR: Use whisper-tiny.en_timestamped which supports word-level timestamps
-      // English-only model, smaller (~75MB), exported with output_attentions=True
-      whisperPipeline = await pipeline(
-        'automatic-speech-recognition',
-        'onnx-community/whisper-tiny.en_timestamped',
-        {
-          dtype: 'fp32', // Timestamped model works best with fp32
-          device: 'webgpu', // Use WebGPU if available
-        }
-      );
-    } catch (error) {
-      console.error('[Whisper] Failed to initialize with WebGPU, falling back to WASM:', error);
-      // CURSOR: Fallback to WASM if WebGPU not available
-      whisperPipeline = await pipeline(
-        'automatic-speech-recognition',
-        'onnx-community/whisper-tiny.en_timestamped',
-        {
-          dtype: 'fp32',
-          device: 'wasm',
-        }
-      );
-    }
+    // CURSOR: Probe GPU adapter before calling pipeline to avoid corrupting
+    // onnxruntime's backend state with a failed WebGPU attempt
+    const device = await resolveWhisperDevice();
+    console.log(`[Whisper] Using ${device} backend`);
+
+    // CURSOR: Use whisper-tiny.en_timestamped which supports word-level timestamps
+    // English-only model, smaller (~75MB), exported with output_attentions=True
+    whisperPipeline = await pipeline(
+      'automatic-speech-recognition',
+      'onnx-community/whisper-tiny.en_timestamped',
+      {
+        dtype: 'fp32',
+        device,
+      }
+    );
   })();
 
   await initPromise;

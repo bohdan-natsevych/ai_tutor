@@ -100,34 +100,28 @@ export class KokoroProvider implements TTSProvider {
       return;
     }
 
-    // Check WebGPU support
-    const gpu = (navigator as Navigator & { gpu?: unknown }).gpu;
-    if (!gpu) {
-      this.status = {
-        initialized: false,
-        loading: false,
-        error: 'WebGPU not supported in this browser',
-      };
-      return;
-    }
-
     this.status.loading = true;
     this.status.progress = 0;
 
+    const progressCallback = (progress: unknown) => {
+      const p = progress as { progress?: number };
+      if (p.progress !== undefined) {
+        this.status.progress = Math.round(p.progress * 100);
+      }
+    };
+
     try {
-      // Dynamically import kokoro-js to avoid SSR issues
       const { KokoroTTS } = await import('kokoro-js');
-      
-      // Initialize Kokoro TTS
+
+      // CURSOR: Probe GPU adapter before calling from_pretrained to avoid
+      // corrupting onnxruntime's backend state with a failed WebGPU attempt
+      const device = await this.resolveDevice();
+      console.log(`[Kokoro TTS] Using ${device} backend`);
+
       this.kokoro = await KokoroTTS.from_pretrained('onnx-community/Kokoro-82M-v1.0-ONNX', {
         dtype: 'fp32',
-        device: 'webgpu',
-        progress_callback: (progress: unknown) => {
-          const p = progress as { progress?: number };
-          if (p.progress !== undefined) {
-            this.status.progress = Math.round(p.progress * 100);
-          }
-        },
+        device,
+        progress_callback: progressCallback,
       });
 
       this.status = {
@@ -136,12 +130,30 @@ export class KokoroProvider implements TTSProvider {
         progress: 100,
       };
     } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to initialize Kokoro TTS';
+      console.error('[Kokoro TTS] Initialization failed:', message);
       this.status = {
         initialized: false,
         loading: false,
-        error: error instanceof Error ? error.message : 'Failed to initialize Kokoro TTS',
+        error: message,
       };
     }
+  }
+
+  // CURSOR: Probe GPU adapter availability before deciding backend.
+  // Calling from_pretrained with device:'webgpu' when no adapter exists
+  // corrupts onnxruntime's internal state, breaking subsequent WASM attempts.
+  private async resolveDevice(): Promise<'webgpu' | 'wasm'> {
+    try {
+      const gpu = (navigator as Navigator & { gpu?: { requestAdapter: () => Promise<unknown | null> } }).gpu;
+      if (gpu) {
+        const adapter = await gpu.requestAdapter();
+        if (adapter) return 'webgpu';
+      }
+    } catch {
+      // GPU probe failed
+    }
+    return 'wasm';
   }
 
   async synthesize(text: string, options: TTSOptions): Promise<ArrayBuffer> {
@@ -171,18 +183,9 @@ export class KokoroProvider implements TTSProvider {
     return this.voices;
   }
 
+  // CURSOR: Kokoro is available in any browser environment (WebGPU or WASM)
   async isAvailable(): Promise<boolean> {
-    if (typeof window === 'undefined') return false;
-    
-    const gpu = (navigator as Navigator & { gpu?: { requestAdapter: () => Promise<unknown> } }).gpu;
-    if (!gpu) return false;
-    
-    try {
-      const adapter = await gpu.requestAdapter();
-      return adapter !== null;
-    } catch {
-      return false;
-    }
+    return typeof window !== 'undefined';
   }
 
   getStatus(): TTSProviderStatus {

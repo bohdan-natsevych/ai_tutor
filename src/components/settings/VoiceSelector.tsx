@@ -10,7 +10,7 @@ import { ttsManager } from '@/lib/tts/manager';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 
 const TTS_PROVIDERS = [
-  { id: 'kokoro', name: 'Kokoro TTS', description: 'High-quality local TTS (WebGPU)', type: 'local' },
+  { id: 'kokoro', name: 'Kokoro TTS', description: 'High-quality local TTS (WebGPU/WASM)', type: 'local' },
   { id: 'web-speech', name: 'Web Speech', description: 'Browser built-in (fallback)', type: 'local' },
   { id: 'openai-tts', name: 'OpenAI TTS', description: 'Cloud-based, natural voices (~$15/1M chars)', type: 'cloud' },
 ];

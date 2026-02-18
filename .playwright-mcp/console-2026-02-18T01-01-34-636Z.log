@@ -1,0 +1,3 @@
+[    3032ms] [WARNING] No available adapters. @ http://localhost:3000/settings:0
+[   17351ms] [WARNING] No available adapters. @ http://localhost:3000/settings:0
+[   17396ms] [WARNING] Unable to determine content-length from response headers. Will expand buffer when needed. @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_f3530cac._.js:2297

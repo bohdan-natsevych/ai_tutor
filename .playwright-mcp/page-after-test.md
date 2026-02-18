@@ -1,0 +1,207 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - generic [ref=e4]:
+        - link [ref=e5] [cursor=pointer]:
+          - /url: /
+          - button [ref=e6]:
+            - img
+        - generic [ref=e7]:
+          - heading "Налаштування" [level=1] [ref=e161]
+          - paragraph [ref=e9]: Налаштуйте свій досвід навчання
+        - combobox [ref=e162]:
+          - img
+          - generic:
+            - generic:
+              - generic: ⚙️
+              - generic: Auto
+          - img
+    - main [ref=e11]:
+      - generic [ref=e12]:
+        - generic [ref=e13]:
+          - generic [ref=e14]: Мовні налаштування
+          - generic [ref=e15]: Налаштуйте мову навчання та рідну мову
+        - generic [ref=e16]:
+          - generic [ref=e17]:
+            - text: Мова для вивчення
+            - combobox [ref=e18]:
+              - generic:
+                - generic:
+                  - generic: en
+                  - generic: English
+              - img
+          - generic [ref=e20]:
+            - text: Діалект
+            - combobox [ref=e21]:
+              - generic: American English
+              - img
+          - generic [ref=e23]:
+            - text: Рідна мова
+            - combobox [ref=e24]:
+              - generic:
+                - generic:
+                  - generic: 🇺🇦
+                  - generic: Українська
+              - img
+            - paragraph [ref=e26]: Переклади будуть показані цією мовою
+      - generic [ref=e27]:
+        - generic [ref=e28]:
+          - generic [ref=e29]: Налаштування голосу
+          - generic [ref=e30]: Налаштуйте синтез мовлення для відповідей AI
+        - generic [ref=e31]:
+          - generic [ref=e32]:
+            - text: Провайдер TTS
+            - combobox [ref=e33]:
+              - generic:
+                - generic:
+                  - generic: Kokoro TTS
+                  - generic: High-quality local TTS (WebGPU/WASM)
+              - img
+          - generic [ref=e35]:
+            - text: Голос
+            - generic [ref=e36]:
+              - combobox [ref=e37]:
+                - generic:
+                  - generic:
+                    - generic: Heart
+                    - generic: (Female (American))
+                - img
+              - button "Тест" [ref=e163]:
+                - generic [ref=e40]:
+                  - img
+                  - text: Тест
+          - generic [ref=e41]:
+            - generic [ref=e42]:
+              - generic [ref=e43]: Швидкість мовлення
+              - generic [ref=e44]: 1.00x
+            - slider [ref=e165]
+            - generic [ref=e48]:
+              - generic [ref=e49]: Повільніше (0.5x)
+              - generic [ref=e50]: Швидше (1.5x)
+      - generic [ref=e51]:
+        - generic [ref=e52]:
+          - generic [ref=e53]: Налаштування AI
+          - generic [ref=e54]: Налаштуйте провайдера AI та моделі для розмов
+        - generic [ref=e55]:
+          - generic [ref=e56]:
+            - text: Провайдер AI
+            - combobox [ref=e57]:
+              - generic: OpenAI (Chat)
+              - img
+          - generic [ref=e59]:
+            - text: Аудіо модель
+            - paragraph [ref=e60]: Використовується для розмовних відповідей з голосовим введенням/виведенням
+            - combobox [ref=e166]:
+              - generic:
+                - generic:
+                  - generic: GPT Audio
+                  - generic: Audio-enabled model
+              - img
+          - generic [ref=e63]:
+            - text: Текстова модель
+            - paragraph [ref=e64]: Використовується для підказок, відкриваючих повідомлень, підсумків та перекладів
+            - combobox [ref=e167]:
+              - generic:
+                - generic:
+                  - generic: gpt-5.2
+                  - generic: Latest generation model
+              - img
+      - generic [ref=e67]:
+        - generic [ref=e68]:
+          - generic [ref=e69]: Контекст і підсумок
+          - generic [ref=e70]: Контролюйте, як історія розмов управляється для контексту AI
+        - generic [ref=e71]:
+          - generic [ref=e72]:
+            - generic [ref=e73]:
+              - text: Вимкнути підсумовування
+              - paragraph [ref=e74]: Завжди надсилати повну історію розмов (більше токенів)
+            - switch [ref=e75]
+          - generic [ref=e76]:
+            - generic [ref=e77]:
+              - generic [ref=e78]: Вікно нещодавніх повідомлень
+              - generic [ref=e79]: 20 повідомлень
+            - slider [ref=e169]
+            - paragraph [ref=e83]: Кількість нещодавніх повідомлень, що зберігаються повністю (без підсумків)
+          - generic [ref=e84]:
+            - generic [ref=e85]:
+              - generic [ref=e86]: Підсумовувати кожні
+              - generic [ref=e87]: 10 повідомлень
+            - slider [ref=e171]
+            - paragraph [ref=e91]: Запускати підсумовування, коли стільки повідомлень виходять за межі вікна
+          - generic [ref=e92]:
+            - heading "Орієнтовна економія токенів" [level=4] [ref=e172]
+            - paragraph [ref=e94]: "With window size 20: ~50-70% token reduction for long conversations"
+      - generic [ref=e95]:
+        - generic [ref=e96]:
+          - generic [ref=e97]: Власні промпти
+          - generic [ref=e98]: Налаштуйте, як AI-тьютор поводиться та аналізує ваші повідомлення
+        - generic [ref=e100]:
+          - tablist [ref=e101]:
+            - tab "Системний промпт" [selected] [ref=e173]
+            - tab "Промпт аналізу" [ref=e174]
+          - tabpanel "Системний промпт" [ref=e175]:
+            - generic [ref=e105]:
+              - generic [ref=e107]: Особистість тьютора
+              - textbox "Введіть власний системний промпт або залиште порожнім для стандартного..." [ref=e176]
+              - paragraph [ref=e109]: Цей промпт визначає, як AI-тьютор поводиться та відповідає під час розмов.
+            - generic [ref=e110]:
+              - button "Зберегти зміни" [disabled]
+              - button "Стандартні значення" [disabled]
+              - button "Переглянути стандартний" [ref=e177]
+            - group [ref=e112]:
+              - generic "Показати стандартний системний промпт" [ref=e178] [cursor=pointer]
+      - generic [ref=e114]:
+        - generic [ref=e115]:
+          - generic [ref=e116]: Налаштування перекладу
+          - generic [ref=e117]: Налаштуйте відображення перекладів слів і фраз
+        - generic [ref=e118]:
+          - generic [ref=e119]:
+            - generic [ref=e120]:
+              - text: Розширений переклад
+              - paragraph [ref=e121]: Показувати визначення, приклади використання та визначати ідіоми/фрази (використовує AI)
+            - switch [ref=e122]
+          - paragraph [ref=e124]: "Простий режим: Показує лише переклад (DeepL)"
+      - generic [ref=e125]:
+        - generic [ref=e126]:
+          - generic [ref=e127]: Налаштування інтерфейсу
+          - generic [ref=e128]: Налаштуйте інтерфейс користувача
+        - generic [ref=e129]:
+          - generic [ref=e130]:
+            - generic [ref=e131]:
+              - text: Режим слухання
+              - paragraph [ref=e132]: Текст AI повідомлення прихований до завершення аудіовідтворення
+            - switch [checked] [ref=e133]
+          - generic [ref=e134]:
+            - generic [ref=e135]:
+              - text: Тема
+              - paragraph [ref=e136]: Оберіть бажану кольорову схему
+            - generic [ref=e137]:
+              - button "Світла" [ref=e179]
+              - button "Темна" [ref=e180]
+              - button "Системна" [ref=e181]
+          - generic [ref=e141]:
+            - generic [ref=e142]:
+              - text: Мова інтерфейсу
+              - paragraph [ref=e143]: Мова кнопок, підписів та меню
+            - combobox [ref=e144]:
+              - generic: Авто (рідна мова)
+              - img
+      - generic [ref=e146]:
+        - generic [ref=e147]:
+          - generic [ref=e148]: Скинути налаштування
+          - generic [ref=e149]: Скинути всі налаштування до стандартних значень
+        - button "Скинути до стандартних" [ref=e182]
+  - generic [ref=e156] [cursor=pointer]:
+    - button "Open Next.js Dev Tools" [ref=e157]:
+      - img [ref=e158]
+    - generic [ref=e184]:
+      - button "Open issues overlay" [ref=e185]:
+        - generic [ref=e194]:
+          - generic [ref=e195]: "3"
+          - generic [ref=e196]: "4"
+        - generic [ref=e189]:
+          - text: Issue
+          - generic [ref=e190]: s
+      - button "Collapse issues badge" [ref=e191]:
+        - img [ref=e192]
+  - alert [ref=e183]
