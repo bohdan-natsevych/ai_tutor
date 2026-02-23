@@ -249,7 +249,6 @@ export const DEFAULT_GENERAL_OPENING = "Let's have a casual chat.";
 export function buildSystemPrompt(
   mode?: 'general' | 'roleplay' | 'topic',
   topicKey?: string,
-  customPrompt?: string,
   learningLanguage?: string,
   level?: ProficiencyLevel,
 ): string {
@@ -258,9 +257,7 @@ export function buildSystemPrompt(
   const header = SYSTEM_PROMPTS.tutorHeader.replace(/\{\{LEARNING_LANGUAGE\}\}/g, langName);
   const footer = SYSTEM_PROMPTS.tutorFooter.replace(/\{\{LEARNING_LANGUAGE\}\}/g, langName);
   
-  let body = customPrompt 
-    ? customPrompt.replace(/\{\{LEARNING_LANGUAGE\}\}/g, langName)
-    : SYSTEM_PROMPTS.tutorDefaultBody.replace(/\{\{LEARNING_LANGUAGE\}\}/g, langName);
+  const body = SYSTEM_PROMPTS.tutorDefaultBody.replace(/\{\{LEARNING_LANGUAGE\}\}/g, langName);
 
   const levelBlock = LEVEL_INSTRUCTIONS[level || 'intermediate'];
 

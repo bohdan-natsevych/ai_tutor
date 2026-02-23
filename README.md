@@ -1,4 +1,4 @@
-# Lanqua - AI Language Tutoring Service
+# AI-tutor
 
 A voice-first language learning application that helps you practice speaking with an AI tutor. Get real-time feedback on grammar, vocabulary, and fluency.
 
@@ -37,8 +37,8 @@ A voice-first language learning application that helps you practice speaking wit
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/lanqua.git
-cd lanqua
+git clone https://github.com/yourusername/ai-tutor.git
+cd ai-tutor
 
 # Install dependencies
 npm install
@@ -101,7 +101,7 @@ The app automatically switches between SQLite (local dev) and PostgreSQL (produc
 |----------|----------|-------------|
 | `OPENAI_API_KEY` | Yes | Your OpenAI API key |
 | `DEEPL_API_KEY` | No | DeepL API key for translations |
-| `DATABASE_URL` | No | SQLite database path (default: ./data/lanqua.db) |
+| `DATABASE_URL` | No | SQLite database path (default: ./data/ai-tutor.db) |
 
 ### Settings
 

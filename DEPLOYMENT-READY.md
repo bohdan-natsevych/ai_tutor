@@ -1,6 +1,6 @@
 # 🚀 Deployment Configuration Complete!
 
-Your Lanqua app is now ready for deployment to Vercel with free PostgreSQL hosting on Neon.
+Your ai-tutor app is now ready for deployment to Vercel with free PostgreSQL hosting on Neon.
 
 ## ✅ What's Been Configured
 
@@ -44,7 +44,7 @@ npm run dev
 
 1. **Set up Neon Database** (5 mins)
    - Go to [neon.tech](https://neon.tech) → Create free account
-   - Create project "lanqua"
+   - Create project "ai-tutor"
    - Copy connection string
    - Run initialization SQL (see DEPLOYMENT.md)
 
@@ -110,7 +110,7 @@ The app intelligently switches between databases:
 
 ```typescript
 // Local development
-DATABASE_URL=file:./data/lanqua.db
+DATABASE_URL=file:./data/ai-tutor.db
 → Uses SQLite with local file
 
 // Production (Vercel)

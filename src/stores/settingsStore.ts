@@ -1,5 +1,33 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage, type StateStorage } from 'zustand/middleware';
+
+// Per-user storage: namespaces localStorage keys with the current userId
+let currentUserId: string | null = null;
+
+const userScopedStorage: StateStorage = {
+  getItem: (name: string) => {
+    const key = currentUserId ? `${name}-${currentUserId}` : name;
+    return localStorage.getItem(key);
+  },
+  setItem: (name: string, value: string) => {
+    const key = currentUserId ? `${name}-${currentUserId}` : name;
+    localStorage.setItem(key, value);
+  },
+  removeItem: (name: string) => {
+    const key = currentUserId ? `${name}-${currentUserId}` : name;
+    localStorage.removeItem(key);
+  },
+};
+
+export function setCurrentUserId(id: string) {
+  currentUserId = id;
+  useSettingsStore.persist.rehydrate();
+}
+
+export function clearCurrentUser() {
+  currentUserId = null;
+  useSettingsStore.getState().resetToDefaults();
+}
 
 // Types
 export interface LanguageSettings {
@@ -34,6 +62,8 @@ export interface ContextSettings {
 
 export interface UISettings {
   listenFirstMode: boolean;
+  // CURSOR: Only relevant when listenFirstMode is true - auto-reveals text after audio ends
+  showTextAutomatically: boolean;
   theme: 'light' | 'dark' | 'system';
   interfaceLanguage: string; // 'auto' = use mother language, or explicit code like 'en', 'uk'
 }
@@ -88,6 +118,7 @@ const defaultSettings: AppSettings = {
   },
   ui: {
     listenFirstMode: true,
+    showTextAutomatically: true,
     theme: 'system',
     interfaceLanguage: 'auto',
   },
@@ -163,8 +194,9 @@ export const useSettingsStore = create<SettingsState>()(
       resetToDefaults: () => set(defaultSettings),
     }),
     {
-      name: 'lanqua-settings',
-      version: 3,
+      name: 'ai-tutor-settings',
+      version: 4,
+      storage: createJSONStorage(() => userScopedStorage),
       migrate: (persisted: unknown, version: number) => {
         const state = persisted as AppSettings;
         if (version === 0) {
@@ -183,6 +215,12 @@ export const useSettingsStore = create<SettingsState>()(
           // v2 → v3: Add interface language setting
           if (state.ui && !(state.ui as unknown as Record<string, unknown>).interfaceLanguage) {
             (state.ui as unknown as Record<string, unknown>).interfaceLanguage = 'auto';
+          }
+        }
+        if (version < 4) {
+          // v3 → v4: Add showTextAutomatically setting
+          if (state.ui && (state.ui as unknown as Record<string, unknown>).showTextAutomatically === undefined) {
+            (state.ui as unknown as Record<string, unknown>).showTextAutomatically = false;
           }
         }
         return state;

@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { getRoleplayScenarios, getTopics, DEFAULT_GENERAL_OPENING, type ProficiencyLevel } from '@/lib/ai/prompts';
 import { useSettingsStore } from '@/stores/settingsStore';
 import type { Chat } from '@/stores/chatStore';
@@ -16,6 +17,7 @@ import { useTranslation } from '@/lib/i18n/useTranslation';
 import type { TranslationKey } from '@/lib/i18n/translations';
 import { HeaderLanguageSelector } from '@/components/layout/HeaderLanguageSelector';
 import { getDisplayTitle } from '@/lib/chatUtils';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function HomePage() {
   const router = useRouter();
@@ -27,15 +29,38 @@ export default function HomePage() {
   const [showNewChatDialog, setShowNewChatDialog] = useState(false);
   const [selectedTab, setSelectedTab] = useState<'general' | 'roleplay' | 'topic'>('general');
   const [selectedLevel, setSelectedLevel] = useState<ProficiencyLevel>('intermediate');
+  const [listenFirst, setListenFirst] = useState(true);
+  const [showTextAuto, setShowTextAuto] = useState(true);
   const { t, lang } = useTranslation();
 
   const ai = useSettingsStore((state) => state.ai);
+  const setUISettings = useSettingsStore((state) => state.setUISettings);
   const languageSettings = useSettingsStore((state) => state.language);
   const [createError, setCreateError] = useState<string | null>(null);
+  const { user, isLoading: authLoading, logout } = useAuth();
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.replace('/login');
+    }
+  }, [authLoading, user, router]);
+
+  // CURSOR: Auto-set defaults based on selected level
+  const handleLevelChange = (level: ProficiencyLevel) => {
+    setSelectedLevel(level);
+    if (level === 'advanced') {
+      setListenFirst(true);
+      setShowTextAuto(false);
+    } else {
+      setListenFirst(true);
+      setShowTextAuto(true);
+    }
+  };
 
   useEffect(() => {
-    fetchChats();
-  }, []);
+    if (user) fetchChats();
+  }, [user]);
 
   const fetchChats = async () => {
     try {
@@ -49,9 +74,20 @@ export default function HomePage() {
     }
   };
 
+  // Show loading spinner while checking auth
+  if (authLoading || !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
+      </div>
+    );
+  }
+
   const createChat = async (topicType: 'general' | 'roleplay' | 'topic', topicKey?: string) => {
     setIsCreating(true);
     setCreateError(null);
+    // CURSOR: Apply dialog audio settings to global store before navigating
+    setUISettings({ listenFirstMode: listenFirst, showTextAutomatically: showTextAuto });
     try {
       const response = await fetch('/api/chat', {
         method: 'POST',
@@ -94,6 +130,8 @@ export default function HomePage() {
       setNewChatTitle('');
       setOpeningPrompt(DEFAULT_GENERAL_OPENING);
       setSelectedLevel('intermediate');
+      setListenFirst(true);
+      setShowTextAuto(true);
     }
   };
 
@@ -160,6 +198,12 @@ export default function HomePage() {
                 <SettingsIcon className="h-4 w-4" />
               </Button>
             </Link>
+            {user && (
+              <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground" onClick={logout}>
+                <span className="hidden sm:inline text-xs">{user.name}</span>
+                <LogOutIcon className="h-4 w-4" />
+              </Button>
+            )}
           </div>
         </div>
       </header>
@@ -277,7 +321,7 @@ export default function HomePage() {
 
         {/* Conversation setup / scenario picker dialog */}
         {showNewChatDialog && (
-          <Dialog open={showNewChatDialog} onOpenChange={(open) => { if (!open) { setNewChatTitle(''); setOpeningPrompt(DEFAULT_GENERAL_OPENING); setSelectedLevel('intermediate'); } setShowNewChatDialog(open); }}>
+          <Dialog open={showNewChatDialog} onOpenChange={(open) => { if (!open) { setNewChatTitle(''); setOpeningPrompt(DEFAULT_GENERAL_OPENING); setSelectedLevel('intermediate'); setListenFirst(true); setShowTextAuto(true); } setShowNewChatDialog(open); }}>
             <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>
@@ -300,7 +344,7 @@ export default function HomePage() {
                         <button
                           key={level}
                           type="button"
-                          onClick={() => setSelectedLevel(level)}
+                          onClick={() => handleLevelChange(level)}
                           className={`flex flex-col items-center gap-1 rounded-lg border p-2.5 text-center transition-colors ${
                             selectedLevel === level
                               ? 'border-primary bg-primary/5 ring-1 ring-primary'
@@ -313,6 +357,32 @@ export default function HomePage() {
                       );
                     })}
                   </div>
+                </div>
+
+                {/* CURSOR: Listen-first and show-text-auto toggles, defaults driven by level */}
+                <div className="grid gap-3 p-3 rounded-lg border bg-muted/30">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <label className="text-sm font-medium">{t('settings.interface.listenFirst')}</label>
+                      <p className="text-xs text-muted-foreground">{t('settings.interface.listenFirstDesc')}</p>
+                    </div>
+                    <Switch
+                      checked={listenFirst}
+                      onCheckedChange={setListenFirst}
+                    />
+                  </div>
+                  {listenFirst && (
+                    <div className="flex items-center justify-between pl-4 border-l-2 border-muted">
+                      <div className="space-y-0.5">
+                        <label className="text-sm font-medium">{t('settings.interface.showTextAuto')}</label>
+                        <p className="text-xs text-muted-foreground">{t('settings.interface.showTextAutoDesc')}</p>
+                      </div>
+                      <Switch
+                        checked={showTextAuto}
+                        onCheckedChange={setShowTextAuto}
+                      />
+                    </div>
+                  )}
                 </div>
 
                 {selectedTab === 'general' && (
@@ -559,6 +629,16 @@ function ArrowRightIcon({ className }: { className?: string }) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
       <path d="M5 12h14" /><path d="m12 5 7 7-7 7" />
+    </svg>
+  );
+}
+
+function LogOutIcon({ className }: { className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+      <polyline points="16 17 21 12 16 7" />
+      <line x1="21" y1="12" x2="9" y2="12" />
     </svg>
   );
 }

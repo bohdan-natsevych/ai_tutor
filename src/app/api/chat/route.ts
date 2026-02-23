@@ -4,6 +4,7 @@ import { aiManager } from '@/lib/ai/manager';
 import { contextManager } from '@/lib/ai/context';
 import { buildSystemPrompt, DEFAULT_GENERAL_OPENING, type ProficiencyLevel } from '@/lib/ai/prompts';
 import { convertToWav } from '@/lib/audio/convert';
+import { getSessionFromRequest } from '@/lib/auth';
 
 // CURSOR: Track last initialized provider to reinitialize when changed
 let lastInitializedProvider: string | null = null;
@@ -43,7 +44,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ chat, messages });
     }
 
-    const chats = await getAllChats();
+    const session = getSessionFromRequest(request);
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const chats = await getAllChats(session.userId);
     return NextResponse.json({ chats });
   } catch (error) {
     console.error('Chat GET error:', error);
@@ -105,7 +108,7 @@ export async function POST(request: NextRequest) {
 
     if (action === 'create') {
       // Create new chat - DON'T save to DB yet, just generate the data
-      const { title, topicType, topicKey, language, dialect, aiMode, customPrompt, openingPrompt, level } = body as Record<string, string | undefined>;
+      const { title, topicType, topicKey, language, dialect, aiMode, openingPrompt, level } = body as Record<string, string | undefined>;
       const { v4: uuidv4 } = await import('uuid');
       const chatId = uuidv4();
       const messageId = uuidv4();
@@ -115,6 +118,7 @@ export async function POST(request: NextRequest) {
       const chat = {
         id: chatId,
         title: title || 'New Conversation',
+        userId: (() => { const s = getSessionFromRequest(request); if (!s) throw new Error('Unauthorized'); return s.userId; })(),
         topicType: (topicType as 'general' | 'roleplay' | 'topic') || 'general',
         topicDetails: topicKey ? JSON.stringify({ topicKey }) : undefined,
         level: chatLevel,
@@ -125,11 +129,10 @@ export async function POST(request: NextRequest) {
         createdAt: now,
         updatedAt: now,
         threadId: null,
-        customPrompt: customPrompt || null,
       };
 
       // Generate opening message from AI
-      const systemPrompt = buildSystemPrompt((topicType as 'general' | 'roleplay' | 'topic') || 'general', topicKey, customPrompt, language || 'en', chatLevel);
+      const systemPrompt = buildSystemPrompt((topicType as 'general' | 'roleplay' | 'topic') || 'general', topicKey, language || 'en', chatLevel);
       const context = await contextManager.buildContext(chatId, systemPrompt);
       
       const openingCore = topicType === 'roleplay'
@@ -194,6 +197,7 @@ export async function POST(request: NextRequest) {
         if (!existingChat) {
           await createChat({
             title: pendingChatRaw.title,
+            userId: pendingChatRaw.userId,
             topicType: pendingChatRaw.topicType,
             topicDetails: pendingChatRaw.topicDetails,
             level: pendingChatRaw.level,
@@ -201,7 +205,6 @@ export async function POST(request: NextRequest) {
             dialect: pendingChatRaw.dialect,
             aiProvider: pendingChatRaw.aiProvider,
             aiMode: pendingChatRaw.aiMode,
-            customPrompt: pendingChatRaw.customPrompt,
           }, pendingChatRaw.id);
         }
 
@@ -243,7 +246,6 @@ export async function POST(request: NextRequest) {
       const systemPrompt = buildSystemPrompt(
         chat.topicType as 'general' | 'roleplay' | 'topic',
         topicDetails.topicKey as string | undefined,
-        chat.customPrompt || undefined,
         learningLanguage,
         chatLevel
       );

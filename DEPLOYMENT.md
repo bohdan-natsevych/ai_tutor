@@ -1,6 +1,6 @@
-# Deploying Lanqua to Vercel
+# Deploying ai-tutor to Vercel
 
-This guide walks you through deploying your Lanqua language tutoring app to Vercel with a free Neon PostgreSQL database.
+This guide walks you through deploying your ai-tutor app to Vercel with a free Neon PostgreSQL database.
 
 ## Prerequisites
 
@@ -126,7 +126,7 @@ gh repo create ai_tutor --private --source=. --remote=origin --push
 1. **Import Project**
    - Go to [vercel.com/new](https://vercel.com/new)
    - Click "Import Project"
-   - Select your Git repository (lanqua)
+   - Select your Git repository (ai-tutor)
    - Vercel auto-detects Next.js configuration
 
 2. **Configure Environment Variables** ⚠️ **CRITICAL STEP**

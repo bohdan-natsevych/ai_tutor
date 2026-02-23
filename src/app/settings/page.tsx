@@ -97,22 +97,6 @@ export default function SettingsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {/* Listen-first mode */}
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <label className="text-sm font-medium">{t('settings.interface.listenFirst')}</label>
-                <p className="text-xs text-muted-foreground">
-                  {t('settings.interface.listenFirstDesc')}
-                </p>
-              </div>
-              <Switch
-                checked={ui.listenFirstMode}
-                onCheckedChange={(checked) => setUISettings({ listenFirstMode: checked })}
-              />
-            </div>
-
-            <Separator />
-
             {/* Theme */}
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">

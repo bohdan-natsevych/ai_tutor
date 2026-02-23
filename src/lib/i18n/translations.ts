@@ -115,6 +115,9 @@ const en = {
   'chat.msg.playRecording': 'Play recording',
   'chat.msg.stopRecording': 'Stop recording',
   'chat.msg.errorRetry': 'Sorry, there was an error. Please try again.',
+  'chat.msg.showText': 'Show message text',
+  'chat.msg.hideText': 'Hide message text',
+  'chat.msg.textHidden': 'Text is hidden',
 
   // ── Voice recorder ──
   'voice.startRecording': 'Start Recording',
@@ -246,6 +249,8 @@ const en = {
   'settings.interface.language': 'Interface Language',
   'settings.interface.languageDesc': 'Language used for buttons, labels, and menus',
   'settings.interface.languageAuto': 'Auto (mother language)',
+  'settings.interface.showTextAuto': 'Show text automatically',
+  'settings.interface.showTextAutoDesc': 'Reveal message text automatically when audio finishes',
 
   // ── Settings: Reset ──
   'settings.reset.title': 'Reset Settings',
@@ -366,6 +371,9 @@ const uk: Record<TranslationKey, string> = {
   'chat.msg.playRecording': 'Відтворити запис',
   'chat.msg.stopRecording': 'Зупинити запис',
   'chat.msg.errorRetry': 'Виникла помилка. Спробуйте ще раз.',
+  'chat.msg.showText': 'Показати текст повідомлення',
+  'chat.msg.hideText': 'Приховати текст повідомлення',
+  'chat.msg.textHidden': 'Текст прихований',
 
   // ── Voice recorder ──
   'voice.startRecording': 'Почати запис',
@@ -497,6 +505,8 @@ const uk: Record<TranslationKey, string> = {
   'settings.interface.language': 'Мова інтерфейсу',
   'settings.interface.languageDesc': 'Мова кнопок, підписів та меню',
   'settings.interface.languageAuto': 'Авто (рідна мова)',
+  'settings.interface.showTextAuto': 'Показувати текст автоматично',
+  'settings.interface.showTextAutoDesc': 'Автоматично показувати текст повідомлення після завершення аудіо',
 
   // ── Settings: Reset ──
   'settings.reset.title': 'Скинути налаштування',
@@ -617,6 +627,9 @@ const de: Record<TranslationKey, string> = {
   'chat.msg.playRecording': 'Aufnahme abspielen',
   'chat.msg.stopRecording': 'Aufnahme stoppen',
   'chat.msg.errorRetry': 'Entschuldigung, es gab einen Fehler. Bitte versuche es erneut.',
+  'chat.msg.showText': 'Nachrichtentext anzeigen',
+  'chat.msg.hideText': 'Nachrichtentext ausblenden',
+  'chat.msg.textHidden': 'Text ist ausgeblendet',
 
   // ── Voice recorder ──
   'voice.startRecording': 'Aufnahme starten',
@@ -748,6 +761,8 @@ const de: Record<TranslationKey, string> = {
   'settings.interface.language': 'Oberflächensprache',
   'settings.interface.languageDesc': 'Sprache für Schaltflächen, Labels und Menüs',
   'settings.interface.languageAuto': 'Auto (Muttersprache)',
+  'settings.interface.showTextAuto': 'Text automatisch anzeigen',
+  'settings.interface.showTextAutoDesc': 'Nachrichtentext automatisch anzeigen, wenn das Audio endet',
 
   // ── Settings: Reset ──
   'settings.reset.title': 'Einstellungen zurücksetzen',
@@ -869,6 +884,9 @@ const fr: Record<TranslationKey, string> = {
   'chat.msg.playRecording': 'Lire l\'enregistrement',
   'chat.msg.stopRecording': 'Arrêter l\'enregistrement',
   'chat.msg.errorRetry': 'Désolé, une erreur s\'est produite. Veuillez réessayer.',
+  'chat.msg.showText': 'Afficher le texte du message',
+  'chat.msg.hideText': 'Masquer le texte du message',
+  'chat.msg.textHidden': 'Texte masque',
 
   // ── Voice recorder ──
   'voice.startRecording': 'Commencer l\'enregistrement',
@@ -1000,6 +1018,8 @@ const fr: Record<TranslationKey, string> = {
   'settings.interface.language': 'Langue de l\'interface',
   'settings.interface.languageDesc': 'Langue utilisée pour les boutons, étiquettes et menus',
   'settings.interface.languageAuto': 'Auto (langue maternelle)',
+  'settings.interface.showTextAuto': 'Afficher le texte automatiquement',
+  'settings.interface.showTextAutoDesc': 'Afficher automatiquement le texte du message a la fin de l\'audio',
 
   // ── Settings: Reset ──
   'settings.reset.title': 'Réinitialiser les paramètres',
@@ -1121,6 +1141,9 @@ const es: Record<TranslationKey, string> = {
   'chat.msg.playRecording': 'Reproducir grabación',
   'chat.msg.stopRecording': 'Detener grabación',
   'chat.msg.errorRetry': 'Lo siento, hubo un error. Por favor intenta de nuevo.',
+  'chat.msg.showText': 'Mostrar texto del mensaje',
+  'chat.msg.hideText': 'Ocultar texto del mensaje',
+  'chat.msg.textHidden': 'Texto oculto',
 
   // ── Voice recorder ──
   'voice.startRecording': 'Iniciar grabación',
@@ -1252,6 +1275,8 @@ const es: Record<TranslationKey, string> = {
   'settings.interface.language': 'Idioma de interfaz',
   'settings.interface.languageDesc': 'Idioma usado para botones, etiquetas y menús',
   'settings.interface.languageAuto': 'Auto (idioma nativo)',
+  'settings.interface.showTextAuto': 'Mostrar texto automaticamente',
+  'settings.interface.showTextAutoDesc': 'Mostrar automaticamente el texto del mensaje cuando termina el audio',
 
   // ── Settings: Reset ──
   'settings.reset.title': 'Restablecer ajustes',
@@ -1373,6 +1398,9 @@ const it: Record<TranslationKey, string> = {
   'chat.msg.playRecording': 'Riproduci registrazione',
   'chat.msg.stopRecording': 'Ferma registrazione',
   'chat.msg.errorRetry': 'Spiacenti, si è verificato un errore. Riprova.',
+  'chat.msg.showText': 'Mostra testo del messaggio',
+  'chat.msg.hideText': 'Nascondi testo del messaggio',
+  'chat.msg.textHidden': 'Testo nascosto',
 
   // ── Voice recorder ──
   'voice.startRecording': 'Inizia registrazione',
@@ -1504,6 +1532,8 @@ const it: Record<TranslationKey, string> = {
   'settings.interface.language': 'Lingua interfaccia',
   'settings.interface.languageDesc': 'Lingua usata per pulsanti, etichette e menu',
   'settings.interface.languageAuto': 'Auto (lingua madre)',
+  'settings.interface.showTextAuto': 'Mostra testo automaticamente',
+  'settings.interface.showTextAutoDesc': 'Mostra automaticamente il testo del messaggio al termine dell\'audio',
 
   // ── Settings: Reset ──
   'settings.reset.title': 'Ripristina impostazioni',
@@ -1624,6 +1654,9 @@ const pt: Record<TranslationKey, string> = {
   'chat.msg.playRecording': 'Reproduzir gravação',
   'chat.msg.stopRecording': 'Parar gravação',
   'chat.msg.errorRetry': 'Desculpe, houve um erro. Por favor tente novamente.',
+  'chat.msg.showText': 'Mostrar texto da mensagem',
+  'chat.msg.hideText': 'Ocultar texto da mensagem',
+  'chat.msg.textHidden': 'Texto oculto',
 
   // ── Voice recorder ──
   'voice.startRecording': 'Iniciar gravação',
@@ -1755,6 +1788,8 @@ const pt: Record<TranslationKey, string> = {
   'settings.interface.language': 'Idioma da interface',
   'settings.interface.languageDesc': 'Idioma usado para botões, rótulos e menus',
   'settings.interface.languageAuto': 'Auto (idioma nativo)',
+  'settings.interface.showTextAuto': 'Mostrar texto automaticamente',
+  'settings.interface.showTextAutoDesc': 'Mostrar automaticamente o texto da mensagem quando o audio terminar',
 
   // ── Settings: Reset ──
   'settings.reset.title': 'Redefinir configurações',
@@ -1876,6 +1911,9 @@ const pl: Record<TranslationKey, string> = {
   'chat.msg.playRecording': 'Odtwórz nagranie',
   'chat.msg.stopRecording': 'Zatrzymaj nagrywanie',
   'chat.msg.errorRetry': 'Przepraszamy, wystąpił błąd. Spróbuj ponownie.',
+  'chat.msg.showText': 'Pokaz tekst wiadomosci',
+  'chat.msg.hideText': 'Ukryj tekst wiadomosci',
+  'chat.msg.textHidden': 'Tekst ukryty',
 
   // ── Voice recorder ──
   'voice.startRecording': 'Rozpocznij nagrywanie',
@@ -2007,6 +2045,8 @@ const pl: Record<TranslationKey, string> = {
   'settings.interface.language': 'Język interfejsu',
   'settings.interface.languageDesc': 'Język używany dla przycisków, etykiet i menu',
   'settings.interface.languageAuto': 'Auto (język ojczysty)',
+  'settings.interface.showTextAuto': 'Pokazuj tekst automatycznie',
+  'settings.interface.showTextAutoDesc': 'Automatycznie ujawnij tekst wiadomosci po zakonczeniu audio',
 
   // ── Settings: Reset ──
   'settings.reset.title': 'Resetuj ustawienia',
@@ -2128,6 +2168,9 @@ const ja: Record<TranslationKey, string> = {
   'chat.msg.playRecording': '録音を再生',
   'chat.msg.stopRecording': '録音を停止',
   'chat.msg.errorRetry': '申し訳ありません、エラーが発生しました。再試行してください。',
+  'chat.msg.showText': 'メッセージテキストを表示',
+  'chat.msg.hideText': 'メッセージテキストを非表示',
+  'chat.msg.textHidden': 'テキストは非表示',
 
   // ── Voice recorder ──
   'voice.startRecording': '録音開始',
@@ -2259,6 +2302,8 @@ const ja: Record<TranslationKey, string> = {
   'settings.interface.language': 'インターフェース言語',
   'settings.interface.languageDesc': 'ボタン、ラベル、メニューに使用される言語',
   'settings.interface.languageAuto': '自動（母国語）',
+  'settings.interface.showTextAuto': 'テキストを自動的に表示',
+  'settings.interface.showTextAutoDesc': '音声再生後にメッセージテキストを自動的に表示する',
 
   // ── Settings: Reset ──
   'settings.reset.title': '設定をリセット',
@@ -2379,6 +2424,9 @@ const zh: Record<TranslationKey, string> = {
   'chat.msg.playRecording': '播放录音',
   'chat.msg.stopRecording': '停止录音',
   'chat.msg.errorRetry': '抱歉，出错了。请重试。',
+  'chat.msg.showText': '显示消息文本',
+  'chat.msg.hideText': '隐藏消息文本',
+  'chat.msg.textHidden': '文本已隐藏',
 
   // ── Voice recorder ──
   'voice.startRecording': '开始录音',
@@ -2510,6 +2558,8 @@ const zh: Record<TranslationKey, string> = {
   'settings.interface.language': '界面语言',
   'settings.interface.languageDesc': '用于按钮、标签和菜单的语言',
   'settings.interface.languageAuto': '自动（母语）',
+  'settings.interface.showTextAuto': '自动显示文本',
+  'settings.interface.showTextAutoDesc': '音频播放结束后自动显示消息文本',
 
   // ── Settings: Reset ──
   'settings.reset.title': '重置设置',
@@ -2630,6 +2680,9 @@ const ko: Record<TranslationKey, string> = {
   'chat.msg.playRecording': '녹음 재생',
   'chat.msg.stopRecording': '녹음 중지',
   'chat.msg.errorRetry': '죄송합니다. 오류가 발생했습니다. 다시 시도해 주세요.',
+  'chat.msg.showText': '메시지 텍스트 표시',
+  'chat.msg.hideText': '메시지 텍스트 숨기기',
+  'chat.msg.textHidden': '텍스트 숨김',
 
   // ── Voice recorder ──
   'voice.startRecording': '녹음 시작',
@@ -2761,6 +2814,8 @@ const ko: Record<TranslationKey, string> = {
   'settings.interface.language': '인터페이스 언어',
   'settings.interface.languageDesc': '버튼, 라벨 및 메뉴에 사용되는 언어',
   'settings.interface.languageAuto': '자동 (모국어)',
+  'settings.interface.showTextAuto': '자동으로 텍스트 표시',
+  'settings.interface.showTextAutoDesc': '오디오 재생 후 자동으로 메시지 텍스트 표시',
 
   // ── Settings: Reset ──
   'settings.reset.title': '설정 재설정',
