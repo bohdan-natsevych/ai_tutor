@@ -59,7 +59,7 @@ export class OpenAIAssistantProvider implements AIProvider {
 
     // Create new assistant
     const assistant = await this.client.beta.assistants.create({
-      name: 'Lanqua Language Tutor',
+      name: 'AI Language Tutor',
       instructions: systemPrompt || 'You are a friendly language tutor helping someone learn English.',
       model: 'gpt-4o-mini',
     });

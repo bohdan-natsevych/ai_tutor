@@ -9,5 +9,5 @@ export default defineConfig({
   dialect: isPostgres ? 'postgresql' : 'sqlite',
   dbCredentials: isPostgres 
     ? { url: databaseUrl! }
-    : { url: databaseUrl?.replace('file:', '') || './data/lanqua.db' },
+    : { url: databaseUrl?.replace('file:', '') || './data/ai-tutor.db' },
 });

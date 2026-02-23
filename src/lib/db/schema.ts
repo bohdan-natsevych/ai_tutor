@@ -1,12 +1,20 @@
 import { sqliteTable, text, integer, blob } from 'drizzle-orm/sqlite-core';
 
+// Users table
+export const users = sqliteTable('users', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull().unique(),
+  passwordHash: text('password_hash').notNull().default(''),
+  createdAt: integer('created_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
+});
+
 // Chats table
 export const chats = sqliteTable('chats', {
   id: text('id').primaryKey(),
+  userId: text('user_id').references(() => users.id),
   title: text('title'),
   topicType: text('topic_type').$type<'general' | 'roleplay' | 'topic'>().default('general'),
   topicDetails: text('topic_details'), // JSON string
-  customPrompt: text('custom_prompt'), // Optional custom system prompt body
   level: text('level').$type<'novice' | 'beginner' | 'intermediate' | 'advanced'>().default('intermediate'),
   language: text('language').default('en'),
   dialect: text('dialect').default('american'),
@@ -39,6 +47,7 @@ export const settings = sqliteTable('settings', {
 // Vocabulary table
 export const vocabulary = sqliteTable('vocabulary', {
   id: text('id').primaryKey(),
+  userId: text('user_id').references(() => users.id),
   word: text('word').notNull(),
   translation: text('translation'),
   example: text('example'),
@@ -55,6 +64,8 @@ export const chatSummaries = sqliteTable('chat_summaries', {
 });
 
 // Type exports
+export type User = typeof users.$inferSelect;
+export type NewUser = typeof users.$inferInsert;
 export type Chat = typeof chats.$inferSelect;
 export type NewChat = typeof chats.$inferInsert;
 export type Message = typeof messages.$inferSelect;

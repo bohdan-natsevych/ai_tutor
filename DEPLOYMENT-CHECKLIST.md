@@ -12,7 +12,7 @@ Use this checklist to track your deployment progress.
 ## ✅ Database Setup (Neon)
 
 - [ ] Create Neon account at [neon.tech](https://neon.tech)
-- [ ] Create new project named "lanqua"
+- [ ] Create new project named "ai-tutor"
 - [ ] Save connection string (postgres://...)
 - [ ] Run SQL initialization script (see DEPLOYMENT.md)
 - [ ] Verify tables created successfully
@@ -72,7 +72,7 @@ NODE_ENV=production
 DEEPL_API_KEY=... (optional)
 
 # Local Development
-DATABASE_URL=file:./data/lanqua.db
+DATABASE_URL=file:./data/ai-tutor.db
 OPENAI_API_KEY=sk-...
 NODE_ENV=development
 ```

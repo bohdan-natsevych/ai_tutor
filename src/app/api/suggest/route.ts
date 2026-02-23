@@ -76,7 +76,6 @@ export async function POST(request: NextRequest) {
     const systemPrompt = buildSystemPrompt(
       topicType as 'general' | 'roleplay' | 'topic',
       topicDetails.topicKey as string | undefined,
-      undefined,
       learningLanguage,
       chatLevel
     );

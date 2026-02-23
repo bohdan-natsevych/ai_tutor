@@ -1,12 +1,20 @@
 import { pgTable, text, timestamp } from 'drizzle-orm/pg-core';
 
+// Users table
+export const users = pgTable('users', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull().unique(),
+  passwordHash: text('password_hash').notNull().default(''),
+  createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
+});
+
 // Chats table
 export const chats = pgTable('chats', {
   id: text('id').primaryKey(),
+  userId: text('user_id').references(() => users.id),
   title: text('title'),
   topicType: text('topic_type').$type<'general' | 'roleplay' | 'topic'>().default('general'),
   topicDetails: text('topic_details'), // JSON string
-  customPrompt: text('custom_prompt'), // Optional custom system prompt body
   level: text('level').$type<'novice' | 'beginner' | 'intermediate' | 'advanced'>().default('intermediate'),
   language: text('language').default('en'),
   dialect: text('dialect').default('american'),
@@ -39,6 +47,7 @@ export const settings = pgTable('settings', {
 // Vocabulary table
 export const vocabulary = pgTable('vocabulary', {
   id: text('id').primaryKey(),
+  userId: text('user_id').references(() => users.id),
   word: text('word').notNull(),
   translation: text('translation'),
   example: text('example'),
@@ -55,6 +64,8 @@ export const chatSummaries = pgTable('chat_summaries', {
 });
 
 // Type exports
+export type User = typeof users.$inferSelect;
+export type NewUser = typeof users.$inferInsert;
 export type Chat = typeof chats.$inferSelect;
 export type NewChat = typeof chats.$inferInsert;
 export type Message = typeof messages.$inferSelect;

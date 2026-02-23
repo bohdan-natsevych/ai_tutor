@@ -1,7 +1,34 @@
-import { eq, desc, asc } from 'drizzle-orm';
-import { db, chats, messages, settings, vocabulary, chatSummaries } from './index';
-import type { NewChat, NewMessage, NewVocabulary, Chat, Message } from './schema';
+import { eq, desc, asc, and } from 'drizzle-orm';
+import { db, chats, messages, settings, vocabulary, chatSummaries, users } from './index';
+import type { NewChat, NewMessage, NewVocabulary, Chat, Message, User } from './schema';
 import { v4 as uuidv4 } from 'uuid';
+
+// ============= USER OPERATIONS =============
+
+export async function createUser(data: { name: string; passwordHash: string }): Promise<User> {
+  const id = uuidv4();
+  const now = new Date();
+
+  await db.insert(users).values({
+    id,
+    name: data.name,
+    passwordHash: data.passwordHash,
+    createdAt: now,
+  });
+
+  const [user] = await db.select().from(users).where(eq(users.id, id));
+  return user;
+}
+
+export async function getUserByName(name: string): Promise<User | undefined> {
+  const [user] = await db.select().from(users).where(eq(users.name, name));
+  return user;
+}
+
+export async function getUserById(id: string): Promise<User | undefined> {
+  const [user] = await db.select().from(users).where(eq(users.id, id));
+  return user;
+}
 
 // ============= CHAT OPERATIONS =============
 
@@ -25,8 +52,10 @@ export async function getChat(id: string): Promise<Chat | undefined> {
   return chat;
 }
 
-export async function getAllChats(): Promise<Chat[]> {
-  return await db.select().from(chats).orderBy(desc(chats.updatedAt));
+export async function getAllChats(userId: string): Promise<Chat[]> {
+  return await db.select().from(chats)
+    .where(eq(chats.userId, userId))
+    .orderBy(desc(chats.updatedAt));
 }
 
 export async function updateChat(id: string, data: Partial<NewChat>): Promise<void> {
@@ -138,8 +167,10 @@ export async function addVocabulary(data: Omit<NewVocabulary, 'id' | 'createdAt'
   return entry;
 }
 
-export async function getAllVocabulary() {
-  return await db.select().from(vocabulary).orderBy(desc(vocabulary.createdAt));
+export async function getAllVocabulary(userId: string) {
+  return await db.select().from(vocabulary)
+    .where(eq(vocabulary.userId, userId))
+    .orderBy(desc(vocabulary.createdAt));
 }
 
 export async function deleteVocabulary(id: string): Promise<void> {

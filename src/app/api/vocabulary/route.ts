@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { addVocabulary, getAllVocabulary, deleteVocabulary } from '@/lib/db/queries';
+import { getSessionFromRequest } from '@/lib/auth';
 
 // CURSOR: Vocabulary API Route - CRUD for saved words
 
 // GET /api/vocabulary - Get all saved vocabulary
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const vocabulary = await getAllVocabulary();
+    const session = getSessionFromRequest(request);
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const vocabulary = await getAllVocabulary(session.userId);
     return NextResponse.json({ vocabulary });
   } catch (error) {
     console.error('Vocabulary GET error:', error);
@@ -30,7 +33,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const session = getSessionFromRequest(request);
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     const entry = await addVocabulary({
+      userId: session.userId,
       word,
       translation,
       example,

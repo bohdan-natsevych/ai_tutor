@@ -17,9 +17,10 @@ export const messages = activeSchema.messages as any;
 export const settings = activeSchema.settings as any;
 export const vocabulary = activeSchema.vocabulary as any;
 export const chatSummaries = activeSchema.chatSummaries as any;
+export const users = activeSchema.users as any;
 
 // Re-export types (compatible between both schemas)
-export type { Chat, NewChat, Message, NewMessage, Setting, Vocabulary, NewVocabulary, ChatSummary } from './schema';
+export type { Chat, NewChat, Message, NewMessage, Setting, Vocabulary, NewVocabulary, ChatSummary, User, NewUser } from './schema';
 
 // Lazy initialization - only create DB connection when accessed
 let _db: any = null;
@@ -37,8 +38,10 @@ function initializeDatabase() {
     _db = drizzlePostgres(sql, { schema: schemaPostgres });
 
     // CURSOR: Ensure new columns exist for existing Postgres databases
-    sql(`ALTER TABLE chats ADD COLUMN IF NOT EXISTS custom_prompt TEXT`).catch(() => {});
     sql(`ALTER TABLE chats ADD COLUMN IF NOT EXISTS level TEXT DEFAULT 'intermediate'`).catch(() => {});
+    sql(`CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, name TEXT UNIQUE NOT NULL, password_hash TEXT NOT NULL DEFAULT '', created_at TIMESTAMP DEFAULT NOW())`).catch(() => {});
+    sql(`ALTER TABLE chats ADD COLUMN IF NOT EXISTS user_id TEXT REFERENCES users(id)`).catch(() => {});
+    sql(`ALTER TABLE vocabulary ADD COLUMN IF NOT EXISTS user_id TEXT REFERENCES users(id)`).catch(() => {});
 
     console.log('Using PostgreSQL database');
   } else {
@@ -55,7 +58,7 @@ function initializeDatabase() {
     }
 
     // Database path
-    const dbPath = databaseUrl?.replace('file:', '') || path.join(dataDir, 'lanqua.db');
+    const dbPath = databaseUrl?.replace('file:', '') || path.join(dataDir, 'ai-tutor.db');
 
     // Create SQLite connection
     const sqlite = new Database(dbPath);
@@ -68,7 +71,6 @@ function initializeDatabase() {
         title TEXT,
         topic_type TEXT DEFAULT 'general',
         topic_details TEXT,
-        custom_prompt TEXT,
         level TEXT DEFAULT 'intermediate',
         language TEXT DEFAULT 'en',
         dialect TEXT DEFAULT 'american',
@@ -111,14 +113,18 @@ function initializeDatabase() {
         last_message_index INTEGER,
         updated_at INTEGER
       );
+
+      CREATE TABLE IF NOT EXISTS users (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL UNIQUE,
+        password_hash TEXT NOT NULL DEFAULT '',
+        created_at INTEGER
+      );
     `);
 
     // Ensure new columns exist for existing databases
     const chatColumns = sqlite.prepare(`PRAGMA table_info(chats);`).all();
     const chatColumnNames = new Set((chatColumns as Array<{ name: string }>).map((col) => col.name));
-    if (!chatColumnNames.has('custom_prompt')) {
-      sqlite.exec(`ALTER TABLE chats ADD COLUMN custom_prompt TEXT;`);
-    }
     if (!chatColumnNames.has('level')) {
       sqlite.exec(`ALTER TABLE chats ADD COLUMN level TEXT DEFAULT 'intermediate';`);
     }
@@ -130,6 +136,16 @@ function initializeDatabase() {
     }
     if (!messageColumnNames.has('audio_format')) {
       sqlite.exec(`ALTER TABLE messages ADD COLUMN audio_format TEXT;`);
+    }
+
+    // Add user_id columns
+    if (!chatColumnNames.has('user_id')) {
+      sqlite.exec(`ALTER TABLE chats ADD COLUMN user_id TEXT REFERENCES users(id);`);
+    }
+    const vocabColumns = sqlite.prepare(`PRAGMA table_info(vocabulary);`).all();
+    const vocabColumnNames = new Set((vocabColumns as Array<{ name: string }>).map((col) => col.name));
+    if (!vocabColumnNames.has('user_id')) {
+      sqlite.exec(`ALTER TABLE vocabulary ADD COLUMN user_id TEXT REFERENCES users(id);`);
     }
 
     _db = drizzleSqlite(sqlite, { schema: schemaSqlite });

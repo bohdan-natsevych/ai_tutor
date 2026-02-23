@@ -54,16 +54,36 @@ export function ChatMessageBubble({
   const { t, lang } = useTranslation();
   
   const isUser = message.role === 'user';
-  const isHidden = ui.listenFirstMode && 
-    message.role === 'assistant' && 
-    message.state === 'playing' && 
-    !message.audioPlayed;
 
-  // Determine what to show based on state
+  // CURSOR: Per-message text visibility toggle. For AI messages in listen-first mode,
+  // start hidden unless audio has already been played (e.g. on page remount).
+  const [textVisible, setTextVisible] = useState<boolean>(() => {
+    if (message.role === 'user') return true;
+    if (!ui.listenFirstMode) return true;
+    return message.audioPlayed;
+  });
+
+  // CURSOR: Auto-reveal text when audio finishes, if the setting is enabled
+  useEffect(() => {
+    if (message.audioPlayed && ui.listenFirstMode && ui.showTextAutomatically && !textVisible) {
+      setTextVisible(true);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [message.audioPlayed]);
+
   const showLoader = message.state === 'generating' || message.state === 'audio_loading';
-  const showContent = !isHidden && (message.state === 'revealed' || isUser);
+  // CURSOR: Show waveform only when actively playing in listen-first mode with text hidden
+  const showWaveform = !isUser && !textVisible && !showLoader && message.state === 'playing' && ui.listenFirstMode;
+  // CURSOR: Show "text hidden" placeholder when text is hidden but audio is not actively playing in listen-first mode
+  const showHiddenPlaceholder = !isUser && !textVisible && !showLoader && !showWaveform &&
+    (message.state === 'revealed' || message.state === 'playing');
+  const showContent = !showLoader && (textVisible || isUser) &&
+    (message.state === 'revealed' || message.state === 'playing' || isUser);
   const showPlayButton = message.role === 'assistant' && 
     (message.state === 'revealed' || message.audioPlayed);
+  // CURSOR: Show toggle button for AI messages once audio has started or finished
+  const showTextToggleButton = !isUser &&
+    (message.state === 'playing' || message.state === 'revealed');
 
   // CURSOR: Cleanup user audio on unmount
   useEffect(() => {
@@ -175,10 +195,15 @@ export function ChatMessageBubble({
                 {message.state === 'generating' ? t('chat.msg.thinking') : t('chat.msg.preparingAudio')}
               </span>
             </div>
-          ) : isHidden ? (
+          ) : showWaveform ? (
             <div className="flex items-center gap-2">
               <WaveformIcon className="w-5 h-5 animate-pulse" />
               <span className="text-sm">{t('chat.msg.listen')}</span>
+            </div>
+          ) : showHiddenPlaceholder ? (
+            <div className="flex items-center gap-2 opacity-50">
+              <EyeOffIcon className="w-4 h-4" />
+              <span className="text-sm italic">{t('chat.msg.textHidden')}</span>
             </div>
           ) : showContent ? (
             <>
@@ -309,6 +334,22 @@ export function ChatMessageBubble({
             </div>
           )}
 
+          {/* CURSOR: Show/hide message text toggle - available for all AI messages once playing/revealed */}
+          {showTextToggleButton && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setTextVisible((v) => !v)}
+              className="text-xs gap-1"
+            >
+              {textVisible ? (
+                <><EyeOffIcon className="h-3 w-3" /> {t('chat.msg.hideText')}</>
+              ) : (
+                <><EyeIcon className="h-3 w-3" /> {t('chat.msg.showText')}</>
+              )}
+            </Button>
+          )}
+
           {/* Translate button - available for all revealed messages */}
           {showContent && (
             <Button
@@ -400,6 +441,43 @@ function StopIcon({ className }: { className?: string }) {
       className={className}
     >
       <path d="M6 6h12v12H6z" />
+    </svg>
+  );
+}
+
+function EyeIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+    >
+      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  );
+}
+
+function EyeOffIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+    >
+      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
+      <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
+      <line x1="1" y1="1" x2="23" y2="23" />
     </svg>
   );
 }
