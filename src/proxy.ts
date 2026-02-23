@@ -29,7 +29,7 @@ async function verifyJwt(token: string): Promise<{ userId: string } | null> {
 
     const signature = base64UrlDecode(parts[2]);
     const data = encoder.encode(`${parts[0]}.${parts[1]}`);
-    const valid = await crypto.subtle.verify('HMAC', key, signature, data);
+    const valid = await crypto.subtle.verify('HMAC', key, signature.buffer as ArrayBuffer, data.buffer as ArrayBuffer);
     if (!valid) return null;
 
     // Decode payload and check expiry
