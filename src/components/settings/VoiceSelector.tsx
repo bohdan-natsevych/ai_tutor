@@ -11,6 +11,7 @@ import { useTranslation } from '@/lib/i18n/useTranslation';
 
 const TTS_PROVIDERS = [
   { id: 'kokoro', name: 'Kokoro TTS', description: 'High-quality local TTS (WebGPU/WASM)', type: 'local' },
+  { id: 'piper', name: 'Piper TTS', description: 'Fast CPU-only local TTS (WASM)', type: 'local' },
   { id: 'web-speech', name: 'Web Speech', description: 'Browser built-in (fallback)', type: 'local' },
   { id: 'openai-tts', name: 'OpenAI TTS', description: 'Cloud-based, natural voices (~$15/1M chars)', type: 'cloud' },
 ];
@@ -60,6 +61,57 @@ const VOICES: Record<string, Array<{ id: string; name: string; gender: string }>
     { id: 'nova', name: 'Nova', gender: 'Female' },
     { id: 'shimmer', name: 'Shimmer', gender: 'Female' },
   ],
+  piper: [
+    // English - American
+    { id: 'en_US-hfc_female-medium', name: 'HFC Female', gender: 'Female (American)' },
+    { id: 'en_US-hfc_male-medium', name: 'HFC Male', gender: 'Male (American)' },
+    { id: 'en_US-amy-medium', name: 'Amy', gender: 'Female (American)' },
+    { id: 'en_US-lessac-medium', name: 'Lessac', gender: 'Female (American)' },
+    { id: 'en_US-ryan-medium', name: 'Ryan', gender: 'Male (American)' },
+    { id: 'en_US-joe-medium', name: 'Joe', gender: 'Male (American)' },
+    { id: 'en_US-kristin-medium', name: 'Kristin', gender: 'Female (American)' },
+    { id: 'en_US-kathleen-low', name: 'Kathleen', gender: 'Female (American)' },
+    { id: 'en_US-danny-low', name: 'Danny', gender: 'Male (American)' },
+    // English - British
+    { id: 'en_GB-alba-medium', name: 'Alba', gender: 'Female (British)' },
+    { id: 'en_GB-cori-medium', name: 'Cori', gender: 'Female (British)' },
+    { id: 'en_GB-jenny_dioco-medium', name: 'Jenny', gender: 'Female (British)' },
+    { id: 'en_GB-alan-medium', name: 'Alan', gender: 'Male (British)' },
+    { id: 'en_GB-northern_english_male-medium', name: 'Northern Male', gender: 'Male (British)' },
+    // Ukrainian
+    { id: 'uk_UA-ukrainian_tts-medium', name: 'Ukrainian TTS', gender: 'Female (Ukrainian)' },
+    { id: 'uk_UA-lada-x_low', name: 'Lada', gender: 'Female (Ukrainian)' },
+    // German
+    { id: 'de_DE-thorsten-medium', name: 'Thorsten', gender: 'Male (German)' },
+    { id: 'de_DE-thorsten-high', name: 'Thorsten HQ', gender: 'Male (German)' },
+    { id: 'de_DE-thorsten_emotional-medium', name: 'Thorsten Emotional', gender: 'Male (German)' },
+    { id: 'de_DE-kerstin-low', name: 'Kerstin', gender: 'Female (German)' },
+    { id: 'de_DE-ramona-low', name: 'Ramona', gender: 'Female (German)' },
+    { id: 'de_DE-eva_k-x_low', name: 'Eva', gender: 'Female (German)' },
+    // French
+    { id: 'fr_FR-siwis-medium', name: 'Siwis', gender: 'Female (French)' },
+    { id: 'fr_FR-tom-medium', name: 'Tom', gender: 'Male (French)' },
+    { id: 'fr_FR-gilles-low', name: 'Gilles', gender: 'Male (French)' },
+    // Spanish
+    { id: 'es_ES-davefx-medium', name: 'Dave', gender: 'Male (Spanish)' },
+    { id: 'es_ES-sharvard-medium', name: 'Sharvard', gender: 'Male (Spanish)' },
+    { id: 'es_ES-carlfm-x_low', name: 'Carl', gender: 'Male (Spanish)' },
+    { id: 'es_MX-ald-medium', name: 'Ald (MX)', gender: 'Male (Spanish)' },
+    { id: 'es_MX-claude-high', name: 'Claude (MX)', gender: 'Male (Spanish)' },
+    // Italian
+    { id: 'it_IT-riccardo-x_low', name: 'Riccardo', gender: 'Male (Italian)' },
+    // Portuguese
+    { id: 'pt_PT-tug\u00e3o-medium', name: 'Tugao', gender: 'Male (Portuguese)' },
+    { id: 'pt_BR-faber-medium', name: 'Faber (BR)', gender: 'Male (Portuguese)' },
+    { id: 'pt_BR-edresson-low', name: 'Edresson (BR)', gender: 'Male (Portuguese)' },
+    // Polish
+    { id: 'pl_PL-gosia-medium', name: 'Gosia', gender: 'Female (Polish)' },
+    { id: 'pl_PL-darkman-medium', name: 'Darkman', gender: 'Male (Polish)' },
+    { id: 'pl_PL-mc_speech-medium', name: 'MC Speech', gender: 'Male (Polish)' },
+    // Chinese
+    { id: 'zh_CN-huayan-medium', name: 'Huayan', gender: 'Female (Chinese)' },
+    { id: 'zh_CN-huayan-x_low', name: 'Huayan Light', gender: 'Female (Chinese)' },
+  ],
   'kokoro_mix': [ // Internal use for mixing
   ]
 };
@@ -106,42 +158,54 @@ KOKORO_VOICES.push(
   { id: 'pm_santa', name: 'Santa', gender: 'Male (Portuguese)' }
 );
 
+// CURSOR: Centralized voice filtering for providers with per-language voice catalogs
+function filterVoicesByLanguage(
+  provider: string,
+  allVoices: Array<{ id: string; name: string; gender: string }>,
+  learningLang: string,
+  dialect: string,
+): Array<{ id: string; name: string; gender: string }> {
+  if (provider === 'kokoro') {
+    if (learningLang === 'en') {
+      return allVoices.filter(v =>
+        dialect === 'american'
+          ? v.id.startsWith('am_') || v.id.startsWith('af_')
+          : v.id.startsWith('bm_') || v.id.startsWith('bf_'),
+      );
+    }
+    const kokoroPrefixMap: Record<string, string> = { ja: 'j', zh: 'z', fr: 'f', es: 'e', it: 'i', pt: 'p' };
+    const prefix = kokoroPrefixMap[learningLang];
+    return prefix ? allVoices.filter(v => v.id.startsWith(prefix)) : [];
+  }
+
+  if (provider === 'piper') {
+    // CURSOR: Piper voice IDs follow locale format: en_US-name-quality, de_DE-name-quality, etc.
+    const piperLocaleMap: Record<string, string[]> = {
+      en: dialect === 'american' ? ['en_US'] : ['en_GB'],
+      uk: ['uk_UA'],
+      de: ['de_DE'],
+      fr: ['fr_FR'],
+      es: ['es_ES', 'es_MX'],
+      it: ['it_IT'],
+      pt: ['pt_PT', 'pt_BR'],
+      pl: ['pl_PL'],
+      zh: ['zh_CN'],
+    };
+    const locales = piperLocaleMap[learningLang];
+    if (!locales) return [];
+    return allVoices.filter(v => locales.some(loc => v.id.startsWith(loc)));
+  }
+
+  return allVoices;
+}
+
 export function VoiceSelector() {
   const { tts, language, setTTSSettings } = useSettingsStore();
   const { t } = useTranslation();
   
-  // Filter voices by language and dialect for Kokoro provider
+  // CURSOR: Filter voices by language/dialect for providers that have per-language voices
   const allVoices = VOICES[tts.provider] || [];
-  const voices = tts.provider === 'kokoro' 
-    ? allVoices.filter(voice => {
-        // English
-        if (language.learning === 'en') {
-          const dialectMatch = language.dialect === 'american' 
-            ? voice.id.startsWith('am_') || voice.id.startsWith('af_')
-            : voice.id.startsWith('bm_') || voice.id.startsWith('bf_');
-          return dialectMatch;
-        }
-        
-        // Other languages - map based on prefix
-        // ja -> j, zh -> z, fr -> f, es -> e, it -> i, pt -> p
-        const prefixMap: Record<string, string> = {
-          'ja': 'j',
-          'zh': 'z',
-          'fr': 'f',
-          'es': 'e',
-          'it': 'i',
-          'pt': 'p',
-        };
-        
-        const prefix = prefixMap[language.learning];
-        if (prefix) {
-          return voice.id.startsWith(prefix);
-        }
-        
-        // No fallback for unsupported languages - return nothing so user knows it's not supported
-        return false;
-      })
-    : allVoices;
+  const voices = filterVoicesByLanguage(tts.provider, allVoices, language.learning, language.dialect);
   
   const [isPlayingPreview, setIsPlayingPreview] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -207,15 +271,13 @@ export function VoiceSelector() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tts.voice]);
 
-  // Auto-select appropriate voice when dialect changes
+  // Auto-select appropriate voice when dialect/language changes
   useEffect(() => {
-    if (tts.provider !== 'kokoro') return;
+    if (tts.provider !== 'kokoro' && tts.provider !== 'piper') return;
     
-    // Check if current voice matches the dialect
     const currentVoiceMatchesDialect = voices.some(v => v.id === tts.voice);
     
     if (!currentVoiceMatchesDialect && voices.length > 0) {
-      // Switch to first voice of matching dialect
       setTTSSettings({ voice: voices[0].id });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -237,33 +299,8 @@ export function VoiceSelector() {
             value={tts.provider}
             onValueChange={(value) => {
               setTTSSettings({ provider: value });
-              // Reset voice when provider changes - respect dialect filtering
               const allProviderVoices = VOICES[value] || [];
-              const filteredVoices = value === 'kokoro'
-                ? allProviderVoices.filter(voice => {
-                    // Replicate filtering logic (this logic is duplicated, ideally should be a function)
-                    // English
-                    if (language.learning === 'en') {
-                      const dialectMatch = language.dialect === 'american' 
-                        ? voice.id.startsWith('am_') || voice.id.startsWith('af_')
-                        : voice.id.startsWith('bm_') || voice.id.startsWith('bf_');
-                      return dialectMatch;
-                    }
-                    
-                    const prefixMap: Record<string, string> = {
-                      'ja': 'j',
-                      'zh': 'z',
-                      'fr': 'f',
-                      'es': 'e',
-                      'it': 'i',
-                      'pt': 'p',
-                    };
-                    const prefix = prefixMap[language.learning];
-                    if (prefix) return voice.id.startsWith(prefix);
-                    return false;
-                  })
-                : allProviderVoices;
-              
+              const filteredVoices = filterVoicesByLanguage(value, allProviderVoices, language.learning, language.dialect);
               if (filteredVoices.length > 0) {
                 setTTSSettings({ voice: filteredVoices[0].id });
               }
@@ -336,17 +373,17 @@ export function VoiceSelector() {
               </Button>
             </div>
           </div>
-        ) : tts.provider === 'kokoro' ? (
+        ) : (tts.provider === 'kokoro' || tts.provider === 'piper') ? (
           <div className="rounded-md bg-yellow-50 p-4 border border-yellow-100">
             <div className="flex">
               <div className="flex-shrink-0">
                 <AlertTriangle className="h-5 w-5 text-yellow-400" />
               </div>
               <div className="ml-3">
-                <h3 className="text-sm font-medium text-yellow-800">Language not supported by Kokoro TTS</h3>
+                <h3 className="text-sm font-medium text-yellow-800">Language not supported by {tts.provider === 'kokoro' ? 'Kokoro' : 'Piper'} TTS</h3>
                 <div className="mt-2 text-sm text-yellow-700">
                   <p>
-                    Kokoro TTS does not yet support this language. Please switch to <b>Web Speech</b> or <b>OpenAI</b> for the best experience.
+                    This language is not yet supported. Please switch to <b>Web Speech</b> or <b>OpenAI</b> for the best experience.
                   </p>
                 </div>
               </div>
