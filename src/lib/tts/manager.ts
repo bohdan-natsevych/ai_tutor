@@ -23,7 +23,7 @@ class TTSManager {
     }
 
     if (providerId) {
-      const provider = getTTSProvider(providerId);
+      const provider = await getTTSProvider(providerId);
       if (provider) {
         await provider.initialize();
         this.currentProvider = provider;
@@ -41,7 +41,7 @@ class TTSManager {
 
   // Switch to a different provider
   async switchProvider(providerId: string): Promise<void> {
-    const provider = getTTSProvider(providerId);
+    const provider = await getTTSProvider(providerId);
     if (!provider) {
       throw new Error(`TTS provider not found: ${providerId}`);
     }

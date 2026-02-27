@@ -10,6 +10,7 @@
     },
     "dependencies": {
         "@huggingface/transformers": "^3.8.1",
+        "@mintplex-labs/piper-tts-web": "^1.0.4",
         "@mlc-ai/web-llm": "^0.2.80",
         "@neondatabase/serverless": "^0.10.4",
         "bcryptjs": "^3.0.3",
