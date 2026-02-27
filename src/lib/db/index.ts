@@ -15,12 +15,13 @@ const activeSchema = _isPostgres ? schemaPostgres : schemaSqlite;
 export const chats = activeSchema.chats as any;
 export const messages = activeSchema.messages as any;
 export const settings = activeSchema.settings as any;
+export const dictionaries = activeSchema.dictionaries as any;
 export const vocabulary = activeSchema.vocabulary as any;
 export const chatSummaries = activeSchema.chatSummaries as any;
 export const users = activeSchema.users as any;
 
 // Re-export types (compatible between both schemas)
-export type { Chat, NewChat, Message, NewMessage, Setting, Vocabulary, NewVocabulary, ChatSummary, User, NewUser } from './schema';
+export type { Chat, NewChat, Message, NewMessage, Setting, Dictionary, NewDictionary, Vocabulary, NewVocabulary, ChatSummary, User, NewUser } from './schema';
 
 // Lazy initialization - only create DB connection when accessed
 let _db: any = null;
@@ -42,6 +43,8 @@ function initializeDatabase() {
     sql(`CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, name TEXT UNIQUE NOT NULL, password_hash TEXT NOT NULL DEFAULT '', created_at TIMESTAMP DEFAULT NOW())`).catch(() => {});
     sql(`ALTER TABLE chats ADD COLUMN IF NOT EXISTS user_id TEXT REFERENCES users(id)`).catch(() => {});
     sql(`ALTER TABLE vocabulary ADD COLUMN IF NOT EXISTS user_id TEXT REFERENCES users(id)`).catch(() => {});
+    sql(`CREATE TABLE IF NOT EXISTS dictionaries (id TEXT PRIMARY KEY, user_id TEXT REFERENCES users(id), name TEXT NOT NULL, created_at TIMESTAMP DEFAULT NOW())`).catch(() => {});
+    sql(`ALTER TABLE vocabulary ADD COLUMN IF NOT EXISTS dictionary_id TEXT REFERENCES dictionaries(id) ON DELETE CASCADE`).catch(() => {});
 
     console.log('Using PostgreSQL database');
   } else {
@@ -120,6 +123,13 @@ function initializeDatabase() {
         password_hash TEXT NOT NULL DEFAULT '',
         created_at INTEGER
       );
+
+      CREATE TABLE IF NOT EXISTS dictionaries (
+        id TEXT PRIMARY KEY,
+        user_id TEXT REFERENCES users(id),
+        name TEXT NOT NULL,
+        created_at INTEGER
+      );
     `);
 
     // Ensure new columns exist for existing databases
@@ -146,6 +156,9 @@ function initializeDatabase() {
     const vocabColumnNames = new Set((vocabColumns as Array<{ name: string }>).map((col) => col.name));
     if (!vocabColumnNames.has('user_id')) {
       sqlite.exec(`ALTER TABLE vocabulary ADD COLUMN user_id TEXT REFERENCES users(id);`);
+    }
+    if (!vocabColumnNames.has('dictionary_id')) {
+      sqlite.exec(`ALTER TABLE vocabulary ADD COLUMN dictionary_id TEXT REFERENCES dictionaries(id) ON DELETE CASCADE;`);
     }
 
     _db = drizzleSqlite(sqlite, { schema: schemaSqlite });

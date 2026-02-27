@@ -96,7 +96,7 @@ export interface ChatMessage {
 export interface Chat {
   id: string;
   title: string;
-  topicType: 'general' | 'roleplay' | 'topic';
+  topicType: 'general' | 'roleplay' | 'topic' | 'dictionary';
   topicDetails?: Record<string, unknown>;
   language: string;
   dialect: string;
@@ -158,6 +158,13 @@ export interface AppSettings {
   prompts: CustomPrompts;
 }
 
+// Dictionary Types
+export interface Dictionary {
+  id: string;
+  name: string;
+  createdAt: Date;
+}
+
 // Vocabulary Types
 export interface VocabularyEntry {
   id: string;
@@ -165,6 +172,8 @@ export interface VocabularyEntry {
   translation: string;
   example: string;
   context?: string;
+  dictionaryId?: string;
+  dictionaryName?: string;
   createdAt: Date;
 }
 

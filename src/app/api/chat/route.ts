@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createChat, getChat, getAllChats, updateChat, deleteChat, createMessage, updateMessage, getChatMessages } from '@/lib/db/queries';
+import { createChat, getChat, getAllChats, updateChat, deleteChat, createMessage, updateMessage, getChatMessages, getVocabularyByDictionaryIds } from '@/lib/db/queries';
 import { aiManager } from '@/lib/ai/manager';
 import { contextManager } from '@/lib/ai/context';
 import { buildSystemPrompt, DEFAULT_GENERAL_OPENING, type ProficiencyLevel } from '@/lib/ai/prompts';
@@ -119,8 +119,8 @@ export async function POST(request: NextRequest) {
         id: chatId,
         title: title || 'New Conversation',
         userId: (() => { const s = getSessionFromRequest(request); if (!s) throw new Error('Unauthorized'); return s.userId; })(),
-        topicType: (topicType as 'general' | 'roleplay' | 'topic') || 'general',
-        topicDetails: topicKey ? JSON.stringify({ topicKey }) : undefined,
+        topicType: (topicType as 'general' | 'roleplay' | 'topic' | 'dictionary') || 'general',
+        topicDetails: topicKey ? JSON.stringify({ topicKey }) : (body.dictionaryIds ? JSON.stringify({ dictionaryIds: body.dictionaryIds }) : undefined),
         level: chatLevel,
         language: language || 'en',
         dialect: dialect || 'american',
@@ -131,8 +131,22 @@ export async function POST(request: NextRequest) {
         threadId: null,
       };
 
+      // Fetch dictionary words if dictionary mode
+      let dictionaryWords: string[] | undefined;
+      if (topicType === 'dictionary' && body.dictionaryIds) {
+        const dictIds = body.dictionaryIds as string[];
+        const entries = await getVocabularyByDictionaryIds(dictIds);
+        dictionaryWords = entries.map((e: any) => e.word);
+      }
+
       // Generate opening message from AI
-      const systemPrompt = buildSystemPrompt((topicType as 'general' | 'roleplay' | 'topic') || 'general', topicKey, language || 'en', chatLevel);
+      const systemPrompt = buildSystemPrompt(
+        (topicType as 'general' | 'roleplay' | 'topic' | 'dictionary') || 'general',
+        topicKey,
+        language || 'en',
+        chatLevel,
+        dictionaryWords,
+      );
       const context = await contextManager.buildContext(chatId, systemPrompt);
       
       const openingCore = topicType === 'roleplay'
@@ -141,6 +155,8 @@ export async function POST(request: NextRequest) {
 
       const resolvedOpeningPrompt = topicType === 'roleplay' || topicType === 'topic'
         ? `You are starting ${openingCore}. User didn't say anything yet, so just set the scene. Speak in the learning language.`
+        : topicType === 'dictionary'
+        ? `You are starting a casual conversation. The learner wants to practice specific vocabulary words (listed in your system instructions). User didn't say anything yet. Start a casual, everyday topic that is RELATED to the themes of those vocabulary words, so the learner will naturally want to use them in their replies. Do NOT mention the words yourself in unnatural ways — just pick a relevant topic and ask a simple question. Speak in the learning language.`
         : `You are starting this conversation. The learner has not said anything yet. The user setup is ${openingPrompt || DEFAULT_GENERAL_OPENING}. 
         If you are allowed to choose the topic, choose more casual, everyday topics.
         Sound like a normal person having a casual chat. Simple, everyday language.
@@ -243,11 +259,21 @@ export async function POST(request: NextRequest) {
       
       const learningLanguage = chat.language || 'en';
       const chatLevel = (chat.level as ProficiencyLevel) || 'intermediate';
+
+      // Fetch dictionary words if dictionary mode
+      let dictionaryWords: string[] | undefined;
+      if (chat.topicType === 'dictionary' && topicDetails.dictionaryIds) {
+        const dictIds = topicDetails.dictionaryIds as string[];
+        const entries = await getVocabularyByDictionaryIds(dictIds);
+        dictionaryWords = entries.map((e: any) => e.word);
+      }
+
       const systemPrompt = buildSystemPrompt(
-        chat.topicType as 'general' | 'roleplay' | 'topic',
+        chat.topicType as 'general' | 'roleplay' | 'topic' | 'dictionary',
         topicDetails.topicKey as string | undefined,
         learningLanguage,
-        chatLevel
+        chatLevel,
+        dictionaryWords,
       );
       const context = await contextManager.buildContext(chatId, systemPrompt, chat.threadId || undefined);
 
