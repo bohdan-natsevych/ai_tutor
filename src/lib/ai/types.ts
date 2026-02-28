@@ -12,6 +12,7 @@ export interface AIModel {
 
 export interface AIResponse {
   content: string;
+  audioBase64?: string;
   usage?: {
     promptTokens: number;
     completionTokens: number;
@@ -52,6 +53,7 @@ export interface Analysis {
 export interface UnifiedResponse {
   reply: string;
   analysis: Analysis;
+  audioBase64?: string;
   usage?: {
     promptTokens: number;
     completionTokens: number;
@@ -92,6 +94,8 @@ export interface AIOptions {
   audioBase64?: string;
   audioFormat?: string;
   whisperTranscription?: string;
+  wantAudioOutput?: boolean;
+  voice?: string;
 }
 
 export interface AIProvider {

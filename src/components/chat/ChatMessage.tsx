@@ -303,7 +303,15 @@ export function ChatMessageBubble({
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={onReplay}
+                    onClick={() => {
+                      if (onReplay) {
+                        // The onReplay in page.tsx doesn't natively take an event, but it's wrapped. We need to pass the base64 from message.
+                        // Actually, looking at ChatMessageProps, onReplay is typed as: () => void.
+                        // Wait, we need to modify ChatMessageProps to pass it along, or page.tsx to bind it.
+                        // Let's just call onReplay() and fix it in page.tsx instead where the binding happens.
+                        onReplay();
+                      }
+                    }}
                     className="text-xs gap-1"
                   >
                     <PlayIcon className="h-3 w-3" />

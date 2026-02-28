@@ -32,6 +32,7 @@ export interface ChatMessage {
   state: MessageState;
   audioUrl?: string;
   audioData?: ArrayBuffer; // CURSOR: Cache audio data for Whisper analysis
+  audioBase64?: string;    // CURSOR: Base64 audio returned directly by AI provider
   audioBlob?: Blob;
   audioFormat?: string;
   audioPlayed: boolean;

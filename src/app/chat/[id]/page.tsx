@@ -349,10 +349,23 @@ export default function ChatPage({ params }: ChatPageProps) {
         if (ttsReady) {
           try {
             // CURSOR: Get audio data (ArrayBuffer) for Whisper analysis
-            const audioData = await ttsManager.synthesize(firstMessage.content);
+            let audioData: ArrayBuffer;
+            let audioMimeType = 'audio/wav';
+            
+            if (firstMessage.audioBase64 && tts.provider === 'openai') {
+              const binaryString = window.atob(firstMessage.audioBase64);
+              const bytes = new Uint8Array(binaryString.length);
+              for (let i = 0; i < binaryString.length; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+              }
+              audioData = bytes.buffer;
+              audioMimeType = 'audio/mpeg';
+            } else {
+              audioData = await ttsManager.synthesize(firstMessage.content);
+            }
             
             // CURSOR: Create audio element from data
-            const blob = new Blob([audioData], { type: 'audio/wav' });
+            const blob = new Blob([audioData], { type: audioMimeType });
             const audioUrl = URL.createObjectURL(blob);
             const audio = new Audio(audioUrl);
             
@@ -424,7 +437,8 @@ export default function ChatPage({ params }: ChatPageProps) {
   const playMessageAudio = async (
     messageId: string, 
     content: string, 
-    ttsReady?: boolean
+    ttsReady?: boolean,
+    audioBase64?: string
   ) => {
     const isTtsAvailable = ttsReady ?? ttsInitialized;
     if (!isTtsAvailable || !content) {
@@ -437,10 +451,23 @@ export default function ChatPage({ params }: ChatPageProps) {
       updateMessage(messageId, { state: 'audio_loading' });
       
       // CURSOR: Get audio data (ArrayBuffer) for Whisper analysis
-      const audioData = await ttsManager.synthesize(content);
+      let audioData: ArrayBuffer;
+      let audioMimeType = 'audio/wav';
+      
+      if (audioBase64 && tts.provider === 'openai') {
+        const binaryString = window.atob(audioBase64);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+        audioData = bytes.buffer;
+        audioMimeType = 'audio/mpeg';
+      } else {
+        audioData = await ttsManager.synthesize(content);
+      }
       
       // CURSOR: Create audio element from data
-      const blob = new Blob([audioData], { type: 'audio/wav' });
+      const blob = new Blob([audioData], { type: audioMimeType });
       const audioUrl = URL.createObjectURL(blob);
       const audio = new Audio(audioUrl);
       
@@ -553,6 +580,8 @@ export default function ChatPage({ params }: ChatPageProps) {
         formData.append('audioFormat', audio.format);
         formData.append('motherLanguage', language.mother);
         formData.append('contextSettings', contextSettingsPayload);
+        formData.append('ttsProvider', tts.provider);
+        formData.append('ttsVoice', tts.voice);
         if (pendingChatRef.current) {
           formData.append('pendingChat', JSON.stringify(pendingChatRef.current.chat));
           formData.append('pendingOpeningMessage', JSON.stringify(pendingChatRef.current.openingMessage));
@@ -572,6 +601,8 @@ export default function ChatPage({ params }: ChatPageProps) {
           aiModel: ai.model,
           aiTextModel: ai.textModel,
           contextSettings: contextSettingsPayload,
+          ttsProvider: tts.provider,
+          ttsVoice: tts.voice,
         };
         if (pendingChatRef.current) {
           messageBody.pendingChat = pendingChatRef.current.chat;
@@ -661,7 +692,7 @@ export default function ChatPage({ params }: ChatPageProps) {
             : false;
           
           if (ttsReady) {
-            await playMessageAudio(realAiMessageId, data.aiMessage.content, true);
+            await playMessageAudio(realAiMessageId, data.aiMessage.content, true, data.aiMessage.audioBase64);
           } else {
             updateMessage(realAiMessageId, { 
               state: 'revealed', 
@@ -707,7 +738,8 @@ export default function ChatPage({ params }: ChatPageProps) {
     content: string, 
     messageSpeed?: number,
     cachedAudioData?: ArrayBuffer,
-    cachedTimestamps?: WordTimestamp[]
+    cachedTimestamps?: WordTimestamp[],
+    audioBase64?: string
   ) => {
     if (currentlyPlayingId) return; // Already playing something
     
@@ -719,7 +751,17 @@ export default function ChatPage({ params }: ChatPageProps) {
       
       // CURSOR: Use cached audio data if available, otherwise regenerate
       if (cachedAudioData) {
-        const blob = new Blob([cachedAudioData], { type: 'audio/wav' });
+        // Omitting type lets the browser infer from magic bytes usually
+        const blob = new Blob([cachedAudioData]);
+        audioUrl = URL.createObjectURL(blob);
+      } else if (audioBase64 && tts.provider === 'openai') {
+        // CURSOR: decode base64 on-the-fly for replay
+        const binaryString = window.atob(audioBase64);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+        const blob = new Blob([bytes.buffer], { type: 'audio/mpeg' });
         audioUrl = URL.createObjectURL(blob);
       } else {
         // Check if TTS is available
@@ -1107,7 +1149,8 @@ export default function ChatPage({ params }: ChatPageProps) {
                     message.content, 
                     message.playbackSpeed,
                     message.audioData,
-                    message.wordTimestamps
+                    message.wordTimestamps,
+                    message.audioBase64
                   )}
                   onPause={pauseCurrentAudio}
                   onResume={resumeCurrentAudio}
