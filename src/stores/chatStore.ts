@@ -69,7 +69,7 @@ export interface MessageAnalysis {
 export interface Chat {
   id: string;
   title: string;
-  topicType: 'general' | 'roleplay' | 'topic';
+  topicType: 'general' | 'roleplay' | 'topic' | 'dictionary';
   topicKey?: string;
   topicDetails?: Record<string, unknown>;
   level?: 'novice' | 'beginner' | 'intermediate' | 'advanced';

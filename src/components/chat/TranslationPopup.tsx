@@ -50,6 +50,10 @@ export function TranslationPopup({
   const [isPlayingTTS, setIsPlayingTTS] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   
+  // Dictionary state
+  const [dictionaries, setDictionaries] = useState<Array<{ id: string; name: string }>>([]);
+  const [selectedDictId, setSelectedDictId] = useState<string>('');
+  
   const language = useSettingsStore((state) => state.language);
   const translationMode = useSettingsStore((state) => state.translation.mode);
   const aiSettings = useSettingsStore((state) => state.ai);
@@ -63,6 +67,27 @@ export function TranslationPopup({
       }
     };
   }, []);
+
+  // Fetch dictionaries when popup opens
+  const fetchDictionaries = async () => {
+    try {
+      const response = await fetch('/api/dictionaries');
+      if (response.ok) {
+        const data = await response.json();
+        setDictionaries(data.dictionaries || []);
+        // Restore last-used dictionary from localStorage
+        const lastUsed = localStorage.getItem('lastDictionaryId');
+        const dicts = data.dictionaries || [];
+        if (lastUsed && dicts.some((d: any) => d.id === lastUsed)) {
+          setSelectedDictId(lastUsed);
+        } else if (dicts.length > 0) {
+          setSelectedDictId(dicts[0].id);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to fetch dictionaries:', err);
+    }
+  };
 
   // CURSOR: Play the original (learning language) text using TTS
   const handlePlayTranslation = async () => {
@@ -147,8 +172,9 @@ export function TranslationPopup({
   const handleOpenChange = (open: boolean) => {
     setIsOpen(open);
     onOpenChange?.(open);
-    if (open && !translation) {
-      fetchTranslation();
+    if (open) {
+      if (!translation) fetchTranslation();
+      fetchDictionaries();
     }
     if (!open) {
       // Stop TTS when closing
@@ -164,6 +190,11 @@ export function TranslationPopup({
     if (!translation) return;
     
     try {
+      // Remember selected dictionary
+      if (selectedDictId) {
+        localStorage.setItem('lastDictionaryId', selectedDictId);
+      }
+
       const response = await fetch('/api/vocabulary', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -171,6 +202,7 @@ export function TranslationPopup({
           word: text,
           translation: translation.translatedText,
           context: chatId,
+          dictionaryId: selectedDictId || undefined,
         }),
       });
 
@@ -305,7 +337,18 @@ export function TranslationPopup({
             </div>
             
             {/* Footer - fixed */}
-            <div className="p-3 border-t flex-shrink-0">
+            <div className="p-3 border-t flex-shrink-0 space-y-2">
+              {dictionaries.length > 1 && (
+                <select
+                  value={selectedDictId}
+                  onChange={(e) => setSelectedDictId(e.target.value)}
+                  className="w-full text-xs border rounded px-2 py-1 bg-background"
+                >
+                  {dictionaries.map((d) => (
+                    <option key={d.id} value={d.id}>{d.name}</option>
+                  ))}
+                </select>
+              )}
               <Button
                 size="sm"
                 variant={saved ? 'secondary' : 'default'}
@@ -313,7 +356,7 @@ export function TranslationPopup({
                 disabled={saved}
                 className="w-full"
               >
-                {saved ? 'Saved!' : 'Save to Vocabulary'}
+                {saved ? 'Saved!' : dictionaries.length <= 1 ? 'Save to Vocabulary' : `Save to ${dictionaries.find(d => d.id === selectedDictId)?.name || 'Dictionary'}`}
               </Button>
             </div>
           </div>
@@ -351,7 +394,18 @@ export function TranslationPopup({
               </div>
             </div>
 
-            {/* Save button */}
+            {/* Dictionary selector + Save button */}
+            {dictionaries.length > 1 && (
+              <select
+                value={selectedDictId}
+                onChange={(e) => setSelectedDictId(e.target.value)}
+                className="w-full text-xs border rounded px-2 py-1 bg-background"
+              >
+                {dictionaries.map((d) => (
+                  <option key={d.id} value={d.id}>{d.name}</option>
+                ))}
+              </select>
+            )}
             <Button
               size="sm"
               variant={saved ? 'secondary' : 'default'}
@@ -359,7 +413,7 @@ export function TranslationPopup({
               disabled={saved}
               className="w-full mt-2"
             >
-              {saved ? 'Saved!' : 'Save to Vocabulary'}
+              {saved ? 'Saved!' : dictionaries.length <= 1 ? 'Save to Vocabulary' : `Save to ${dictionaries.find(d => d.id === selectedDictId)?.name || 'Dictionary'}`}
             </Button>
           </div>
         )}

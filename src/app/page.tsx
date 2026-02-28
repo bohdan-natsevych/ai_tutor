@@ -27,11 +27,16 @@ export default function HomePage() {
   const [newChatTitle, setNewChatTitle] = useState('');
   const [openingPrompt, setOpeningPrompt] = useState(DEFAULT_GENERAL_OPENING);
   const [showNewChatDialog, setShowNewChatDialog] = useState(false);
-  const [selectedTab, setSelectedTab] = useState<'general' | 'roleplay' | 'topic'>('general');
+  const [selectedTab, setSelectedTab] = useState<'general' | 'roleplay' | 'topic' | 'dictionary'>('general');
   const [selectedLevel, setSelectedLevel] = useState<ProficiencyLevel>('intermediate');
   const [listenFirst, setListenFirst] = useState(true);
   const [showTextAuto, setShowTextAuto] = useState(true);
   const { t, lang } = useTranslation();
+
+  // Dictionary practice state
+  const [availableDictionaries, setAvailableDictionaries] = useState<Array<{ id: string; name: string }>>([]);
+  const [selectedDictIds, setSelectedDictIds] = useState<string[]>([]);
+  const [dictWordCounts, setDictWordCounts] = useState<Record<string, number>>({});
 
   const ai = useSettingsStore((state) => state.ai);
   const setUISettings = useSettingsStore((state) => state.setUISettings);
@@ -83,7 +88,7 @@ export default function HomePage() {
     );
   }
 
-  const createChat = async (topicType: 'general' | 'roleplay' | 'topic', topicKey?: string) => {
+  const createChat = async (topicType: 'general' | 'roleplay' | 'topic' | 'dictionary', topicKey?: string, dictionaryIds?: string[]) => {
     setIsCreating(true);
     setCreateError(null);
     // CURSOR: Apply dialog audio settings to global store before navigating
@@ -104,6 +109,7 @@ export default function HomePage() {
           aiModel: ai.model,
           aiTextModel: ai.textModel,
           openingPrompt: topicType === 'general' ? openingPrompt : undefined,
+          dictionaryIds: topicType === 'dictionary' ? dictionaryIds : undefined,
         }),
       });
 
@@ -132,11 +138,44 @@ export default function HomePage() {
       setSelectedLevel('intermediate');
       setListenFirst(true);
       setShowTextAuto(true);
+      setSelectedDictIds([]);
     }
+  };
+
+  // Fetch dictionaries for the practice mode
+  const fetchDictionaries = async () => {
+    try {
+      const response = await fetch('/api/dictionaries');
+      if (response.ok) {
+        const data = await response.json();
+        setAvailableDictionaries(data.dictionaries || []);
+        // Fetch word counts
+        const counts: Record<string, number> = {};
+        for (const dict of data.dictionaries || []) {
+          try {
+            const vocabRes = await fetch(`/api/vocabulary?dictionaryId=${dict.id}`);
+            if (vocabRes.ok) {
+              const vocabData = await vocabRes.json();
+              counts[dict.id] = (vocabData.vocabulary || []).length;
+            }
+          } catch { counts[dict.id] = 0; }
+        }
+        setDictWordCounts(counts);
+      }
+    } catch (err) {
+      console.error('Failed to fetch dictionaries:', err);
+    }
+  };
+
+  const toggleDictSelection = (id: string) => {
+    setSelectedDictIds(prev => 
+      prev.includes(id) ? prev.filter(d => d !== id) : [...prev, id]
+    );
   };
 
   const getDefaultTitle = (topicType: string, topicKey?: string): string => {
     if (topicType === 'general') return 'General Conversation';
+    if (topicType === 'dictionary') return 'Dictionary Practice';
     if (topicType === 'roleplay' && topicKey) {
       const scenario = getRoleplayScenarios().find(s => s.id === topicKey);
       return scenario ? `Roleplay: ${scenario.name}` : 'Roleplay';
@@ -253,7 +292,7 @@ export default function HomePage() {
             <h2 className="text-2xl font-bold tracking-tight">{t('home.pickMode')}</h2>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {/* Free Chat Card */}
             <Card className="hover:shadow-lg transition-shadow cursor-pointer border-primary/20" onClick={() => { setSelectedTab('general'); setShowNewChatDialog(true); }}>
               <CardHeader>
@@ -316,6 +355,29 @@ export default function HomePage() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Dictionary Practice Card */}
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => {
+              setSelectedTab('dictionary');
+              fetchDictionaries();
+              setShowNewChatDialog(true);
+            }}>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <span>📖</span> {t('home.dictionaryPractice')}
+                </CardTitle>
+                <CardDescription>
+                  {t('home.dictionaryPracticeDesc')}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-wrap gap-2">
+                  <span className="px-2 py-1 bg-muted rounded-md text-xs font-medium">{t('home.dictionaryPracticeTagPersonal')}</span>
+                  <span className="px-2 py-1 bg-muted rounded-md text-xs font-medium">{t('home.dictionaryPracticeTagVocab')}</span>
+                  <span className="px-2 py-1 bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 rounded-md text-xs font-medium">{t('home.dictionaryPracticeTagContextual')}</span>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </section>
 
@@ -325,10 +387,10 @@ export default function HomePage() {
             <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>
-                  {selectedTab === 'general' ? t('home.freeChat') : selectedTab === 'roleplay' ? t('home.roleplay') : t('home.topics')}
+                  {selectedTab === 'general' ? t('home.freeChat') : selectedTab === 'roleplay' ? t('home.roleplay') : selectedTab === 'dictionary' ? t('home.dictionaryPractice') : t('home.topics')}
                 </DialogTitle>
                 <DialogDescription>
-                  {selectedTab === 'general' ? t('home.freeChatDesc') : t('home.dialog.description')}
+                  {selectedTab === 'general' ? t('home.freeChatDesc') : selectedTab === 'dictionary' ? t('home.dictionaryPracticeDesc') : t('home.dialog.description')}
                 </DialogDescription>
               </DialogHeader>
 
@@ -448,6 +510,52 @@ export default function HomePage() {
                     ))}
                   </div>
                 )}
+
+                {selectedTab === 'dictionary' && (
+                  <div className="space-y-4">
+                    <div className="grid gap-2">
+                      <Label>{t('home.dialog.selectDictionaries')}</Label>
+                      {availableDictionaries.length === 0 ? (
+                        <div className="text-center py-6 bg-muted/30 rounded-lg border border-dashed">
+                          <p className="text-muted-foreground text-sm">{t('home.dialog.noDictionaries')}</p>
+                          <Link href="/vocabulary">
+                            <Button variant="link" size="sm" className="mt-2">{t('home.dialog.goToVocabulary')}</Button>
+                          </Link>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                          {availableDictionaries.map((dict) => (
+                            <button
+                              key={dict.id}
+                              type="button"
+                              onClick={() => toggleDictSelection(dict.id)}
+                              className={`flex items-center justify-between rounded-lg border p-3 text-left transition-colors ${
+                                selectedDictIds.includes(dict.id)
+                                  ? 'border-primary bg-primary/5 ring-1 ring-primary'
+                                  : 'border-border hover:border-primary/40'
+                              }`}
+                            >
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm">{selectedDictIds.includes(dict.id) ? '✅' : '📖'}</span>
+                                <span className="text-sm font-medium">{dict.name}</span>
+                              </div>
+                              <span className="text-xs text-muted-foreground">{dictWordCounts[dict.id] || 0} {t('dict.wordsCount')}</span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex justify-end pt-2">
+                      <Button
+                        onClick={() => createChat('dictionary', undefined, selectedDictIds)}
+                        disabled={isCreating || selectedDictIds.length === 0}
+                      >
+                        {isCreating ? t('common.loading') : t('home.startConversation')}
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
             </DialogContent>
           </Dialog>
@@ -470,7 +578,9 @@ export default function HomePage() {
                   ? { icon: '🎭', bg: 'bg-amber-500/10', text: 'text-amber-700', label: 'Roleplay' }
                   : chat.topicType === 'topic'
                     ? { icon: '📚', bg: 'bg-emerald-500/10', text: 'text-emerald-700', label: 'Topic' }
-                    : { icon: '💬', bg: 'bg-blue-500/10', text: 'text-blue-700', label: 'General' };
+                    : chat.topicType === 'dictionary'
+                      ? { icon: '📖', bg: 'bg-purple-500/10', text: 'text-purple-700', label: 'Dictionary' }
+                      : { icon: '💬', bg: 'bg-blue-500/10', text: 'text-blue-700', label: 'General' };
 
                 return (
                   <Link key={chat.id} href={`/chat/${chat.id}`}>
@@ -493,7 +603,7 @@ export default function HomePage() {
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-1.5">
                             <span className="text-xs bg-muted px-2 py-0.5 rounded-full capitalize">
-                              {chat.topicType === 'general' ? t('home.typeGeneral') : chat.topicType === 'roleplay' ? t('home.typeRoleplay') : t('home.typeTopic')}
+                              {chat.topicType === 'general' ? t('home.typeGeneral') : chat.topicType === 'roleplay' ? t('home.typeRoleplay') : chat.topicType === 'dictionary' ? t('home.typeDictionary') : t('home.typeTopic')}
                             </span>
                             {chat.level && (
                               <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">

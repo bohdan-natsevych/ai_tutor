@@ -48,6 +48,12 @@ const en = {
   'home.typeGeneral': 'General',
   'home.typeRoleplay': 'Roleplay',
   'home.typeTopic': 'Topic',
+  'home.typeDictionary': 'Dictionary',
+  'home.dictionaryPractice': 'Dictionary Practice',
+  'home.dictionaryPracticeDesc': 'Practice conversation using words from your personal dictionaries.',
+  'home.dictionaryPracticeTagPersonal': 'Personal',
+  'home.dictionaryPracticeTagVocab': 'Your words',
+  'home.dictionaryPracticeTagContextual': 'Contextual',
 
   // ── Home dialog ──
   'home.dialog.title': 'Pick a scenario',
@@ -57,6 +63,9 @@ const en = {
   'home.dialog.startingMessage': 'Starting Instructions',
   'home.dialog.tabRoleplay': 'Roleplay',
   'home.dialog.tabTopics': 'Topics',
+  'home.dialog.selectDictionaries': 'Select dictionaries to practice',
+  'home.dialog.noDictionaries': 'No dictionaries yet. Add words first!',
+  'home.dialog.goToVocabulary': 'Go to Vocabulary',
 
   // ── Level picker ──
   'home.dialog.level': 'Proficiency level',
@@ -91,6 +100,7 @@ const en = {
   'chat.defaultTitle.general': 'General Conversation',
   'chat.defaultTitle.roleplay': 'Roleplay',
   'chat.defaultTitle.topic': 'Topic Discussion',
+  'chat.defaultTitle.dictionary': 'Dictionary Practice',
   'chat.startConversation': 'Start a conversation',
   'chat.replySuggestions': 'Reply suggestions',
   'chat.gettingSuggestions': 'Getting suggestions...',
@@ -145,6 +155,26 @@ const en = {
   'vocab.date.justNow': 'just now',
   'vocab.date.minAgo': 'min ago',
   'vocab.date.hoursAgo': 'hours ago',
+
+  // ── Dictionary feature ──
+  'dict.title': 'My Dictionaries',
+  'dict.dictionaries': 'Dictionaries',
+  'dict.create': 'New',
+  'dict.rename': 'Rename',
+  'dict.namePlaceholder': 'Dictionary name...',
+  'dict.deleteConfirm': 'Delete dictionary \"{name}\" and all its words?',
+  'dict.addWord': 'Add word',
+  'dict.editWord': 'Edit',
+  'dict.moveWord': 'Move',
+  'dict.moveToDict': 'Move to dictionary:',
+  'dict.wordPlaceholder': 'Word or phrase',
+  'dict.translationPlaceholder': 'Translation',
+  'dict.examplePlaceholder': 'Example sentence (optional)',
+  'dict.noEntries': 'No words in this dictionary',
+  'dict.noEntriesDesc': 'Add words directly or save them from chat translations',
+  'dict.selectOrCreate': 'Select a dictionary or create a new one',
+  'dict.wordsCount': 'words',
+
 
   // ── Settings page ──
   'settings.title': 'Settings',
@@ -304,6 +334,12 @@ const uk: Record<TranslationKey, string> = {
   'home.typeGeneral': 'Загальна',
   'home.typeRoleplay': 'Рольова гра',
   'home.typeTopic': 'Тема',
+  'home.typeDictionary': 'Словник',
+  'home.dictionaryPractice': 'Практика зі словником',
+  'home.dictionaryPracticeDesc': 'Практикуйте розмову зі словами з ваших особистих словників.',
+  'home.dictionaryPracticeTagPersonal': 'Особисте',
+  'home.dictionaryPracticeTagVocab': 'Ваші слова',
+  'home.dictionaryPracticeTagContextual': 'Контекст',
 
   // ── Home dialog ──
   'home.dialog.title': 'Оберіть сценарій',
@@ -313,6 +349,9 @@ const uk: Record<TranslationKey, string> = {
   'home.dialog.startingMessage': 'Початкові інструкції',
   'home.dialog.tabRoleplay': 'Рольові ігри',
   'home.dialog.tabTopics': 'Теми',
+  'home.dialog.selectDictionaries': 'Оберіть словники для практики',
+  'home.dialog.noDictionaries': 'Словників ще немає. Спершу додайте слова!',
+  'home.dialog.goToVocabulary': 'Перейти до словника',
 
   // ── Level picker ──
   'home.dialog.level': 'Рівень володіння',
@@ -347,6 +386,7 @@ const uk: Record<TranslationKey, string> = {
   'chat.defaultTitle.general': 'Загальна розмова',
   'chat.defaultTitle.roleplay': 'Рольова гра',
   'chat.defaultTitle.topic': 'Обговорення теми',
+  'chat.defaultTitle.dictionary': 'Практика зі словником',
   'chat.startConversation': 'Почніть розмову...',
   'chat.replySuggestions': 'Підказки для відповіді',
   'chat.gettingSuggestions': 'Отримую підказки...',
@@ -401,6 +441,25 @@ const uk: Record<TranslationKey, string> = {
   'vocab.date.justNow': 'щойно',
   'vocab.date.minAgo': 'хв тому',
   'vocab.date.hoursAgo': 'год тому',
+
+  // ── Dictionary feature ──
+  'dict.title': 'Мої словники',
+  'dict.dictionaries': 'Словники',
+  'dict.create': 'Новий',
+  'dict.rename': 'Перейменувати',
+  'dict.namePlaceholder': 'Назва словника...',
+  'dict.deleteConfirm': 'Видалити словник \"{name}\" та всі його слова?',
+  'dict.addWord': 'Додати слово',
+  'dict.editWord': 'Редагувати',
+  'dict.moveWord': 'Перемістити',
+  'dict.moveToDict': 'Перемістити до словника:',
+  'dict.wordPlaceholder': 'Слово або фраза',
+  'dict.translationPlaceholder': 'Переклад',
+  'dict.examplePlaceholder': 'Приклад речення (необов\'язково)',
+  'dict.noEntries': 'У цьому словнику немає слів',
+  'dict.noEntriesDesc': 'Додайте слова безпосередньо або збережіть їх із перекладів чату',
+  'dict.selectOrCreate': 'Оберіть словник або створіть новий',
+  'dict.wordsCount': 'слів',
 
   // ── Settings page ──
   'settings.title': 'Налаштування',
@@ -560,6 +619,12 @@ const de: Record<TranslationKey, string> = {
   'home.typeGeneral': 'Allgemein',
   'home.typeRoleplay': 'Rollenspiel',
   'home.typeTopic': 'Thema',
+  'home.typeDictionary': 'Wörterbuch',
+  'home.dictionaryPractice': 'Wörterbuch-Übung',
+  'home.dictionaryPracticeDesc': 'Übe Gespräche mit Wörtern aus deinen persönlichen Wörterbüchern.',
+  'home.dictionaryPracticeTagPersonal': 'Persönlich',
+  'home.dictionaryPracticeTagVocab': 'Deine Wörter',
+  'home.dictionaryPracticeTagContextual': 'Kontextuell',
 
   // ── Home dialog ──
   'home.dialog.title': 'Wähle ein Szenario',
@@ -569,6 +634,9 @@ const de: Record<TranslationKey, string> = {
   'home.dialog.startingMessage': 'Startanweisungen',
   'home.dialog.tabRoleplay': 'Rollenspiel',
   'home.dialog.tabTopics': 'Themen',
+  'home.dialog.selectDictionaries': 'Wörterbücher zum Üben auswählen',
+  'home.dialog.noDictionaries': 'Noch keine Wörterbücher. Füge zuerst Wörter hinzu!',
+  'home.dialog.goToVocabulary': 'Zum Wortschatz',
 
   // ── Level picker ──
   'home.dialog.level': 'Sprachniveau',
@@ -603,6 +671,7 @@ const de: Record<TranslationKey, string> = {
   'chat.defaultTitle.general': 'Allgemeines Gespräch',
   'chat.defaultTitle.roleplay': 'Rollenspiel',
   'chat.defaultTitle.topic': 'Themendiskussion',
+  'chat.defaultTitle.dictionary': 'Wörterbuch-Übung',
   'chat.startConversation': 'Beginne das Gespräch...',
   'chat.replySuggestions': 'Antwortvorschläge',
   'chat.gettingSuggestions': 'Hole Vorschläge...',
@@ -657,6 +726,25 @@ const de: Record<TranslationKey, string> = {
   'vocab.date.justNow': 'gerade eben',
   'vocab.date.minAgo': 'min her',
   'vocab.date.hoursAgo': 'Std her',
+
+  // ── Dictionary feature ──
+  'dict.title': 'Meine Wörterbücher',
+  'dict.dictionaries': 'Wörterbücher',
+  'dict.create': 'Neu',
+  'dict.rename': 'Umbenennen',
+  'dict.namePlaceholder': 'Wörterbuchname...',
+  'dict.deleteConfirm': 'Wörterbuch \"{name}\" und alle Wörter löschen?',
+  'dict.addWord': 'Wort hinzufügen',
+  'dict.editWord': 'Bearbeiten',
+  'dict.moveWord': 'Verschieben',
+  'dict.moveToDict': 'Verschieben nach:',
+  'dict.wordPlaceholder': 'Wort oder Phrase',
+  'dict.translationPlaceholder': 'Übersetzung',
+  'dict.examplePlaceholder': 'Beispielsatz (optional)',
+  'dict.noEntries': 'Keine Wörter in diesem Wörterbuch',
+  'dict.noEntriesDesc': 'Füge Wörter direkt hinzu oder speichere sie aus Chat-Übersetzungen',
+  'dict.selectOrCreate': 'Wähle ein Wörterbuch oder erstelle ein neues',
+  'dict.wordsCount': 'Wörter',
 
   // ── Settings page ──
   'settings.title': 'Einstellungen',
@@ -817,6 +905,12 @@ const fr: Record<TranslationKey, string> = {
   'home.typeGeneral': 'Général',
   'home.typeRoleplay': 'Jeu de rôle',
   'home.typeTopic': 'Sujet',
+  'home.typeDictionary': 'Dictionnaire',
+  'home.dictionaryPractice': 'Pratique du dictionnaire',
+  'home.dictionaryPracticeDesc': 'Pratiquez la conversation avec les mots de vos dictionnaires personnels.',
+  'home.dictionaryPracticeTagPersonal': 'Personnel',
+  'home.dictionaryPracticeTagVocab': 'Vos mots',
+  'home.dictionaryPracticeTagContextual': 'Contextuel',
 
   // ── Home dialog ──
   'home.dialog.title': 'Choisissez un scénario',
@@ -826,6 +920,9 @@ const fr: Record<TranslationKey, string> = {
   'home.dialog.startingMessage': 'Instructions de départ',
   'home.dialog.tabRoleplay': 'Jeu de rôle',
   'home.dialog.tabTopics': 'Sujets',
+  'home.dialog.selectDictionaries': 'Sélectionnez les dictionnaires à pratiquer',
+  'home.dialog.noDictionaries': 'Pas encore de dictionnaires. Ajoutez des mots d\'abord !',
+  'home.dialog.goToVocabulary': 'Aller au vocabulaire',
 
   // ── Level picker ──
   'home.dialog.level': 'Niveau de competence',
@@ -860,6 +957,7 @@ const fr: Record<TranslationKey, string> = {
   'chat.defaultTitle.general': 'Conversation générale',
   'chat.defaultTitle.roleplay': 'Jeu de rôle',
   'chat.defaultTitle.topic': 'Discussion thématique',
+  'chat.defaultTitle.dictionary': 'Pratique du dictionnaire',
   'chat.startConversation': 'Commencez la conversation...',
   'chat.replySuggestions': 'Suggestions de réponse',
   'chat.gettingSuggestions': 'Obtention des suggestions...',
@@ -914,6 +1012,25 @@ const fr: Record<TranslationKey, string> = {
   'vocab.date.justNow': 'à l\'instant',
   'vocab.date.minAgo': 'il y a min',
   'vocab.date.hoursAgo': 'il y a h',
+
+  // ── Dictionary feature ──
+  'dict.title': 'Mes dictionnaires',
+  'dict.dictionaries': 'Dictionnaires',
+  'dict.create': 'Nouveau',
+  'dict.rename': 'Renommer',
+  'dict.namePlaceholder': 'Nom du dictionnaire...',
+  'dict.deleteConfirm': 'Supprimer le dictionnaire \"{name}\" et tous ses mots ?',
+  'dict.addWord': 'Ajouter un mot',
+  'dict.editWord': 'Modifier',
+  'dict.moveWord': 'Déplacer',
+  'dict.moveToDict': 'Déplacer vers :',
+  'dict.wordPlaceholder': 'Mot ou expression',
+  'dict.translationPlaceholder': 'Traduction',
+  'dict.examplePlaceholder': 'Exemple de phrase (optionnel)',
+  'dict.noEntries': 'Aucun mot dans ce dictionnaire',
+  'dict.noEntriesDesc': 'Ajoutez des mots directement ou sauvegardez-les depuis les traductions du chat',
+  'dict.selectOrCreate': 'Sélectionnez un dictionnaire ou créez-en un',
+  'dict.wordsCount': 'mots',
 
   // ── Settings page ──
   'settings.title': 'Paramètres',
@@ -1074,6 +1191,12 @@ const es: Record<TranslationKey, string> = {
   'home.typeGeneral': 'General',
   'home.typeRoleplay': 'Juego de roles',
   'home.typeTopic': 'Tema',
+  'home.typeDictionary': 'Diccionario',
+  'home.dictionaryPractice': 'Práctica de diccionario',
+  'home.dictionaryPracticeDesc': 'Practica conversación usando palabras de tus diccionarios personales.',
+  'home.dictionaryPracticeTagPersonal': 'Personal',
+  'home.dictionaryPracticeTagVocab': 'Tus palabras',
+  'home.dictionaryPracticeTagContextual': 'Contextual',
 
   // ── Home dialog ──
   'home.dialog.title': 'Elige un escenario',
@@ -1083,6 +1206,9 @@ const es: Record<TranslationKey, string> = {
   'home.dialog.startingMessage': 'Instrucciones iniciales',
   'home.dialog.tabRoleplay': 'Juego de roles',
   'home.dialog.tabTopics': 'Temas',
+  'home.dialog.selectDictionaries': 'Selecciona diccionarios para practicar',
+  'home.dialog.noDictionaries': '¡Aún no hay diccionarios. Añade palabras primero!',
+  'home.dialog.goToVocabulary': 'Ir al vocabulario',
 
   // ── Level picker ──
   'home.dialog.level': 'Nivel de competencia',
@@ -1117,6 +1243,7 @@ const es: Record<TranslationKey, string> = {
   'chat.defaultTitle.general': 'Conversación general',
   'chat.defaultTitle.roleplay': 'Juego de roles',
   'chat.defaultTitle.topic': 'Discusión de tema',
+  'chat.defaultTitle.dictionary': 'Práctica de diccionario',
   'chat.startConversation': 'Inicia la conversación...',
   'chat.replySuggestions': 'Sugerencias de respuesta',
   'chat.gettingSuggestions': 'Obteniendo sugerencias...',
@@ -1171,6 +1298,25 @@ const es: Record<TranslationKey, string> = {
   'vocab.date.justNow': 'ahora mismo',
   'vocab.date.minAgo': 'hace min',
   'vocab.date.hoursAgo': 'hace horas',
+
+  // ── Dictionary feature ──
+  'dict.title': 'Mis diccionarios',
+  'dict.dictionaries': 'Diccionarios',
+  'dict.create': 'Nuevo',
+  'dict.rename': 'Renombrar',
+  'dict.namePlaceholder': 'Nombre del diccionario...',
+  'dict.deleteConfirm': '¿Eliminar diccionario \"{name}\" y todas sus palabras?',
+  'dict.addWord': 'Añadir palabra',
+  'dict.editWord': 'Editar',
+  'dict.moveWord': 'Mover',
+  'dict.moveToDict': 'Mover a diccionario:',
+  'dict.wordPlaceholder': 'Palabra o frase',
+  'dict.translationPlaceholder': 'Traducción',
+  'dict.examplePlaceholder': 'Oración de ejemplo (opcional)',
+  'dict.noEntries': 'No hay palabras en este diccionario',
+  'dict.noEntriesDesc': 'Añade palabras directamente o guárdalas de las traducciones del chat',
+  'dict.selectOrCreate': 'Selecciona un diccionario o crea uno nuevo',
+  'dict.wordsCount': 'palabras',
 
   // ── Settings page ──
   'settings.title': 'Ajustes',
@@ -1331,6 +1477,12 @@ const it: Record<TranslationKey, string> = {
   'home.typeGeneral': 'Generale',
   'home.typeRoleplay': 'Gioco di ruolo',
   'home.typeTopic': 'Argomento',
+  'home.typeDictionary': 'Dizionario',
+  'home.dictionaryPractice': 'Pratica del dizionario',
+  'home.dictionaryPracticeDesc': 'Pratica la conversazione usando parole dai tuoi dizionari personali.',
+  'home.dictionaryPracticeTagPersonal': 'Personale',
+  'home.dictionaryPracticeTagVocab': 'Le tue parole',
+  'home.dictionaryPracticeTagContextual': 'Contestuale',
 
   // ── Home dialog ──
   'home.dialog.title': 'Scegli uno scenario',
@@ -1340,6 +1492,9 @@ const it: Record<TranslationKey, string> = {
   'home.dialog.startingMessage': 'Istruzioni iniziali',
   'home.dialog.tabRoleplay': 'Gioco di ruolo',
   'home.dialog.tabTopics': 'Argomenti',
+  'home.dialog.selectDictionaries': 'Seleziona i dizionari da praticare',
+  'home.dialog.noDictionaries': 'Nessun dizionario ancora. Aggiungi prima delle parole!',
+  'home.dialog.goToVocabulary': 'Vai al vocabolario',
 
   // ── Level picker ──
   'home.dialog.level': 'Livello di competenza',
@@ -1374,6 +1529,7 @@ const it: Record<TranslationKey, string> = {
   'chat.defaultTitle.general': 'Conversazione generale',
   'chat.defaultTitle.roleplay': 'Gioco di ruolo',
   'chat.defaultTitle.topic': 'Discussione argomento',
+  'chat.defaultTitle.dictionary': 'Pratica del dizionario',
   'chat.startConversation': 'Inizia la conversazione...',
   'chat.replySuggestions': 'Suggerimenti di risposta',
   'chat.gettingSuggestions': 'Recupero suggerimenti...',
@@ -1428,6 +1584,25 @@ const it: Record<TranslationKey, string> = {
   'vocab.date.justNow': 'proprio ora',
   'vocab.date.minAgo': 'min fa',
   'vocab.date.hoursAgo': 'ore fa',
+
+  // ── Dictionary feature ──
+  'dict.title': 'I miei dizionari',
+  'dict.dictionaries': 'Dizionari',
+  'dict.create': 'Nuovo',
+  'dict.rename': 'Rinomina',
+  'dict.namePlaceholder': 'Nome del dizionario...',
+  'dict.deleteConfirm': 'Eliminare il dizionario \"{name}\" e tutte le sue parole?',
+  'dict.addWord': 'Aggiungi parola',
+  'dict.editWord': 'Modifica',
+  'dict.moveWord': 'Sposta',
+  'dict.moveToDict': 'Sposta nel dizionario:',
+  'dict.wordPlaceholder': 'Parola o frase',
+  'dict.translationPlaceholder': 'Traduzione',
+  'dict.examplePlaceholder': 'Frase di esempio (opzionale)',
+  'dict.noEntries': 'Nessuna parola in questo dizionario',
+  'dict.noEntriesDesc': 'Aggiungi parole direttamente o salvale dalle traduzioni della chat',
+  'dict.selectOrCreate': 'Seleziona un dizionario o creane uno nuovo',
+  'dict.wordsCount': 'parole',
 
   // ── Settings page ──
   'settings.title': 'Impostazioni',
@@ -1587,6 +1762,12 @@ const pt: Record<TranslationKey, string> = {
   'home.typeGeneral': 'Geral',
   'home.typeRoleplay': 'Roleplay',
   'home.typeTopic': 'Tópico',
+  'home.typeDictionary': 'Dicionário',
+  'home.dictionaryPractice': 'Prática de dicionário',
+  'home.dictionaryPracticeDesc': 'Pratique conversação usando palavras dos seus dicionários pessoais.',
+  'home.dictionaryPracticeTagPersonal': 'Pessoal',
+  'home.dictionaryPracticeTagVocab': 'Suas palavras',
+  'home.dictionaryPracticeTagContextual': 'Contextual',
 
   // ── Home dialog ──
   'home.dialog.title': 'Escolha um cenário',
@@ -1596,6 +1777,9 @@ const pt: Record<TranslationKey, string> = {
   'home.dialog.startingMessage': 'Instrucoes iniciais',
   'home.dialog.tabRoleplay': 'Roleplay',
   'home.dialog.tabTopics': 'Tópicos',
+  'home.dialog.selectDictionaries': 'Selecione dicionários para praticar',
+  'home.dialog.noDictionaries': 'Ainda sem dicionários. Adicione palavras primeiro!',
+  'home.dialog.goToVocabulary': 'Ir ao vocabulário',
 
   // ── Level picker ──
   'home.dialog.level': 'Nivel de proficiencia',
@@ -1630,6 +1814,7 @@ const pt: Record<TranslationKey, string> = {
   'chat.defaultTitle.general': 'Conversa geral',
   'chat.defaultTitle.roleplay': 'Jogo de papéis',
   'chat.defaultTitle.topic': 'Discussão de tópico',
+  'chat.defaultTitle.dictionary': 'Prática de dicionário',
   'chat.startConversation': 'Inicie a conversa...',
   'chat.replySuggestions': 'Sugestões de resposta',
   'chat.gettingSuggestions': 'Obtendo sugestões...',
@@ -1684,6 +1869,25 @@ const pt: Record<TranslationKey, string> = {
   'vocab.date.justNow': 'agora mesmo',
   'vocab.date.minAgo': 'há min',
   'vocab.date.hoursAgo': 'há horas',
+
+  // ── Dictionary feature ──
+  'dict.title': 'Meus dicionários',
+  'dict.dictionaries': 'Dicionários',
+  'dict.create': 'Novo',
+  'dict.rename': 'Renomear',
+  'dict.namePlaceholder': 'Nome do dicionário...',
+  'dict.deleteConfirm': 'Excluir dicionário \"{name}\" e todas as suas palavras?',
+  'dict.addWord': 'Adicionar palavra',
+  'dict.editWord': 'Editar',
+  'dict.moveWord': 'Mover',
+  'dict.moveToDict': 'Mover para dicionário:',
+  'dict.wordPlaceholder': 'Palavra ou frase',
+  'dict.translationPlaceholder': 'Tradução',
+  'dict.examplePlaceholder': 'Frase de exemplo (opcional)',
+  'dict.noEntries': 'Nenhuma palavra neste dicionário',
+  'dict.noEntriesDesc': 'Adicione palavras diretamente ou salve-as das traduções do chat',
+  'dict.selectOrCreate': 'Selecione um dicionário ou crie um novo',
+  'dict.wordsCount': 'palavras',
 
   // ── Settings page ──
   'settings.title': 'Configurações',
@@ -1844,6 +2048,12 @@ const pl: Record<TranslationKey, string> = {
   'home.typeGeneral': 'Ogólne',
   'home.typeRoleplay': 'Odgrywanie ról',
   'home.typeTopic': 'Temat',
+  'home.typeDictionary': 'Słownik',
+  'home.dictionaryPractice': 'Ćwiczenia ze słownika',
+  'home.dictionaryPracticeDesc': 'Ćwicz rozmowę używając słów z osobistych słowników.',
+  'home.dictionaryPracticeTagPersonal': 'Osobiste',
+  'home.dictionaryPracticeTagVocab': 'Twoje słowa',
+  'home.dictionaryPracticeTagContextual': 'Kontekstowe',
 
   // ── Home dialog ──
   'home.dialog.title': 'Wybierz scenariusz',
@@ -1853,6 +2063,9 @@ const pl: Record<TranslationKey, string> = {
   'home.dialog.startingMessage': 'Instrukcje startowe',
   'home.dialog.tabRoleplay': 'Odgrywanie ról',
   'home.dialog.tabTopics': 'Tematy',
+  'home.dialog.selectDictionaries': 'Wybierz słowniki do ćwiczeń',
+  'home.dialog.noDictionaries': 'Brak słowników. Najpierw dodaj słowa!',
+  'home.dialog.goToVocabulary': 'Przejdź do słownictwa',
 
   // ── Level picker ──
   'home.dialog.level': 'Poziom bieglosci',
@@ -1887,6 +2100,7 @@ const pl: Record<TranslationKey, string> = {
   'chat.defaultTitle.general': 'Ogólna rozmowa',
   'chat.defaultTitle.roleplay': 'Odgrywanie ról',
   'chat.defaultTitle.topic': 'Dyskusja tematyczna',
+  'chat.defaultTitle.dictionary': 'Ćwiczenia ze słownika',
   'chat.startConversation': 'Rozpocznij rozmowę...',
   'chat.replySuggestions': 'Sugestie odpowiedzi',
   'chat.gettingSuggestions': 'Pobieranie sugestii...',
@@ -1941,6 +2155,25 @@ const pl: Record<TranslationKey, string> = {
   'vocab.date.justNow': 'przed chwilą',
   'vocab.date.minAgo': 'min temu',
   'vocab.date.hoursAgo': 'godz temu',
+
+  // ── Dictionary feature ──
+  'dict.title': 'Moje słowniki',
+  'dict.dictionaries': 'Słowniki',
+  'dict.create': 'Nowy',
+  'dict.rename': 'Zmień nazwę',
+  'dict.namePlaceholder': 'Nazwa słownika...',
+  'dict.deleteConfirm': 'Usunąć słownik \"{name}\" i wszystkie jego słowa?',
+  'dict.addWord': 'Dodaj słowo',
+  'dict.editWord': 'Edytuj',
+  'dict.moveWord': 'Przenieś',
+  'dict.moveToDict': 'Przenieś do słownika:',
+  'dict.wordPlaceholder': 'Słowo lub fraza',
+  'dict.translationPlaceholder': 'Tłumaczenie',
+  'dict.examplePlaceholder': 'Przykładowe zdanie (opcjonalnie)',
+  'dict.noEntries': 'Brak słów w tym słowniku',
+  'dict.noEntriesDesc': 'Dodaj słowa bezpośrednio lub zapisz je z tłumaczeń czatu',
+  'dict.selectOrCreate': 'Wybierz słownik lub utwórz nowy',
+  'dict.wordsCount': 'słów',
 
   // ── Settings page ──
   'settings.title': 'Ustawienia',
@@ -2101,6 +2334,12 @@ const ja: Record<TranslationKey, string> = {
   'home.typeGeneral': '一般',
   'home.typeRoleplay': 'ロールプレイ',
   'home.typeTopic': 'トピック',
+  'home.typeDictionary': '辞書',
+  'home.dictionaryPractice': '辞書練習',
+  'home.dictionaryPracticeDesc': '個人辞書の単語を使って会話を練習しましょう。',
+  'home.dictionaryPracticeTagPersonal': '個人',
+  'home.dictionaryPracticeTagVocab': 'あなたの単語',
+  'home.dictionaryPracticeTagContextual': '文脈的',
 
   // ── Home dialog ──
   'home.dialog.title': 'シナリオを選択',
@@ -2110,6 +2349,9 @@ const ja: Record<TranslationKey, string> = {
   'home.dialog.startingMessage': '開始指示',
   'home.dialog.tabRoleplay': 'ロールプレイ',
   'home.dialog.tabTopics': 'トピック',
+  'home.dialog.selectDictionaries': '練習する辞書を選択',
+  'home.dialog.noDictionaries': '辞書がまだありません。まず単語を追加してください！',
+  'home.dialog.goToVocabulary': '単語帳へ',
 
   // ── Level picker ──
   'home.dialog.level': '習熟度レベル',
@@ -2144,6 +2386,7 @@ const ja: Record<TranslationKey, string> = {
   'chat.defaultTitle.general': '一般会話',
   'chat.defaultTitle.roleplay': 'ロールプレイ',
   'chat.defaultTitle.topic': 'トピック・ディスカッション',
+  'chat.defaultTitle.dictionary': '辞書練習',
   'chat.startConversation': '会話を始める...',
   'chat.replySuggestions': '返信の提案',
   'chat.gettingSuggestions': '提案を取得中...',
@@ -2198,6 +2441,25 @@ const ja: Record<TranslationKey, string> = {
   'vocab.date.justNow': 'たった今',
   'vocab.date.minAgo': '分前',
   'vocab.date.hoursAgo': '時間前',
+
+  // ── Dictionary feature ──
+  'dict.title': 'マイ辞書',
+  'dict.dictionaries': '辞書',
+  'dict.create': '新規',
+  'dict.rename': '名前変更',
+  'dict.namePlaceholder': '辞書名...',
+  'dict.deleteConfirm': '辞書「{name}」とすべての単語を削除しますか？',
+  'dict.addWord': '単語を追加',
+  'dict.editWord': '編集',
+  'dict.moveWord': '移動',
+  'dict.moveToDict': '辞書に移動：',
+  'dict.wordPlaceholder': '単語またはフレーズ',
+  'dict.translationPlaceholder': '翻訳',
+  'dict.examplePlaceholder': '例文（任意）',
+  'dict.noEntries': 'この辞書に単語はありません',
+  'dict.noEntriesDesc': '直接単語を追加するか、チャット翻訳から保存してください',
+  'dict.selectOrCreate': '辞書を選択するか新しく作成してください',
+  'dict.wordsCount': '単語',
 
   // ── Settings page ──
   'settings.title': '設定',
@@ -2357,6 +2619,12 @@ const zh: Record<TranslationKey, string> = {
   'home.typeGeneral': '常规',
   'home.typeRoleplay': '角色扮演',
   'home.typeTopic': '话题',
+  'home.typeDictionary': '词典',
+  'home.dictionaryPractice': '词典练习',
+  'home.dictionaryPracticeDesc': '使用个人词典中的词汇进行会话练习。',
+  'home.dictionaryPracticeTagPersonal': '个人',
+  'home.dictionaryPracticeTagVocab': '你的词汇',
+  'home.dictionaryPracticeTagContextual': '情境化',
 
   // ── Home dialog ──
   'home.dialog.title': '选择场景',
@@ -2366,6 +2634,9 @@ const zh: Record<TranslationKey, string> = {
   'home.dialog.startingMessage': '起始说明',
   'home.dialog.tabRoleplay': '角色扮演',
   'home.dialog.tabTopics': '话题',
+  'home.dialog.selectDictionaries': '选择要练习的词典',
+  'home.dialog.noDictionaries': '还没有词典。请先添加词汇！',
+  'home.dialog.goToVocabulary': '前往词汇',
 
   // ── Level picker ──
   'home.dialog.level': '熟练程度',
@@ -2400,6 +2671,7 @@ const zh: Record<TranslationKey, string> = {
   'chat.defaultTitle.general': '一般对话',
   'chat.defaultTitle.roleplay': '角色扮演',
   'chat.defaultTitle.topic': '话题讨论',
+  'chat.defaultTitle.dictionary': '词典练习',
   'chat.startConversation': '开始对话...',
   'chat.replySuggestions': '回复建议',
   'chat.gettingSuggestions': '获取建议中...',
@@ -2454,6 +2726,25 @@ const zh: Record<TranslationKey, string> = {
   'vocab.date.justNow': '刚刚',
   'vocab.date.minAgo': '分钟前',
   'vocab.date.hoursAgo': '小时前',
+
+  // ── Dictionary feature ──
+  'dict.title': '我的词典',
+  'dict.dictionaries': '词典',
+  'dict.create': '新建',
+  'dict.rename': '重命名',
+  'dict.namePlaceholder': '词典名称...',
+  'dict.deleteConfirm': '删除词典\"{name}\"及其所有词汇？',
+  'dict.addWord': '添加词汇',
+  'dict.editWord': '编辑',
+  'dict.moveWord': '移动',
+  'dict.moveToDict': '移动到词典：',
+  'dict.wordPlaceholder': '词汇或短语',
+  'dict.translationPlaceholder': '翻译',
+  'dict.examplePlaceholder': '例句（可选）',
+  'dict.noEntries': '此词典中没有词汇',
+  'dict.noEntriesDesc': '直接添加词汇或从聊天翻译中保存',
+  'dict.selectOrCreate': '选择一个词典或创建新词典',
+  'dict.wordsCount': '个词汇',
 
   // ── Settings page ──
   'settings.title': '设置',
@@ -2613,6 +2904,12 @@ const ko: Record<TranslationKey, string> = {
   'home.typeGeneral': '일반',
   'home.typeRoleplay': '롤플레이',
   'home.typeTopic': '주제',
+  'home.typeDictionary': '사전',
+  'home.dictionaryPractice': '사전 연습',
+  'home.dictionaryPracticeDesc': '개인 사전의 단어를 사용하여 대화를 연습하세요.',
+  'home.dictionaryPracticeTagPersonal': '개인',
+  'home.dictionaryPracticeTagVocab': '내 단어',
+  'home.dictionaryPracticeTagContextual': '맥락적',
 
   // ── Home dialog ──
   'home.dialog.title': '시나리오 선택',
@@ -2622,6 +2919,9 @@ const ko: Record<TranslationKey, string> = {
   'home.dialog.startingMessage': '시작 지침',
   'home.dialog.tabRoleplay': '롤플레이',
   'home.dialog.tabTopics': '주제',
+  'home.dialog.selectDictionaries': '연습할 사전 선택',
+  'home.dialog.noDictionaries': '아직 사전이 없습니다. 먼저 단어를 추가하세요!',
+  'home.dialog.goToVocabulary': '단어장으로 이동',
 
   // ── Level picker ──
   'home.dialog.level': '숙련도',
@@ -2656,6 +2956,7 @@ const ko: Record<TranslationKey, string> = {
   'chat.defaultTitle.general': '일반 대화',
   'chat.defaultTitle.roleplay': '역할극',
   'chat.defaultTitle.topic': '주제 토론',
+  'chat.defaultTitle.dictionary': '사전 연습',
   'chat.startConversation': '대화를 시작하세요...',
   'chat.replySuggestions': '답변 제안',
   'chat.gettingSuggestions': '제안 가져오는 중...',
@@ -2710,6 +3011,25 @@ const ko: Record<TranslationKey, string> = {
   'vocab.date.justNow': '방금',
   'vocab.date.minAgo': '분 전',
   'vocab.date.hoursAgo': '시간 전',
+
+  // ── Dictionary feature ──
+  'dict.title': '내 사전',
+  'dict.dictionaries': '사전',
+  'dict.create': '새로 만들기',
+  'dict.rename': '이름 변경',
+  'dict.namePlaceholder': '사전 이름...',
+  'dict.deleteConfirm': '사전 \"{name}\"과 모든 단어를 삭제하시겠습니까?',
+  'dict.addWord': '단어 추가',
+  'dict.editWord': '편집',
+  'dict.moveWord': '이동',
+  'dict.moveToDict': '사전으로 이동:',
+  'dict.wordPlaceholder': '단어 또는 구문',
+  'dict.translationPlaceholder': '번역',
+  'dict.examplePlaceholder': '예문 (선택사항)',
+  'dict.noEntries': '이 사전에 단어가 없습니다',
+  'dict.noEntriesDesc': '직접 단어를 추가하거나 채팅 번역에서 저장하세요',
+  'dict.selectOrCreate': '사전을 선택하거나 새로 만드세요',
+  'dict.wordsCount': '단어',
 
   // ── Settings page ──
   'settings.title': '설정',

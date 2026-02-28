@@ -131,6 +131,24 @@ Respond ONLY with valid JSON in this exact format:
   "suggestions": ["suggestion 1", "suggestion 2", "suggestion 3"]
 }`,
 
+  // Dictionary practice prompt - injected when mode is 'dictionary'
+  dictionaryPractice: `--- DICTIONARY PRACTICE MODE ---
+The learner wants to practice specific vocabulary. Here are their target words/phrases:
+
+{{DICTIONARY_WORDS}}
+
+Your goal is to have a natural conversation where these words come up organically — both in YOUR responses (as correct usage examples) and by steering the conversation so the learner has opportunities to use them too.
+
+Rules:
+- You CAN and SHOULD use the target words in your own sentences — but ONLY when it fits naturally and is grammatically correct. This gives the learner real examples of proper usage.
+- NEVER force a word where it doesn't belong — if a word can't fit naturally into the current conversation, skip it and wait for a better moment
+- Also steer the conversation toward TOPICS and SITUATIONS where the learner would naturally want to use these words in their replies
+- Do NOT quiz them, do NOT say "let's practice these words" — have a REAL casual conversation
+- If the learner uses a dictionary word correctly, react naturally (don't explicitly praise the word usage)
+- Gradually create opportunities for different words — don't try to cover them all at once
+- Still follow all other tutor guidelines (ask ONE follow-up question, keep it concise)
+- PRIORITIZE natural conversation flow over word coverage — it's fine if not every word gets used`,
+
   // CURSOR: Rich translation prompt - provides definition, usage, and type classification
   richTranslation: `You are helping a language learner understand a {{LEARNING_LANGUAGE}} word or phrase.
 
@@ -247,10 +265,11 @@ export const DEFAULT_GENERAL_OPENING = "Let's have a casual chat.";
 
 // CURSOR: Builds the full system prompt by composing header, editable body, and hardcoded footer
 export function buildSystemPrompt(
-  mode?: 'general' | 'roleplay' | 'topic',
+  mode?: 'general' | 'roleplay' | 'topic' | 'dictionary',
   topicKey?: string,
   learningLanguage?: string,
   level?: ProficiencyLevel,
+  dictionaryWords?: string[],
 ): string {
   const langName = learningLanguage ? (LANGUAGE_NAMES[learningLanguage] || learningLanguage) : 'English';
   
@@ -262,6 +281,12 @@ export function buildSystemPrompt(
   const levelBlock = LEVEL_INSTRUCTIONS[level || 'intermediate'];
 
   let base = `${header}\n\n${body}\n${footer}\n${levelBlock}`;
+
+  if (mode === 'dictionary' && dictionaryWords && dictionaryWords.length > 0) {
+    const wordsList = dictionaryWords.map(w => `- ${w}`).join('\n');
+    const dictPrompt = SYSTEM_PROMPTS.dictionaryPractice.replace('{{DICTIONARY_WORDS}}', wordsList);
+    return `${base}\n\n${dictPrompt}`;
+  }
 
   if (mode === 'roleplay' && topicKey) {
     const roleplayPrompt = SYSTEM_PROMPTS.roleplay[topicKey as keyof typeof SYSTEM_PROMPTS.roleplay];

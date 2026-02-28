@@ -13,7 +13,7 @@ export const chats = pgTable('chats', {
   id: text('id').primaryKey(),
   userId: text('user_id').references(() => users.id),
   title: text('title'),
-  topicType: text('topic_type').$type<'general' | 'roleplay' | 'topic'>().default('general'),
+  topicType: text('topic_type').$type<'general' | 'roleplay' | 'topic' | 'dictionary'>().default('general'),
   topicDetails: text('topic_details'), // JSON string
   level: text('level').$type<'novice' | 'beginner' | 'intermediate' | 'advanced'>().default('intermediate'),
   language: text('language').default('en'),
@@ -44,10 +44,19 @@ export const settings = pgTable('settings', {
   value: text('value'), // JSON value
 });
 
+// Dictionaries table
+export const dictionaries = pgTable('dictionaries', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').references(() => users.id),
+  name: text('name').notNull(),
+  createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
+});
+
 // Vocabulary table
 export const vocabulary = pgTable('vocabulary', {
   id: text('id').primaryKey(),
   userId: text('user_id').references(() => users.id),
+  dictionaryId: text('dictionary_id').references(() => dictionaries.id, { onDelete: 'cascade' }),
   word: text('word').notNull(),
   translation: text('translation'),
   example: text('example'),
@@ -71,6 +80,8 @@ export type NewChat = typeof chats.$inferInsert;
 export type Message = typeof messages.$inferSelect;
 export type NewMessage = typeof messages.$inferInsert;
 export type Setting = typeof settings.$inferSelect;
+export type Dictionary = typeof dictionaries.$inferSelect;
+export type NewDictionary = typeof dictionaries.$inferInsert;
 export type Vocabulary = typeof vocabulary.$inferSelect;
 export type NewVocabulary = typeof vocabulary.$inferInsert;
 export type ChatSummary = typeof chatSummaries.$inferSelect;

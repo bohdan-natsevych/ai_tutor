@@ -1,6 +1,6 @@
 import { eq, desc, asc, and } from 'drizzle-orm';
-import { db, chats, messages, settings, vocabulary, chatSummaries, users } from './index';
-import type { NewChat, NewMessage, NewVocabulary, Chat, Message, User } from './schema';
+import { db, chats, messages, settings, dictionaries, vocabulary, chatSummaries, users } from './index';
+import type { NewChat, NewMessage, NewVocabulary, NewDictionary, Chat, Message, User } from './schema';
 import { v4 as uuidv4 } from 'uuid';
 
 // ============= USER OPERATIONS =============
@@ -152,14 +152,75 @@ export async function getAllSettings(): Promise<Record<string, unknown>> {
   return result;
 }
 
+// ============= DICTIONARY OPERATIONS =============
+
+export async function getOrCreateDefaultDictionary(userId: string) {
+  const existing = await db.select().from(dictionaries)
+    .where(and(eq(dictionaries.userId, userId), eq(dictionaries.name, 'Default')));
+  if (existing.length > 0) return existing[0];
+
+  const id = uuidv4();
+  await db.insert(dictionaries).values({
+    id,
+    userId,
+    name: 'Default',
+    createdAt: new Date(),
+  });
+  const [dict] = await db.select().from(dictionaries).where(eq(dictionaries.id, id));
+  return dict;
+}
+
+export async function createDictionary(userId: string, name: string) {
+  // Ensure default dictionary exists first
+  await getOrCreateDefaultDictionary(userId);
+
+  const id = uuidv4();
+  await db.insert(dictionaries).values({
+    id,
+    userId,
+    name,
+    createdAt: new Date(),
+  });
+  const [dict] = await db.select().from(dictionaries).where(eq(dictionaries.id, id));
+  return dict;
+}
+
+export async function getDictionaries(userId: string) {
+  return await db.select().from(dictionaries)
+    .where(eq(dictionaries.userId, userId))
+    .orderBy(asc(dictionaries.createdAt));
+}
+
+export async function getDictionary(id: string) {
+  const [dict] = await db.select().from(dictionaries).where(eq(dictionaries.id, id));
+  return dict;
+}
+
+export async function updateDictionary(id: string, data: { name: string }) {
+  await db.update(dictionaries).set({ name: data.name }).where(eq(dictionaries.id, id));
+}
+
+export async function deleteDictionary(id: string): Promise<void> {
+  // Vocabulary entries are cascade-deleted via FK
+  await db.delete(dictionaries).where(eq(dictionaries.id, id));
+}
+
 // ============= VOCABULARY OPERATIONS =============
 
 export async function addVocabulary(data: Omit<NewVocabulary, 'id' | 'createdAt'>) {
   const id = uuidv4();
+
+  // If no dictionaryId provided, use default dictionary
+  let dictionaryId = data.dictionaryId;
+  if (!dictionaryId && data.userId) {
+    const defaultDict = await getOrCreateDefaultDictionary(data.userId);
+    dictionaryId = defaultDict.id;
+  }
   
   await db.insert(vocabulary).values({
     id,
     ...data,
+    dictionaryId,
     createdAt: new Date(),
   });
   
@@ -167,10 +228,32 @@ export async function addVocabulary(data: Omit<NewVocabulary, 'id' | 'createdAt'
   return entry;
 }
 
-export async function getAllVocabulary(userId: string) {
+export async function getAllVocabulary(userId: string, dictionaryId?: string) {
+  if (dictionaryId) {
+    return await db.select().from(vocabulary)
+      .where(and(eq(vocabulary.userId, userId), eq(vocabulary.dictionaryId, dictionaryId)))
+      .orderBy(desc(vocabulary.createdAt));
+  }
   return await db.select().from(vocabulary)
     .where(eq(vocabulary.userId, userId))
     .orderBy(desc(vocabulary.createdAt));
+}
+
+export async function getVocabularyByDictionaryIds(dictionaryIds: string[]) {
+  if (dictionaryIds.length === 0) return [];
+  // Fetch all entries for multiple dictionaries
+  const allEntries = [];
+  for (const dictId of dictionaryIds) {
+    const entries = await db.select().from(vocabulary)
+      .where(eq(vocabulary.dictionaryId, dictId))
+      .orderBy(desc(vocabulary.createdAt));
+    allEntries.push(...entries);
+  }
+  return allEntries;
+}
+
+export async function updateVocabulary(id: string, data: Partial<Pick<NewVocabulary, 'word' | 'translation' | 'example' | 'context' | 'dictionaryId'>>): Promise<void> {
+  await db.update(vocabulary).set(data).where(eq(vocabulary.id, id));
 }
 
 export async function deleteVocabulary(id: string): Promise<void> {
