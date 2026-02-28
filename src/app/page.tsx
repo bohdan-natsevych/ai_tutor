@@ -39,6 +39,7 @@ export default function HomePage() {
   const [dictWordCounts, setDictWordCounts] = useState<Record<string, number>>({});
 
   const ai = useSettingsStore((state) => state.ai);
+  const tts = useSettingsStore((state) => state.tts);
   const setUISettings = useSettingsStore((state) => state.setUISettings);
   const languageSettings = useSettingsStore((state) => state.language);
   const [createError, setCreateError] = useState<string | null>(null);
@@ -110,6 +111,8 @@ export default function HomePage() {
           aiTextModel: ai.textModel,
           openingPrompt: topicType === 'general' ? openingPrompt : undefined,
           dictionaryIds: topicType === 'dictionary' ? dictionaryIds : undefined,
+          ttsProvider: tts.provider,
+          ttsVoice: tts.voice,
         }),
       });
 

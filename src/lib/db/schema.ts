@@ -33,6 +33,7 @@ export const messages = sqliteTable('messages', {
   content: text('content').notNull(),
   audioUrl: text('audio_url'), // Cached audio blob URL
   audioBlob: blob('audio_blob', { mode: 'buffer' }),
+  audioBase64: text('audio_base64'), // Inline audio for AI responses
   audioFormat: text('audio_format'),
   analysis: text('analysis'), // JSON string with analysis data
   createdAt: integer('created_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),

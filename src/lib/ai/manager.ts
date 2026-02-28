@@ -88,6 +88,8 @@ class AIManager {
       model: options?.model || this.config.model,
       temperature: options?.temperature ?? this.config.temperature,
       maxTokens: options?.maxTokens ?? this.config.maxTokens,
+      wantAudioOutput: options?.wantAudioOutput,
+      voice: options?.voice,
     };
 
     return this.currentProvider.generate(context, message, fullOptions);
@@ -109,6 +111,8 @@ class AIManager {
       audioBase64: options?.audioBase64,
       audioFormat: options?.audioFormat,
       whisperTranscription: options?.whisperTranscription,
+      wantAudioOutput: options?.wantAudioOutput,
+      voice: options?.voice,
     };
 
     return this.currentProvider.respond(context, userMessage, fullOptions);

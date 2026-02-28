@@ -2,6 +2,15 @@ import OpenAI from 'openai';
 import type { AIProvider, AIModel, AIResponse, Analysis, UnifiedResponse, ConversationContext, AIOptions, AIProviderStatus, RichTranslation } from '../types';
 import { getRichTranslationPrompt, getUnifiedResponsePrompt, buildSystemPrompt } from '../prompts';
 
+const VALID_OPENAI_VOICES = ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer', 'coral', 'verse', 'ballad', 'ash', 'sage', 'marin', 'cedar'];
+
+function getValidVoice(voice?: unknown): any {
+  if (typeof voice === 'string' && VALID_OPENAI_VOICES.includes(voice)) {
+    return voice as any;
+  }
+  return 'alloy' as any;
+}
+
 // OpenAI Chat Completions Provider (We manage conversation history)
 export class OpenAIChatProvider implements AIProvider {
   id = 'openai-chat';
@@ -63,15 +72,26 @@ export class OpenAIChatProvider implements AIProvider {
 
     const model = options?.model || this.models[0].id;
 
-    const response = await this.client.chat.completions.create({
+    const createParams: any = {
       model,
       messages,
-    });
+      modalities: ['text', 'audio'],
+      audio: {
+        voice: getValidVoice(options?.voice),
+        format: 'mp3',
+      }
+    };
+
+    const response = await this.client.chat.completions.create(createParams);
 
     const choice = response.choices[0];
     
+    const audioData = (choice.message as any).audio;
+    const content = choice.message.content || (audioData ? audioData.transcript : '');
+    
     return {
-      content: choice.message.content || '',
+      content,
+      audioBase64: audioData ? audioData.data : undefined,
       usage: response.usage ? {
         promptTokens: response.usage.prompt_tokens,
         completionTokens: response.usage.completion_tokens,
@@ -93,61 +113,70 @@ export class OpenAIChatProvider implements AIProvider {
 
     let response;
 
-    if (hasAudio) {
-      // Audio model - use the selected model (should be an audio-capable model)
-      const model = options?.model || 'gpt-4o-audio-preview';
-      console.log('[OpenAI Respond] Audio mode, model:', model);
+    const model = options?.model || 'gpt-4o-audio-preview';
+    console.log('[OpenAI Respond] Audio mode, model:', model, 'hasAudio:', hasAudio);
 
-      // CURSOR: Build user message with Whisper transcription
-      const whisperText = options?.whisperTranscription;
-      const userTextContent = whisperText
+    // CURSOR: Build user message depending on whether audio was provided
+    const whisperText = options?.whisperTranscription;
+    let userTextContent = '';
+    
+    if (hasAudio) {
+      userTextContent = whisperText
         ? `${conversationContext}\n\nDRAFT TRANSCRIPTION (from local STT): "${whisperText}"\n\nNote: This transcription may contain errors. Use it as a guide, but if the audio clearly indicates a different word (especially names or proper nouns).`
         : `${conversationContext}\n\nNow listen to the audio, respond as a tutor, and analyze the learner's message and pronunciation. JSON only. List ALL mispronounced words.`;
+    } else {
+      userTextContent = `${conversationContext}\n\nMESSAGE TO RESPOND TO AND ANALYZE:\n${userMessage}`;
+    }
 
-      response = await this.client.chat.completions.create({
-        model,
-        messages: [
-          {
-            role: 'system',
-            content: `${unifiedPrompt}\n\nCRITICAL: Respond ONLY with valid JSON. Start with { and end with }. Nothing else.\n${whisperText ? 'CRITICAL: The transcribedText field should match the audio. If the draft transcription differs from what you hear, use your correction.' : 'CRITICAL: The mispronunciations array MUST contain ALL mispronounced words. Do NOT truncate or limit this array.'}`,
-          },
-          {
-            role: 'user',
-            content: [
-              { type: 'text', text: userTextContent },
-              { type: 'input_audio', input_audio: { data: options!.audioBase64!, format: options!.audioFormat! } },
-            ] as unknown as string,
-          },
-        ],
+    const messagesArray: any[] = [
+      {
+        role: 'system',
+        content: `${context.systemPrompt}\n\n${unifiedPrompt}\n\nCRITICAL: Respond ONLY with valid JSON. Start with { and end with }. Nothing else.\n${(hasAudio && whisperText) ? 'CRITICAL: The transcribedText field should match the audio. If the draft transcription differs from what you hear, use your correction.' : (hasAudio ? 'CRITICAL: The mispronunciations array MUST contain ALL mispronounced words. Do NOT truncate or limit this array.' : '')}`,
+      }
+    ];
+
+    if (hasAudio) {
+      messagesArray.push({
+        role: 'user',
+        content: [
+          { type: 'text', text: userTextContent },
+          { type: 'input_audio', input_audio: { data: options!.audioBase64!, format: options!.audioFormat! } },
+        ] as unknown as string,
       });
     } else {
-      // Text-only mode - use model directly (caller provides text model)
-      console.log('[OpenAI Respond] Text mode');
-      const textModel = options?.model || 'gpt-4o';
-
-      response = await this.client.chat.completions.create({
-        model: textModel,
-        messages: [
-          {
-            role: 'system',
-            content: `${unifiedPrompt}\n\nRespond ONLY with valid JSON.`,
-          },
-          {
-            role: 'user',
-            content: `${conversationContext}\n\nMESSAGE TO RESPOND TO AND ANALYZE:\n${userMessage}`,
-          },
-        ],
-        response_format: { type: 'json_object' },
+      messagesArray.push({
+        role: 'user',
+        content: userTextContent,
       });
     }
 
-    const content = response.choices[0].message.content || '{}';
+    const createParams: any = {
+      model,
+      messages: messagesArray,
+    };
+
+    // CURSOR: If wantAudioOutput is true (OpenAI TTS), OR there's no audio input (which requires audio output to bypass gpt-4o-audio-preview constraints), we add modalities.
+    if (options?.wantAudioOutput || !hasAudio) {
+      createParams.modalities = ['text', 'audio'];
+      createParams.audio = {
+        voice: getValidVoice(options?.voice),
+        format: 'mp3',
+      };
+    } else {
+      // Audio input given, text-only output requested. gpt-4o-audio-preview does not support json_object with text+audio input/output, but for text-only output it might.
+      // However, since we are doing audio routing, we just omit modalities (keeps it text) and do NOT use response_format to be safe, because audio preview models often crash on it.
+    }
+
+    response = await this.client.chat.completions.create(createParams);
+
+    const audioData = (response.choices[0].message as any).audio;
+    const content = response.choices[0].message.content || (audioData ? audioData.transcript : '{}');
     console.log('[OpenAI Respond] Raw response:', content.substring(0, 300) + '...');
 
-    return this.parseUnifiedResponse(content, hasAudio, options?.whisperTranscription);
+    return this.parseUnifiedResponse(content, hasAudio, options?.whisperTranscription, audioData?.data);
   }
 
-  private parseUnifiedResponse(content: string, hasAudio: boolean, whisperTranscription?: string): UnifiedResponse {
+  private parseUnifiedResponse(content: string, hasAudio: boolean, whisperTranscription?: string, audioBase64?: string): UnifiedResponse {
     try {
       // CURSOR: Sanitize common GPT JSON errors before parsing
       // The model sometimes puts comments/text outside string quotes, e.g.:
@@ -193,12 +222,14 @@ export class OpenAIChatProvider implements AIProvider {
       return {
         reply: parsed.reply ?? '',
         analysis,
+        audioBase64,
       };
     } catch (e) {
       console.error('[OpenAI Respond] JSON parse failed:', e);
       console.error('[OpenAI Respond] Content was:', content);
       return {
         reply: '',
+        audioBase64,
         analysis: {
           grammarScore: 70,
           grammarErrors: [],

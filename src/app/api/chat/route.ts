@@ -165,7 +165,11 @@ export async function POST(request: NextRequest) {
         DO NOT ask more than one question at a time.
         Speak in the learning language.`;
       
-      const response = await aiManager.generate(context, resolvedOpeningPrompt, { model: aiTextModel || aiModel });
+      const response = await aiManager.generate(context, resolvedOpeningPrompt, { 
+        model: aiModel,
+        wantAudioOutput: true,
+        voice: body.ttsVoice as string,
+      });
       
       // Create opening message object (DON'T save to DB yet)
       const aiMessage = {
@@ -183,6 +187,7 @@ export async function POST(request: NextRequest) {
         chat, 
         openingMessage: {
           ...aiMessage,
+          audioBase64: response.audioBase64,
           state: 'audio_loading',
           audioPlayed: false,
         }
@@ -231,6 +236,7 @@ export async function POST(request: NextRequest) {
             chatId: pendingChatRaw.id,
             role: 'assistant',
             content: pendingOpeningMessageRaw.content,
+            audioBase64: pendingOpeningMessageRaw.audioBase64,
           }, pendingOpeningMessageRaw.id);
         }
       }
@@ -300,6 +306,10 @@ export async function POST(request: NextRequest) {
         console.log('[Chat API] STT transcription from client:', whisperTranscription);
       }
 
+      const ttsProvider = body.ttsProvider as string;
+      const ttsVoice = body.ttsVoice as string;
+      const wantAudioOutput = ttsProvider === 'openai';
+
       // CURSOR: Step 2 - Send to AI with Whisper transcription as ground truth
       // The chat model uses the accurate Whisper transcription and only analyzes pronunciation from audio
       const response = await aiManager.respond(context, whisperTranscription || content || '', {
@@ -309,6 +319,8 @@ export async function POST(request: NextRequest) {
         audioBase64,
         audioFormat: audioFormatForAI,
         whisperTranscription,
+        wantAudioOutput,
+        voice: ttsVoice,
       });
 
       // CURSOR: Use AI transcription (which may correct the draft) as authoritative text
@@ -325,6 +337,7 @@ export async function POST(request: NextRequest) {
         chatId,
         role: 'assistant',
         content: response.reply,
+        audioBase64: response.audioBase64,
       });
 
       return NextResponse.json({
@@ -337,6 +350,7 @@ export async function POST(request: NextRequest) {
         },
         aiMessage: {
           ...aiMessage,
+          audioBase64: response.audioBase64,
           state: 'audio_loading',
           audioPlayed: false,
         },

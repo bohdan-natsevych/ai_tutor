@@ -57,3 +57,4 @@ next-env.d.ts
 *.swo
 *~
 
+implementation_plan.md.resolved
