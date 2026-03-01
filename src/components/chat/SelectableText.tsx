@@ -183,7 +183,7 @@ export function SelectableText({ text, chatId, className = '', highlightedWordIn
       {selectedText && popoverPosition && (
         <div 
           ref={menuRef}
-          className="fixed z-50 flex items-center gap-1 p-1 bg-background border rounded-lg shadow-lg animate-in fade-in zoom-in-95 duration-100"
+          className="fixed z-50 flex items-center gap-1 p-1 bg-popover text-popover-foreground border border-border rounded-lg shadow-xl animate-in fade-in zoom-in-95 duration-100"
           style={{ 
             left: popoverPosition.x, 
             top: popoverPosition.y - 10,
@@ -192,7 +192,7 @@ export function SelectableText({ text, chatId, className = '', highlightedWordIn
         >
           <Button
             size="sm"
-            variant="ghost"
+            variant="secondary"
             className="h-8 w-8 p-0"
             onClick={handlePlay}
             title={isPlaying ? "Stop" : "Read Aloud"}
@@ -227,7 +227,7 @@ export function SelectableText({ text, chatId, className = '', highlightedWordIn
           >
             <Button 
               size="sm"
-              variant="ghost"
+              variant="secondary"
               className="h-8 gap-2 px-2"
               title="Translate"
             >

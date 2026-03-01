@@ -130,7 +130,36 @@ export class WebSpeechSTTProvider implements STTProvider {
         default: return 'en-US';
       }
     }
-    return language;
+    // Map language codes to full BCP-47 locale codes
+    const languageMap: Record<string, string> = {
+      uk: 'uk-UA',
+      de: 'de-DE',
+      fr: 'fr-FR',
+      es: 'es-ES',
+      it: 'it-IT',
+      pt: 'pt-PT',
+      pl: 'pl-PL',
+      nl: 'nl-NL',
+      ja: 'ja-JP',
+      ko: 'ko-KR',
+      zh: 'zh-CN',
+      ar: 'ar-SA',
+      tr: 'tr-TR',
+      cs: 'cs-CZ',
+      sv: 'sv-SE',
+      da: 'da-DK',
+      fi: 'fi-FI',
+      no: 'nb-NO',
+      ro: 'ro-RO',
+      hu: 'hu-HU',
+      el: 'el-GR',
+      he: 'he-IL',
+      th: 'th-TH',
+      vi: 'vi-VN',
+      hi: 'hi-IN',
+      ru: 'ru-RU',
+    };
+    return languageMap[language] || language;
   }
 }
 
