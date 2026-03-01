@@ -11,6 +11,7 @@ import { useSettingsStore } from '@/stores/settingsStore';
 import { useHydration } from '@/hooks/useHydration';
 import { cn } from '@/lib/utils';
 import { INTERFACE_LANGUAGES } from '@/lib/i18n/translations';
+import { useTranslation } from '@/lib/i18n/useTranslation';
 
 interface HeaderLanguageSelectorProps {
   className?: string;
@@ -19,6 +20,7 @@ interface HeaderLanguageSelectorProps {
 export function HeaderLanguageSelector({ className }: HeaderLanguageSelectorProps) {
   const { ui, setUISettings } = useSettingsStore();
   const hydrated = useHydration();
+  const { t } = useTranslation();
 
   if (!hydrated) {
     return (
@@ -37,29 +39,27 @@ export function HeaderLanguageSelector({ className }: HeaderLanguageSelectorProp
           className
         )}
       >
-        <GlobeIcon className="h-3.5 w-3.5 opacity-70 mr-1" />
-        <SelectValue placeholder="Language" />
+        <span className="font-semibold opacity-70 mr-1">{t('common.language')}</span>
+        <SelectValue placeholder="EN">
+          {(() => {
+            if (!ui.interfaceLanguage || ui.interfaceLanguage === 'auto') {
+              return 'Auto';
+            }
+            const selected = INTERFACE_LANGUAGES.find(l => l.id === ui.interfaceLanguage);
+            return selected ? selected.id.toUpperCase() : 'EN';
+          })()}
+        </SelectValue>
       </SelectTrigger>
       <SelectContent align="end">
         {INTERFACE_LANGUAGES.map((lang) => (
           <SelectItem key={lang.id} value={lang.id} className="text-xs">
             <span className="flex items-center gap-2">
-              <span className="text-xs">{lang.id === 'en' ? 'EN' : lang.flag}</span>
-              <span>{lang.name}</span>
+              <span className="text-xs">{lang.flag}</span>
+              <span>{lang.id === 'auto' ? 'Auto' : lang.name}</span>
             </span>
           </SelectItem>
         ))}
       </SelectContent>
     </Select>
-  );
-}
-
-function GlobeIcon({ className }: { className?: string }) {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-      <circle cx="12" cy="12" r="10" />
-      <line x1="2" y1="12" x2="22" y2="12" />
-      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-    </svg>
   );
 }

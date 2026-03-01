@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import { ArrowLeft, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -241,17 +242,29 @@ export default function VocabularyPage() {
       {/* Header */}
       <header className="border-b bg-background/95 backdrop-blur-sm sticky top-0 z-10">
         <div className="container mx-auto px-4 h-14 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-semibold text-sm">
-              AI
-            </div>
-            <span className="text-lg font-semibold tracking-tight">{t('common.appName')}</span>
-          </Link>
-          <Link href="/settings">
-            <Button variant="ghost" size="sm" className="text-muted-foreground">
-              {t('common.settings')}
-            </Button>
-          </Link>
+          <div className="flex items-center gap-4 flex-1">
+            <Link href="/">
+              <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground hover:text-foreground">
+                <ArrowLeft className="h-4 w-4" />
+                <span>{t('common.back')}</span>
+              </Button>
+            </Link>
+            <Link href="/" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity hidden sm:flex">
+              <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-semibold text-sm shadow-sm">
+                AI
+              </div>
+              <span className="text-lg font-semibold tracking-tight">{t('common.appName')}</span>
+            </Link>
+          </div>
+
+          <div className="flex items-center justify-end flex-1">
+            <Link href="/settings">
+              <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground hover:text-foreground">
+                <Settings className="h-4 w-4" />
+                <span className="hidden sm:inline-block">{t('common.settings')}</span>
+              </Button>
+            </Link>
+          </div>
         </div>
       </header>
 
