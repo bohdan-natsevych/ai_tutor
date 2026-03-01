@@ -1,14 +1,15 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Settings } from 'lucide-react';
+import { ArrowLeft, Settings, Play, Square } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
+import { ttsManager } from '@/lib/tts/manager';
 
 interface Dictionary {
   id: string;
@@ -59,6 +60,53 @@ export default function VocabularyPage() {
 
   // Move dialog
   const [movingEntryId, setMovingEntryId] = useState<string | null>(null);
+
+  // TTS playback
+  const [playingId, setPlayingId] = useState<string | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, []);
+
+  const handlePlay = async (entryId: string, word: string) => {
+    // Stop if already playing this entry
+    if (playingId === entryId) {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+      setPlayingId(null);
+      return;
+    }
+    // Stop previous
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
+    setPlayingId(entryId);
+    try {
+      const audio = await ttsManager.createAudioElement(word);
+      audioRef.current = audio;
+      audio.onended = () => {
+        if (audioRef.current === audio) audioRef.current = null;
+        setPlayingId(null);
+      };
+      audio.onerror = () => {
+        if (audioRef.current === audio) audioRef.current = null;
+        setPlayingId(null);
+      };
+      await audio.play();
+    } catch (err) {
+      console.error('TTS playback failed:', err);
+      setPlayingId(null);
+    }
+  };
 
   useEffect(() => {
     if (!authLoading && !user) router.replace('/login');
@@ -434,12 +482,25 @@ export default function VocabularyPage() {
                                   <p className="text-xs text-muted-foreground mt-1 italic">{entry.example}</p>
                                 )}
                               </div>
-                              <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                                <button className="text-xs p-1 hover:text-primary" onClick={() => startEdit(entry)} title={t('dict.editWord')}>✏️</button>
-                                {dictionaries.length > 1 && (
-                                  <button className="text-xs p-1 hover:text-primary" onClick={() => setMovingEntryId(entry.id)} title={t('dict.moveWord')}>↗️</button>
-                                )}
-                                <button className="text-xs p-1 hover:text-destructive" onClick={() => deleteEntry(entry.id)} title={t('common.delete')}>🗑️</button>
+                              <div className="flex gap-1 shrink-0">
+                                <button
+                                  className={`text-xs p-1 transition-colors ${playingId === entry.id ? 'text-primary' : 'text-muted-foreground hover:text-primary'}`}
+                                  onClick={() => handlePlay(entry.id, entry.word)}
+                                  title={playingId === entry.id ? 'Stop' : 'Play'}
+                                >
+                                  {playingId === entry.id ? (
+                                    <Square className="h-3.5 w-3.5 fill-current" />
+                                  ) : (
+                                    <Play className="h-3.5 w-3.5 fill-current" />
+                                  )}
+                                </button>
+                                <span className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <button className="text-xs p-1 hover:text-primary" onClick={() => startEdit(entry)} title={t('dict.editWord')}>✏️</button>
+                                  {dictionaries.length > 1 && (
+                                    <button className="text-xs p-1 hover:text-primary" onClick={() => setMovingEntryId(entry.id)} title={t('dict.moveWord')}>↗️</button>
+                                  )}
+                                  <button className="text-xs p-1 hover:text-destructive" onClick={() => deleteEntry(entry.id)} title={t('common.delete')}>🗑️</button>
+                                </span>
                               </div>
                             </div>
                           )}

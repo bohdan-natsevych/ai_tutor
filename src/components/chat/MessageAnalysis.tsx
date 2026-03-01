@@ -251,7 +251,7 @@ export function MessageAnalysisPopup({ analysis, motherLanguage = 'uk', learning
             </div>
           )}
 
-          {/* Alternative Phrasings with inline translate */}
+          {/* Alternative Phrasings with inline actions */}
           {alternativePhrasings.length > 0 && (
             <div className="mb-4">
               <h4 className="font-semibold mb-2 flex items-center gap-2">
@@ -261,14 +261,7 @@ export function MessageAnalysisPopup({ analysis, motherLanguage = 'uk', learning
               <div className="space-y-2">
                 {alternativePhrasings.map((phrase, index) => (
                   <div key={index} className="p-2 bg-purple-50 dark:bg-purple-950/20 rounded border border-purple-200 dark:border-purple-800">
-                    <div className="flex items-start gap-1">
-                      <SelectableText text={phrase} className="text-sm italic flex-1" />
-                      <TranslateInline
-                        text={phrase}
-                        motherLanguage={motherLanguage}
-                        learningLanguage={learningLanguage}
-                      />
-                    </div>
+                    <SelectableText text={phrase} className="text-sm italic" />
                   </div>
                 ))}
               </div>
@@ -316,6 +309,7 @@ export function MessageAnalysisPopup({ analysis, motherLanguage = 'uk', learning
                             {playingKey === key ? '...' : '▶'}
                           </Button>
                         </div>
+
                       </div>
                     );
                   })}
@@ -339,57 +333,6 @@ export function MessageAnalysisPopup({ analysis, motherLanguage = 'uk', learning
           </div>
         </div>
       </div>
-    </div>
-  );
-}
-
-// CURSOR: Inline translate button for learning-language content
-function TranslateInline({ text, motherLanguage, learningLanguage }: { text: string; motherLanguage: string; learningLanguage: string }) {
-  const [translation, setTranslation] = useState<string | null>(null);
-  const [isTranslating, setIsTranslating] = useState(false);
-  const [showTranslation, setShowTranslation] = useState(false);
-
-  const handleTranslate = async () => {
-    if (translation) {
-      setShowTranslation(!showTranslation);
-      return;
-    }
-    setIsTranslating(true);
-    try {
-      const response = await fetch('/api/translate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          text,
-          targetLanguage: motherLanguage,
-          sourceLanguage: learningLanguage,
-        }),
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setTranslation(data.translation.translatedText);
-        setShowTranslation(true);
-      }
-    } catch (err) {
-      console.error('Translation failed:', err);
-    } finally {
-      setIsTranslating(false);
-    }
-  };
-
-  return (
-    <div className="flex flex-col items-end shrink-0">
-      <button
-        onClick={handleTranslate}
-        disabled={isTranslating}
-        className="text-xs text-blue-500 hover:text-blue-700 px-1 rounded hover:bg-blue-50 dark:hover:bg-blue-950/30"
-        title="Translate"
-      >
-        {isTranslating ? '...' : showTranslation ? '✕' : '🌐'}
-      </button>
-      {showTranslation && translation && (
-        <span className="text-xs text-muted-foreground italic mt-1">{translation}</span>
-      )}
     </div>
   );
 }

@@ -79,7 +79,7 @@ export class OpenAIChatProvider implements AIProvider {
       audio: {
         voice: getValidVoice(options?.voice),
         format: 'mp3',
-      }
+      },
     };
 
     const response = await this.client.chat.completions.create(createParams);
@@ -92,6 +92,44 @@ export class OpenAIChatProvider implements AIProvider {
     return {
       content,
       audioBase64: audioData ? audioData.data : undefined,
+      usage: response.usage ? {
+        promptTokens: response.usage.prompt_tokens,
+        completionTokens: response.usage.completion_tokens,
+        totalTokens: response.usage.total_tokens,
+      } : undefined,
+    };
+  }
+
+  async generateText(context: ConversationContext, message: string, options?: AIOptions): Promise<AIResponse> {
+    if (!this.client) {
+      throw new Error('OpenAI client not initialized');
+    }
+
+    const messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [
+      { role: 'system', content: context.systemPrompt },
+    ];
+
+    if (context.summary) {
+      messages.push({
+        role: 'system',
+        content: `CONVERSATION SUMMARY (earlier messages):\n${context.summary}`,
+      });
+    }
+
+    messages.push(...context.messages);
+    messages.push({ role: 'user', content: message });
+
+    const model = options?.model || 'gpt-4o-mini';
+
+    const response = await this.client.chat.completions.create({
+      model,
+      messages,
+    });
+
+    const content = response.choices[0].message.content || '';
+
+    return {
+      content,
       usage: response.usage ? {
         promptTokens: response.usage.prompt_tokens,
         completionTokens: response.usage.completion_tokens,

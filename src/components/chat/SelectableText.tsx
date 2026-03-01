@@ -3,8 +3,9 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { TranslationPopup } from './TranslationPopup';
 import { Button } from '@/components/ui/button';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ttsManager } from '@/lib/tts/manager';
-import { Play, Square, Languages } from 'lucide-react';
+import { Play, Square, Languages, BookPlus, Check, Loader2 } from 'lucide-react';
 
 // CURSOR: SelectableText - Allows users to select words/phrases for translation
 // Wraps message content and handles text selection
@@ -22,6 +23,11 @@ export function SelectableText({ text, chatId, className = '', highlightedWordIn
   const [popoverPosition, setPopoverPosition] = useState<{ x: number; y: number } | null>(null);
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [savedToVocab, setSavedToVocab] = useState(false);
+  const [isSavingToVocab, setIsSavingToVocab] = useState(false);
+  const [vocabPickerOpen, setVocabPickerOpen] = useState(false);
+  const [dictionaries, setDictionaries] = useState<{ id: string; name: string }[]>([]);
+  const [dictsLoading, setDictsLoading] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -41,6 +47,55 @@ export function SelectableText({ text, chatId, className = '', highlightedWordIn
   const tokens = useMemo(() => {
     return parseTextIntoTokens(text);
   }, [text]);
+
+  // CURSOR: Fetch dictionaries when vocab picker opens
+  const fetchDictionaries = async () => {
+    setDictsLoading(true);
+    try {
+      const res = await fetch('/api/dictionaries');
+      if (res.ok) {
+        const data = await res.json();
+        setDictionaries(data.dictionaries || []);
+      }
+    } catch (err) {
+      console.error('Failed to fetch dictionaries:', err);
+    } finally {
+      setDictsLoading(false);
+    }
+  };
+
+  // CURSOR: Save selected text to a specific dictionary
+  const handleSaveToVocabulary = async (dictionaryId: string) => {
+    if (!selectedText || isSavingToVocab) return;
+    setIsSavingToVocab(true);
+    try {
+      localStorage.setItem('lastDictionaryId', dictionaryId);
+      const response = await fetch('/api/vocabulary', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          word: selectedText,
+          context: chatId,
+          dictionaryId,
+        }),
+      });
+      if (response.ok) {
+        setSavedToVocab(true);
+        setVocabPickerOpen(false);
+        // Notify vocabulary panel to refresh
+        window.dispatchEvent(new CustomEvent('vocabulary-updated'));
+        setTimeout(() => {
+          setSavedToVocab(false);
+          setSelectedText(null);
+          setPopoverPosition(null);
+        }, 1000);
+      }
+    } catch (err) {
+      console.error('Failed to save to vocabulary:', err);
+    } finally {
+      setIsSavingToVocab(false);
+    }
+  };
 
   const handlePlay = async () => {
     if (isPlaying) {
@@ -81,8 +136,8 @@ export function SelectableText({ text, chatId, className = '', highlightedWordIn
     if (!selectedText) return;
 
     const handleDocumentMouseDown = (e: MouseEvent) => {
-      // Don't dismiss if the popover is open (user is interacting with translation)
-      if (popoverOpen) return;
+      // Don't dismiss if a popover is open (user is interacting with translation or vocab picker)
+      if (popoverOpen || vocabPickerOpen) return;
       // Don't dismiss if clicking on the menu itself
       if (menuRef.current?.contains(e.target as Node)) return;
       // Don't dismiss if selecting within this component
@@ -101,14 +156,14 @@ export function SelectableText({ text, chatId, className = '', highlightedWordIn
 
     document.addEventListener('mousedown', handleDocumentMouseDown);
     return () => document.removeEventListener('mousedown', handleDocumentMouseDown);
-  }, [selectedText, popoverOpen]);
+  }, [selectedText, popoverOpen, vocabPickerOpen]);
 
   // CURSOR: Listen for selectionchange to dismiss when selection is cleared
   useEffect(() => {
     if (!selectedText) return;
 
     const handleSelectionChange = () => {
-      if (popoverOpen) return;
+      if (popoverOpen || vocabPickerOpen) return;
       const selection = window.getSelection();
       if (!selection?.toString().trim()) {
         if (audioRef.current) {
@@ -123,7 +178,7 @@ export function SelectableText({ text, chatId, className = '', highlightedWordIn
 
     document.addEventListener('selectionchange', handleSelectionChange);
     return () => document.removeEventListener('selectionchange', handleSelectionChange);
-  }, [selectedText, popoverOpen]);
+  }, [selectedText, popoverOpen, vocabPickerOpen]);
 
   const handleMouseUp = useCallback(() => {
     const selection = window.getSelection();
@@ -131,6 +186,7 @@ export function SelectableText({ text, chatId, className = '', highlightedWordIn
     
     if (selected && selected.length > 0 && selected.length < 200) {
       setSelectedText(selected);
+      setSavedToVocab(false);
       
       // Get selection position for popover
       const range = selection?.getRangeAt(0);
@@ -183,7 +239,7 @@ export function SelectableText({ text, chatId, className = '', highlightedWordIn
       {selectedText && popoverPosition && (
         <div 
           ref={menuRef}
-          className="fixed z-50 flex items-center gap-1 p-1 bg-background border rounded-lg shadow-lg animate-in fade-in zoom-in-95 duration-100"
+          className="fixed z-50 flex items-center gap-1 p-1 bg-popover text-popover-foreground border border-border rounded-lg shadow-xl animate-in fade-in zoom-in-95 duration-100"
           style={{ 
             left: popoverPosition.x, 
             top: popoverPosition.y - 10,
@@ -192,7 +248,7 @@ export function SelectableText({ text, chatId, className = '', highlightedWordIn
         >
           <Button
             size="sm"
-            variant="ghost"
+            variant="secondary"
             className="h-8 w-8 p-0"
             onClick={handlePlay}
             title={isPlaying ? "Stop" : "Read Aloud"}
@@ -221,13 +277,15 @@ export function SelectableText({ text, chatId, className = '', highlightedWordIn
               }
             }}
             onSaveToVocabulary={() => {
+              // Notify vocabulary panel to refresh
+              window.dispatchEvent(new CustomEvent('vocabulary-updated'));
               setSelectedText(null);
               setPopoverPosition(null);
             }}
           >
             <Button 
               size="sm"
-              variant="ghost"
+              variant="secondary"
               className="h-8 gap-2 px-2"
               title="Translate"
             >
@@ -235,6 +293,51 @@ export function SelectableText({ text, chatId, className = '', highlightedWordIn
               <span className="text-xs font-medium">Translate</span>
             </Button>
           </TranslationPopup>
+
+          <div className="w-[1px] h-4 bg-border mx-0.5" />
+
+          <Popover open={vocabPickerOpen} onOpenChange={(open) => {
+            setVocabPickerOpen(open);
+            if (open) fetchDictionaries();
+          }}>
+            <PopoverTrigger asChild>
+              <Button
+                size="sm"
+                variant={savedToVocab ? 'default' : 'secondary'}
+                className="h-8 w-8 p-0"
+                disabled={isSavingToVocab || savedToVocab}
+                title="Add to Vocabulary"
+              >
+                {savedToVocab ? (
+                  <Check className="h-4 w-4" />
+                ) : (
+                  <BookPlus className="h-4 w-4" />
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-48 p-1" side="top" align="end">
+              {dictsLoading ? (
+                <div className="flex items-center justify-center py-3">
+                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                </div>
+              ) : dictionaries.length === 0 ? (
+                <p className="text-xs text-muted-foreground text-center py-3">No dictionaries found</p>
+              ) : (
+                <div className="space-y-0.5">
+                  {dictionaries.map((dict) => (
+                    <button
+                      key={dict.id}
+                      className="w-full text-left text-sm px-2 py-1.5 rounded hover:bg-muted transition-colors truncate"
+                      onClick={() => handleSaveToVocabulary(dict.id)}
+                      disabled={isSavingToVocab}
+                    >
+                      📖 {dict.name}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </PopoverContent>
+          </Popover>
         </div>
       )}
     </div>

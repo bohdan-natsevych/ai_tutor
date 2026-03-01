@@ -132,6 +132,11 @@ export class OpenAIAssistantProvider implements AIProvider {
     throw new Error(`Run failed with status: ${run.status}`);
   }
 
+  // CURSOR: Text-only generation - delegates to generate since Assistants API doesn't use modalities
+  async generateText(context: ConversationContext, message: string, options?: AIOptions): Promise<AIResponse> {
+    return this.generate(context, message, options);
+  }
+
   async respond(context: ConversationContext, userMessage: string, options?: AIOptions): Promise<UnifiedResponse> {
     if (!this.client) {
       throw new Error('OpenAI client not initialized');

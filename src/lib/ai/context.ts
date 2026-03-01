@@ -111,7 +111,7 @@ ${messages.map(m => `${m.role}: ${m.content}`).join('\n')}
 SUMMARY:`;
 
     try {
-      const response = await aiManager.generate(
+      const response = await aiManager.generateText(
         {
           chatId: '',
           messages: [],
@@ -142,7 +142,7 @@ ${newSummary}
 MERGED SUMMARY:`;
 
     try {
-      const response = await aiManager.generate(
+      const response = await aiManager.generateText(
         {
           chatId: '',
           messages: [],

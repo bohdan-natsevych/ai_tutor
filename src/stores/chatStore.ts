@@ -103,6 +103,9 @@ interface ChatState {
   analysisPanelOpen: boolean;
   analysisPanelMessageId: string | null; // Which message's analysis is shown
   
+  // Vocabulary panel state
+  vocabularyPanelOpen: boolean;
+  
   // CURSOR: Reply suggestions state
   suggestions: ReplySuggestion[];
   previousSuggestions: ReplySuggestion[]; // CURSOR: Store previous suggestions for undo
@@ -130,6 +133,9 @@ interface ChatState {
   setAnalysisPanelMessageId: (messageId: string | null) => void;
   showAnalysisForMessage: (messageId: string) => void;
   
+  // Vocabulary panel actions
+  setVocabularyPanelOpen: (open: boolean) => void;
+  
   // CURSOR: Suggestion actions
   setSuggestions: (suggestions: ReplySuggestion[]) => void;
   updateSuggestion: (id: string, updates: Partial<ReplySuggestion>) => void;
@@ -152,6 +158,7 @@ const initialState = {
   currentWordIndex: -1, // CURSOR: -1 means no word is highlighted
   analysisPanelOpen: true,
   analysisPanelMessageId: null as string | null,
+  vocabularyPanelOpen: false,
   suggestions: [] as ReplySuggestion[],
   previousSuggestions: [] as ReplySuggestion[],
   isSuggestionsLoading: false,
@@ -199,6 +206,9 @@ export const useChatStore = create<ChatState>((set) => ({
   setAnalysisPanelOpen: (open) => set({ analysisPanelOpen: open }),
   setAnalysisPanelMessageId: (messageId) => set({ analysisPanelMessageId: messageId }),
   showAnalysisForMessage: (messageId) => set({ analysisPanelOpen: true, analysisPanelMessageId: messageId }),
+  
+  // Vocabulary panel actions
+  setVocabularyPanelOpen: (open) => set({ vocabularyPanelOpen: open }),
   
   // CURSOR: Suggestion actions
   setSuggestions: (suggestions) => set({ suggestions }),

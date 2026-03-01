@@ -8,6 +8,7 @@ import { ChatMessageBubble } from '@/components/chat/ChatMessage';
 import { SuggestionBubble } from '@/components/chat/SuggestionBubble';
 import { VoiceRecorder } from '@/components/chat/VoiceRecorder';
 import { AnalysisPanel } from '@/components/chat/AnalysisPanel';
+import { VocabularyPanel } from '@/components/chat/VocabularyPanel';
 import { useChatStore, type ChatMessage as ChatMessageType, type WordTimestamp, type ReplySuggestion } from '@/stores/chatStore';
 import { getWordTimestamps } from '@/lib/whisper/wordTiming';
 import { useSettingsStore } from '@/stores/settingsStore';
@@ -16,6 +17,7 @@ import { useTranslation } from '@/lib/i18n/useTranslation';
 import { HeaderLanguageSelector } from '@/components/layout/HeaderLanguageSelector';
 import { getDisplayTitle } from '@/lib/chatUtils';
 import { LANGUAGE_NAMES } from '@/lib/ai/prompts';
+import { Book } from 'lucide-react';
 
 interface ChatPageProps {
   params: Promise<{ id: string }>;
@@ -52,6 +54,10 @@ export default function ChatPage({ params }: ChatPageProps) {
   const analysisPanelOpen = useChatStore((state) => state.analysisPanelOpen);
   const setAnalysisPanelOpen = useChatStore((state) => state.setAnalysisPanelOpen);
   const showAnalysisForMessage = useChatStore((state) => state.showAnalysisForMessage);
+  
+  // Vocabulary panel state
+  const vocabularyPanelOpen = useChatStore((state) => state.vocabularyPanelOpen);
+  const setVocabularyPanelOpen = useChatStore((state) => state.setVocabularyPanelOpen);
   
   // Actions don't cause re-renders, safe to get from store directly
   const setCurrentChat = useChatStore((state) => state.setCurrentChat);
@@ -1080,6 +1086,9 @@ export default function ChatPage({ params }: ChatPageProps) {
 
   return (
     <div className="flex h-screen overflow-hidden">
+    {/* Vocabulary side panel (left) */}
+    <VocabularyPanel />
+    
     {/* Main chat column */}
     <div className="flex flex-col flex-1 min-w-0 gradient-bg overflow-hidden">
       {/* Header */}
@@ -1104,6 +1113,15 @@ export default function ChatPage({ params }: ChatPageProps) {
             <span className="text-xs text-amber-500">⚠️ {t('chat.ttsUnavailable')}</span>
           )}
           <HeaderLanguageSelector className="mr-2" />
+          <Button
+            variant={vocabularyPanelOpen ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setVocabularyPanelOpen(!vocabularyPanelOpen)}
+            className="text-xs gap-1 shrink-0"
+          >
+            <Book className="h-4 w-4" />
+            {t('chat.vocabulary')}
+          </Button>
           <Button
             variant={analysisPanelOpen ? 'default' : 'outline'}
             size="sm"
@@ -1317,3 +1335,4 @@ function AnalysisToggleIcon({ className }: { className?: string }) {
     </svg>
   );
 }
+
