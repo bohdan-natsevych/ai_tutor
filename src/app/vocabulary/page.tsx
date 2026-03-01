@@ -61,6 +61,9 @@ export default function VocabularyPage() {
   // Move dialog
   const [movingEntryId, setMovingEntryId] = useState<string | null>(null);
 
+  // Search
+  const [searchQuery, setSearchQuery] = useState('');
+
   // TTS playback
   const [playingId, setPlayingId] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -285,6 +288,16 @@ export default function VocabularyPage() {
 
   const activeDict = dictionaries.find(d => d.id === activeDictId);
 
+  const filteredEntries = searchQuery.trim()
+    ? entries.filter((entry) => {
+        const q = searchQuery.toLowerCase();
+        return (
+          entry.word.toLowerCase().includes(q) ||
+          (entry.translation && entry.translation.toLowerCase().includes(q))
+        );
+      })
+    : entries;
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -414,6 +427,14 @@ export default function VocabularyPage() {
                   </Button>
                 </div>
 
+                {/* Search */}
+                <Input
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder={t('dict.searchPlaceholder')}
+                  className="text-sm"
+                />
+
                 {/* Add word form */}
                 {showAddForm && (
                   <Card>
@@ -447,14 +468,14 @@ export default function VocabularyPage() {
                 )}
 
                 {/* Entries list */}
-                {entries.length === 0 ? (
+                {filteredEntries.length === 0 ? (
                   <div className="text-center py-12 bg-muted/30 rounded-lg border border-dashed">
-                    <p className="text-muted-foreground font-medium mb-2">{t('dict.noEntries')}</p>
-                    <p className="text-sm text-muted-foreground">{t('dict.noEntriesDesc')}</p>
+                    <p className="text-muted-foreground font-medium mb-2">{searchQuery.trim() ? t('dict.noSearchResults') : t('dict.noEntries')}</p>
+                    {!searchQuery.trim() && <p className="text-sm text-muted-foreground">{t('dict.noEntriesDesc')}</p>}
                   </div>
                 ) : (
                   <div className="space-y-2">
-                    {entries.map((entry) => (
+                    {filteredEntries.map((entry) => (
                       <Card key={entry.id} className="group">
                         <CardContent className="p-4">
                           {editingId === entry.id ? (

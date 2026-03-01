@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { useChatStore } from '@/stores/chatStore';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import { ttsManager } from '@/lib/tts/manager';
-import { Play, Square, Trash2, BookOpen } from 'lucide-react';
+import { Play, Square, Trash2, BookOpen, Search } from 'lucide-react';
 
 interface VocabularyEntry {
   id: string;
@@ -31,6 +31,7 @@ export function VocabularyPanel() {
   const [dictionaries, setDictionaries] = useState<Dictionary[]>([]);
   const [activeDictId, setActiveDictId] = useState<string>('all');
   const [isLoading, setIsLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const [playingId, setPlayingId] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -146,6 +147,16 @@ export function VocabularyPanel() {
 
   if (!vocabularyPanelOpen) return null;
 
+  const filteredEntries = searchQuery.trim()
+    ? entries.filter((entry) => {
+        const q = searchQuery.toLowerCase();
+        return (
+          entry.word.toLowerCase().includes(q) ||
+          (entry.translation && entry.translation.toLowerCase().includes(q))
+        );
+      })
+    : entries;
+
   return (
     <div className="w-[300px] shrink-0 border-r bg-background flex flex-col h-full overflow-hidden">
       {/* Header */}
@@ -188,6 +199,20 @@ export function VocabularyPanel() {
         </div>
       )}
 
+      {/* Search */}
+      <div className="px-3 py-2 border-b">
+        <div className="relative">
+          <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder={t('dict.searchPlaceholder')}
+            className="w-full pl-7 pr-2 py-1.5 text-xs rounded-md border bg-background focus:outline-none focus:ring-1 focus:ring-primary"
+          />
+        </div>
+      </div>
+
       {/* Entries list */}
       <div className="flex-1 min-h-0 overflow-y-auto">
         {isLoading ? (
@@ -200,9 +225,13 @@ export function VocabularyPanel() {
             <p className="text-sm">{t('chat.vocabulary.empty')}</p>
             <p className="text-xs mt-1 opacity-70">{t('chat.vocabulary.emptyHint')}</p>
           </div>
+        ) : filteredEntries.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-8 px-4 text-center text-muted-foreground">
+            <p className="text-sm">{t('dict.noSearchResults')}</p>
+          </div>
         ) : (
           <div className="divide-y">
-            {entries.map((entry) => (
+            {filteredEntries.map((entry) => (
               <div
                 key={entry.id}
                 className="px-3 py-2.5 hover:bg-muted/50 transition-colors group"
