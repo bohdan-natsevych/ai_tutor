@@ -120,8 +120,11 @@ export interface AIProvider {
   /** Initialize the provider */
   initialize(): Promise<void>;
   
-  /** Simple text generation (opening messages, suggestions) */
+  /** Audio generation (opening messages, chat responses requiring audio output) */
   generate(context: ConversationContext, message: string, options?: AIOptions): Promise<AIResponse>;
+
+  /** Text-only generation (suggestions, summarization - no audio modality) */
+  generateText(context: ConversationContext, message: string, options?: AIOptions): Promise<AIResponse>;
   
   /** Unified respond: reply to user + analyze their message in one call */
   respond(context: ConversationContext, userMessage: string, options?: AIOptions): Promise<UnifiedResponse>;

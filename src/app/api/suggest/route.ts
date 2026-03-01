@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
     
     const fullPrompt = `${suggestionPrompt}\n\nRecent conversation:\n${recentMessagesStr}\n\nGenerate ${count} natural reply suggestions for the learner:`;
     
-    const response = await aiManager.generate(context, fullPrompt);
+    const response = await aiManager.generateText(context, fullPrompt);
     
     // CURSOR: Parse JSON response
     try {

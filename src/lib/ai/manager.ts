@@ -78,7 +78,7 @@ class AIManager {
     return this.currentProvider?.models || [];
   }
 
-  // Simple text generation (opening messages, suggestions)
+  // Audio generation (opening messages, chat responses requiring audio output)
   async generate(context: ConversationContext, message: string, options?: Partial<AIOptions>): Promise<AIResponse> {
     if (!this.currentProvider) {
       throw new Error('AI not initialized. Call initialize() first.');
@@ -93,6 +93,21 @@ class AIManager {
     };
 
     return this.currentProvider.generate(context, message, fullOptions);
+  }
+
+  // Text-only generation (suggestions, summarization - no audio modality)
+  async generateText(context: ConversationContext, message: string, options?: Partial<AIOptions>): Promise<AIResponse> {
+    if (!this.currentProvider) {
+      throw new Error('AI not initialized. Call initialize() first.');
+    }
+
+    const fullOptions: AIOptions = {
+      model: options?.model || this.config.model,
+      temperature: options?.temperature ?? this.config.temperature,
+      maxTokens: options?.maxTokens ?? this.config.maxTokens,
+    };
+
+    return this.currentProvider.generateText(context, message, fullOptions);
   }
 
   // Unified respond: reply to user + analyze their message in one call
