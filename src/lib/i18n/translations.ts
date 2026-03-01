@@ -180,6 +180,8 @@ const en = {
   'dict.noEntriesDesc': 'Add words directly or save them from chat translations',
   'dict.selectOrCreate': 'Select a dictionary or create a new one',
   'dict.wordsCount': 'words',
+  'dict.searchPlaceholder': 'Search words...',
+  'dict.noSearchResults': 'No words match your search',
 
 
   // ── Settings page ──
@@ -472,6 +474,8 @@ const uk: Record<TranslationKey, string> = {
   'dict.noEntriesDesc': 'Додайте слова безпосередньо або збережіть їх із перекладів чату',
   'dict.selectOrCreate': 'Оберіть словник або створіть новий',
   'dict.wordsCount': 'слів',
+  'dict.searchPlaceholder': 'Пошук слів...',
+  'dict.noSearchResults': 'Жодне слово не відповідає пошуку',
 
   // ── Settings page ──
   'settings.title': 'Налаштування',
@@ -763,6 +767,8 @@ const de: Record<TranslationKey, string> = {
   'dict.noEntriesDesc': 'Füge Wörter direkt hinzu oder speichere sie aus Chat-Übersetzungen',
   'dict.selectOrCreate': 'Wähle ein Wörterbuch oder erstelle ein neues',
   'dict.wordsCount': 'Wörter',
+  'dict.searchPlaceholder': 'Wörter suchen...',
+  'dict.noSearchResults': 'Keine Wörter stimmen mit Ihrer Suche überein',
 
   // ── Settings page ──
   'settings.title': 'Einstellungen',
@@ -1055,6 +1061,8 @@ const fr: Record<TranslationKey, string> = {
   'dict.noEntriesDesc': 'Ajoutez des mots directement ou sauvegardez-les depuis les traductions du chat',
   'dict.selectOrCreate': 'Sélectionnez un dictionnaire ou créez-en un',
   'dict.wordsCount': 'mots',
+  'dict.searchPlaceholder': 'Rechercher des mots...',
+  'dict.noSearchResults': 'Aucun mot ne correspond à votre recherche',
 
   // ── Settings page ──
   'settings.title': 'Paramètres',
@@ -1347,6 +1355,8 @@ const es: Record<TranslationKey, string> = {
   'dict.noEntriesDesc': 'Añade palabras directamente o guárdalas de las traducciones del chat',
   'dict.selectOrCreate': 'Selecciona un diccionario o crea uno nuevo',
   'dict.wordsCount': 'palabras',
+  'dict.searchPlaceholder': 'Buscar palabras...',
+  'dict.noSearchResults': 'Ninguna palabra coincide con su búsqueda',
 
   // ── Settings page ──
   'settings.title': 'Ajustes',
@@ -1639,6 +1649,8 @@ const it: Record<TranslationKey, string> = {
   'dict.noEntriesDesc': 'Aggiungi parole direttamente o salvale dalle traduzioni della chat',
   'dict.selectOrCreate': 'Seleziona un dizionario o creane uno nuovo',
   'dict.wordsCount': 'parole',
+  'dict.searchPlaceholder': 'Cerca parole...',
+  'dict.noSearchResults': 'Nessuna parola corrisponde alla ricerca',
 
   // ── Settings page ──
   'settings.title': 'Impostazioni',
@@ -1930,6 +1942,8 @@ const pt: Record<TranslationKey, string> = {
   'dict.noEntriesDesc': 'Adicione palavras diretamente ou salve-as das traduções do chat',
   'dict.selectOrCreate': 'Selecione um dicionário ou crie um novo',
   'dict.wordsCount': 'palavras',
+  'dict.searchPlaceholder': 'Pesquisar palavras...',
+  'dict.noSearchResults': 'Nenhuma palavra corresponde à pesquisa',
 
   // ── Settings page ──
   'settings.title': 'Configurações',
@@ -2222,6 +2236,8 @@ const pl: Record<TranslationKey, string> = {
   'dict.noEntriesDesc': 'Dodaj słowa bezpośrednio lub zapisz je z tłumaczeń czatu',
   'dict.selectOrCreate': 'Wybierz słownik lub utwórz nowy',
   'dict.wordsCount': 'słów',
+  'dict.searchPlaceholder': 'Szukaj słów...',
+  'dict.noSearchResults': 'Żadne słowo nie pasuje do wyszukiwania',
 
   // ── Settings page ──
   'settings.title': 'Ustawienia',
@@ -2514,6 +2530,8 @@ const ja: Record<TranslationKey, string> = {
   'dict.noEntriesDesc': '直接単語を追加するか、チャット翻訳から保存してください',
   'dict.selectOrCreate': '辞書を選択するか新しく作成してください',
   'dict.wordsCount': '単語',
+  'dict.searchPlaceholder': '単語を検索...',
+  'dict.noSearchResults': '検索に一致する単語がありません',
 
   // ── Settings page ──
   'settings.title': '設定',
@@ -2805,6 +2823,8 @@ const zh: Record<TranslationKey, string> = {
   'dict.noEntriesDesc': '直接添加词汇或从聊天翻译中保存',
   'dict.selectOrCreate': '选择一个词典或创建新词典',
   'dict.wordsCount': '个词汇',
+  'dict.searchPlaceholder': '搜索词汇...',
+  'dict.noSearchResults': '没有匹配的词汇',
 
   // ── Settings page ──
   'settings.title': '设置',
@@ -3096,6 +3116,8 @@ const ko: Record<TranslationKey, string> = {
   'dict.noEntriesDesc': '직접 단어를 추가하거나 채팅 번역에서 저장하세요',
   'dict.selectOrCreate': '사전을 선택하거나 새로 만드세요',
   'dict.wordsCount': '단어',
+  'dict.searchPlaceholder': '단어 검색...',
+  'dict.noSearchResults': '검색과 일치하는 단어가 없습니다',
 
   // ── Settings page ──
   'settings.title': '설정',
