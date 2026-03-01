@@ -43,7 +43,7 @@ export function LanguageSelector() {
               {LANGUAGES.map((lang) => (
                 <SelectItem key={lang.id} value={lang.id}>
                   <span className="flex items-center gap-2">
-                    <span>{lang.flag}</span>
+                    <span className="flex items-center justify-center w-[1em]">{lang.id === 'en' ? <span className="text-[11px] font-medium tracking-tight">EN</span> : lang.flag}</span>
                     <span>{lang.name}</span>
                   </span>
                 </SelectItem>
@@ -88,7 +88,7 @@ export function LanguageSelector() {
               {LANGUAGES.map((lang) => (
                 <SelectItem key={lang.id} value={lang.id}>
                   <span className="flex items-center gap-2">
-                    <span>{lang.flag}</span>
+                    <span className="flex items-center justify-center w-[1em]">{lang.id === 'en' ? <span className="text-[11px] font-medium tracking-tight">EN</span> : lang.flag}</span>
                     <span>{lang.name}</span>
                   </span>
                 </SelectItem>
